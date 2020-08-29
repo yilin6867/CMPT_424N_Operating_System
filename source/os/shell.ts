@@ -235,6 +235,11 @@ module TSOS {
                         _StdOut.putText("Help displays a list of (hopefully) valid commands.");
                         break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
+                    case "prompt":
+                        _StdOut.putText("Use string being passed as arguement as prompt icon");
+                        break;
+                    case "trace":
+                        _StdOut.putText("Set the trace mode to be either on or off")
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
