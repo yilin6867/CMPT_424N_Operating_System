@@ -240,6 +240,13 @@ module TSOS {
                         break;
                     case "trace":
                         _StdOut.putText("Set the trace mode to be either on or off")
+                        break;
+                    case "rot13":
+                        _StdOut.putText("Letter substitution cipher that replaces each letter in the argument string" +
+                         " with the 13th letter after it")
+                         break;
+                     case "cls":
+                        _StdOut.putText("")
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
