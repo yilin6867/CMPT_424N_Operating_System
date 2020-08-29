@@ -61,11 +61,23 @@ module TSOS {
                 decided to write one function and use the term "text" to connote string or char.
             */
             if (text !== "") {
+                if (text.length >= _Canvas.width) {
+                    let text_arr : string[] = []
+                    for (let i :number= 0; i < Math.ceil(text.length / _Canvas.width); i++) {
+                        text_arr[i] = text.substr(i * _Canvas.width, (i + 1) * _Canvas.width)
+                    }
+                    for (let str of text_arr) {
+                        _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition
+                            , this.currentYPosition, str);
+                        var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                        this.currentXPosition = this.currentXPosition + offset;
+                    }
+                }
                 // Draw the text at the current X and Y coordinates.
-                _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
+                //_DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
                 // Move the current X position.
-                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
-                this.currentXPosition = this.currentXPosition + offset;
+                //var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                //this.currentXPosition = this.currentXPosition + offset;
             }
          }
 
