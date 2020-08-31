@@ -239,7 +239,7 @@ module TSOS {
                         _StdOut.putText("prompt <string> -- Use string being passed as arguement as prompt icon");
                         break;
                     case "trace":
-                        _StdOut.putText("trace <on><off> -- Set the trace mode to be either on or off")
+                        _StdOut.putText("trace <on, off> -- Set the trace mode to be either on or off")
                         break;
                     case "rot13":
                         _StdOut.putText("rot13 <string> -- Letter substitution cipher that replaces each letter in the "
