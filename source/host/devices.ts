@@ -20,7 +20,7 @@ module TSOS {
     export class Devices {
 
         constructor() {
-            _hardwareClockID = -1;
+            _hardwareClockID = null;
         }
 
         //

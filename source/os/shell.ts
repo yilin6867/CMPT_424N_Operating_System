@@ -235,6 +235,21 @@ module TSOS {
                         _StdOut.putText("Help displays a list of (hopefully) valid commands.");
                         break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
+                    case "prompt":
+                        _StdOut.putText("prompt <string> -- Use string being passed as arguement as prompt icon");
+                        break;
+                    case "trace":
+                        _StdOut.putText("trace <on, off> -- Set the trace mode to be either on or off")
+                        break;
+                    case "rot13":
+                        _StdOut.putText("rot13 <string> -- Letter substitution cipher that replaces each letter in the "
+                         + "argument string with the 13th letter after it")
+                         break;
+                    case "cls":
+                        _StdOut.putText("Clears the screen and reset clear")
+                        break;
+                    case "shutdown":
+                        _StdOut.putText("Shutdown the virtual OS l")
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
