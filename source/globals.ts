@@ -68,3 +68,7 @@ var _GLaDOS: any = null; // If the above is linked in, this is the instantiated 
 var onDocumentLoad = function() {
 	TSOS.Control.hostInit();
 };
+
+// Store historical commands
+var history_cmd: string[] = [];
+var hist_cursor: number = history.length;

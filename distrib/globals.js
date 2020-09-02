@@ -51,3 +51,6 @@ var _GLaDOS = null; // If the above is linked in, this is the instantiated insta
 var onDocumentLoad = function () {
     TSOS.Control.hostInit();
 };
+// Store historical commands
+var history_cmd = [];
+var hist_cursor = history.length;
