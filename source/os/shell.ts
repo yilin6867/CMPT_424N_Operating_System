@@ -73,6 +73,23 @@ module TSOS {
                                   "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
 
+            // date
+            sc = new ShellCommand(this.shellDate,
+                                    "date",
+                                    " - return the current date and time")
+            this.commandList[this.commandList.length] = sc;
+
+            // whereami
+            sc = new ShellCommand(this.shellWhereami,
+                                    "whereami",
+                                    " - return the current directory and file the os is located");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellHistory,
+                                    "history",
+                                    " - Show all previous command"
+                                );
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -239,17 +256,20 @@ module TSOS {
                         _StdOut.putText("prompt <string> -- Use string being passed as arguement as prompt icon");
                         break;
                     case "trace":
-                        _StdOut.putText("trace <on, off> -- Set the trace mode to be either on or off")
+                        _StdOut.putText("trace <on, off> -- Set the trace mode to be either on or off");
                         break;
                     case "rot13":
                         _StdOut.putText("rot13 <string> -- Letter substitution cipher that replaces each letter in the "
-                         + "argument string with the 13th letter after it")
+                         + "argument string with the 13th letter after it");
                          break;
                     case "cls":
-                        _StdOut.putText("Clears the screen and reset clear")
+                        _StdOut.putText("cls -- Clears the screen and reset clear");
                         break;
                     case "shutdown":
-                        _StdOut.putText("Shutdown the virtual OS l")
+                        _StdOut.putText("shutdown -- Shutdown the virtual OS l");
+                        break;
+                    case "history":
+                        _StdOut.putText("history -- Show all previous commands")
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -297,6 +317,27 @@ module TSOS {
             } else {
                 _StdOut.putText("Usage: prompt <string>  Please supply a string.");
             }
+        }
+
+        public shellDate() {
+            let today: Date = new Date();
+            let date = today.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();
+            let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+            _StdOut.putText(date + " " + time)
+        }
+
+        public shellHistory() {
+            for (let cmd in history_cmd) {
+                _StdOut.advanceLine();
+                _StdOut.putText(cmd);
+            }
+        }
+
+        public shellWhereami() {
+            let path: string = window.location.pathname
+            let file: string = path.substring(path.lastIndexOf('/'), path.length-1);
+            let dir: string = file.substring(0, file.lastIndexOf('/'));
+            _StdOut.putText(APP_NAME + " is running at " + file +  " in " + dir)
         }
 
     }
