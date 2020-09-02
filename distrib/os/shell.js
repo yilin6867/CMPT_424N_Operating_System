@@ -45,6 +45,14 @@ var TSOS;
             // prompt <string>
             sc = new TSOS.ShellCommand(this.shellPrompt, "prompt", "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
+            // date
+            sc = new TSOS.ShellCommand(this.shellDate, "date", " - return the current date and time");
+            this.commandList[this.commandList.length] = sc;
+            // whereami
+            sc = new TSOS.ShellCommand(this.shellWhereami, "whereami", " - return the current directory and file the os is located");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellHistory, "history", " - Show all previous command");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -205,10 +213,13 @@ var TSOS;
                             + "argument string with the 13th letter after it");
                         break;
                     case "cls":
-                        _StdOut.putText("Clears the screen and reset clear");
+                        _StdOut.putText("cls -- Clears the screen and reset clear");
                         break;
                     case "shutdown":
-                        _StdOut.putText("Shutdown the virtual OS l");
+                        _StdOut.putText("shutdown -- Shutdown the virtual OS l");
+                        break;
+                    case "history":
+                        _StdOut.putText("history -- Show all previous commands");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -258,6 +269,24 @@ var TSOS;
             else {
                 _StdOut.putText("Usage: prompt <string>  Please supply a string.");
             }
+        };
+        Shell.prototype.shellDate = function () {
+            var today = new Date();
+            var date = today.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();
+            var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+            _StdOut.putText(date + " " + time);
+        };
+        Shell.prototype.shellHistory = function () {
+            for (var cmd in history_cmd) {
+                _StdOut.advanceLine();
+                _StdOut.putText(cmd);
+            }
+        };
+        Shell.prototype.shellWhereami = function () {
+            var path = window.location.pathname;
+            var file = path.substring(path.lastIndexOf('/'), path.length - 1);
+            var dir = file.substring(0, file.lastIndexOf('/'));
+            _StdOut.putText(APP_NAME + " is running at " + file + " in " + dir);
         };
         return Shell;
     }());
