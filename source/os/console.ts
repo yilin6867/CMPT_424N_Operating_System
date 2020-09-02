@@ -103,6 +103,7 @@ module TSOS {
                     }
                 
                 } else if (chr === 9 || chr === "Tab") {
+                    // Tab to auto complete command or should available command with similar heading
                     if (this.buffer !== "") {
                         let similar_cmd: string[] = [];
                         for (let cmd of _OsShell.commandList) {
@@ -111,11 +112,14 @@ module TSOS {
                                 similar_cmd.push(cmd.command);
                             }
                         }
+
                         if (similar_cmd.length == 1) {
+                            // Auto complete command when there is only one similar command
                             this.clear_text();
                             this.buffer = similar_cmd.pop();
                             this.putText(this.buffer)
                         } else if (similar_cmd.length > 1) {
+                            // Auto complete to most common letter and print all available command
                             let suggest: string = this.get_filled_txt(similar_cmd);
                             this.buffer = suggest
                             this.advanceLine();
@@ -173,7 +177,7 @@ module TSOS {
                 }
             }
          }
-
+        
         public advanceLine(): void {
             this.currentXPosition = 0;
             /*
@@ -192,21 +196,20 @@ module TSOS {
             }
         }
 
+        // Return to the previous line in the currnt prompt
         public backLine(): void {
             this.currentXPosition = this.end_of_line.pop();
-            this.back_Y_pos();
-        }
-
-        public back_Y_pos(): void {
             this.currentYPosition -= this.get_deltaY();
         }
         
+        // Return change in Y value from line to line 
         public get_deltaY() : number {
             return _DefaultFontSize + 
                     _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                     _FontHeightMargin;
         }
 
+        // Clear text for replace current printed text with history text
         public clear_text(): void {
             let height = -1 * this.get_deltaY();
             if (this.end_of_line.length > 0) {
@@ -215,7 +218,7 @@ module TSOS {
                 while(this.end_of_line.length > 0) {
                     _DrawingContext.clearRect(0, this.currentYPosition + _FontHeightMargin
                         , this.end_of_line.pop(), height);
-                    this.back_Y_pos();
+                    this.currentYPosition -= this.get_deltaY();
                 }
                 this.advanceLine();
                 this.currentXPosition = 0;
@@ -231,6 +234,7 @@ module TSOS {
             }
         }
 
+        // Get auto complete text base on buffer text
         public get_filled_txt(similar_cmd: string[]): string {
             let suggest:string = "";
             for (let txt_idx = 0; txt_idx < similar_cmd.length; txt_idx++) {
