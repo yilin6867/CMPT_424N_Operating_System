@@ -11,8 +11,8 @@
 //
 // Global CONSTANTS (TypeScript 1.5 introduced const. Very cool.)
 //
-const APP_NAME: string    = "Y_Lin_TypeScript";   // 'cause Bob and I were at a loss for a better name.
-const APP_VERSION: string = "0.01";   // What did you expect?
+const APP_NAME: string    = "Y_Lin_TypeScript_OS";   // 'cause Bob and I were at a loss for a better name.
+const APP_VERSION: string = "0.05";   // What did you expect?
 
 const CPU_CLOCK_INTERVAL: number = 100;   // This is in ms (milliseconds) so 1000 = 1 second.
 
@@ -72,3 +72,5 @@ var onDocumentLoad = function() {
 // Store historical commands
 var history_cmd: string[] = [];
 var hist_cursor: number = history.length;
+
+var os_status: Boolean = false;

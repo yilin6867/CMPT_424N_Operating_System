@@ -51,7 +51,11 @@ var TSOS;
             // whereami
             sc = new TSOS.ShellCommand(this.shellWhereami, "whereami", " - return the current directory and file the os is located");
             this.commandList[this.commandList.length] = sc;
+            // History
             sc = new TSOS.ShellCommand(this.shellHistory, "history", " - Show all previous command");
+            this.commandList[this.commandList.length] = sc;
+            //Load
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", " - validates if user program input is hexidemcimals");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -220,6 +224,8 @@ var TSOS;
                         break;
                     case "history":
                         _StdOut.putText("history -- Show all previous commands");
+                    case "load":
+                        _StdOut.putText("load -- validates if user program input is hexidemcimals");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -287,6 +293,20 @@ var TSOS;
             var file = path.substring(path.lastIndexOf('/'), path.length - 1);
             var dir = file.substring(0, file.lastIndexOf('/'));
             _StdOut.putText(APP_NAME + " is running at " + file + " in " + dir);
+        };
+        Shell.prototype.shellLoad = function () {
+            var prg_in = document.getElementById("taProgramInput");
+            var regexp = new RegExp("^(?:[0-9A-Fa-f]{2} ){0,31}[0-9A-Fa-f]{2}$\s*");
+            var code_lines = prg_in.value.split("\n");
+            for (var _i = 0, code_lines_1 = code_lines; _i < code_lines_1.length; _i++) {
+                var code = code_lines_1[_i];
+                console.log(code, regexp.test(code));
+                if (!regexp.test(code)) {
+                    console.log(regexp.test(code));
+                    break;
+                }
+            }
+            console.log(regexp.test(code_lines[code_lines.length - 1]));
         };
         return Shell;
     }());

@@ -52,6 +52,21 @@ module TSOS {
             if (_GLaDOS) {
                 _GLaDOS.afterStartup();
             }
+            
+            let status_txt:string = "Status: Off";
+            if (!os_status) {
+                os_status = true;
+                status_txt = "Status: On";
+            }
+            let cur_datetime: Date = new Date;
+            let status_html: HTMLElement = document.getElementById("status");
+            let date_html: HTMLElement = document.getElementById("date");
+            let time_html: HTMLElement = document.getElementById("time");
+            status_html.innerText = status_txt;
+            date_html.innerText = "Date: " + cur_datetime.getUTCMonth() + "/" + cur_datetime.getUTCDay() + "/" 
+                                    + cur_datetime.getUTCFullYear();
+            time_html.innerText = "Time: "  + cur_datetime.getHours() + ":" + cur_datetime.getMinutes() 
+                                    + ":" + cur_datetime.getSeconds();
         }
 
         public krnShutdown() {

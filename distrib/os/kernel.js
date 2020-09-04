@@ -45,6 +45,20 @@ var TSOS;
             if (_GLaDOS) {
                 _GLaDOS.afterStartup();
             }
+            var status_txt = "Status: Off";
+            if (!os_status) {
+                os_status = true;
+                status_txt = "Status: On";
+            }
+            var cur_datetime = new Date;
+            var status_html = document.getElementById("status");
+            var date_html = document.getElementById("date");
+            var time_html = document.getElementById("time");
+            status_html.innerText = status_txt;
+            date_html.innerText = "Date: " + cur_datetime.getUTCMonth() + "/" + cur_datetime.getUTCDay() + "/"
+                + cur_datetime.getUTCFullYear();
+            time_html.innerText = "Time: " + cur_datetime.getHours() + ":" + cur_datetime.getMinutes()
+                + ":" + cur_datetime.getSeconds();
         };
         Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");

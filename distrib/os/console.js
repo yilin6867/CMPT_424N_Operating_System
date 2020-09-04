@@ -103,6 +103,7 @@ var TSOS;
                     }
                 }
                 else if (chr === 9 || chr === "Tab") {
+                    // Tab to auto complete command or should available command with similar heading
                     if (this.buffer !== "") {
                         var similar_cmd = [];
                         for (var _i = 0, _a = _OsShell.commandList; _i < _a.length; _i++) {
@@ -113,11 +114,13 @@ var TSOS;
                             }
                         }
                         if (similar_cmd.length == 1) {
+                            // Auto complete command when there is only one similar command
                             this.clear_text();
                             this.buffer = similar_cmd.pop();
                             this.putText(this.buffer);
                         }
                         else if (similar_cmd.length > 1) {
+                            // Auto complete to most common letter and print all available command
                             var suggest = this.get_filled_txt(similar_cmd);
                             this.buffer = suggest;
                             this.advanceLine();
@@ -189,18 +192,18 @@ var TSOS;
                 console.log(-1 * this.get_deltaY(), this.currentYPosition);
             }
         };
+        // Return to the previous line in the currnt prompt
         Console.prototype.backLine = function () {
             this.currentXPosition = this.end_of_line.pop();
-            this.back_Y_pos();
-        };
-        Console.prototype.back_Y_pos = function () {
             this.currentYPosition -= this.get_deltaY();
         };
+        // Return change in Y value from line to line 
         Console.prototype.get_deltaY = function () {
             return _DefaultFontSize +
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
         };
+        // Clear text for replace current printed text with history text
         Console.prototype.clear_text = function () {
             var height = -1 * this.get_deltaY();
             if (this.end_of_line.length > 0) {
@@ -208,7 +211,7 @@ var TSOS;
                 console.log(this.end_of_line.length);
                 while (this.end_of_line.length > 0) {
                     _DrawingContext.clearRect(0, this.currentYPosition + _FontHeightMargin, this.end_of_line.pop(), height);
-                    this.back_Y_pos();
+                    this.currentYPosition -= this.get_deltaY();
                 }
                 this.advanceLine();
                 this.currentXPosition = 0;
@@ -221,6 +224,7 @@ var TSOS;
                 _DrawingContext.clearRect(clear_x, this.currentYPosition + _FontHeightMargin, offset, height);
             }
         };
+        // Get auto complete text base on buffer text
         Console.prototype.get_filled_txt = function (similar_cmd) {
             var suggest = "";
             for (var txt_idx = 0; txt_idx < similar_cmd.length; txt_idx++) {
