@@ -85,10 +85,17 @@ module TSOS {
                                     " - return the current directory and file the os is located");
             this.commandList[this.commandList.length] = sc;
 
+            // History
             sc = new ShellCommand(this.shellHistory,
                                     "history",
                                     " - Show all previous command"
                                 );
+            this.commandList[this.commandList.length] = sc;
+
+            //Load
+            sc = new ShellCommand(this.shellLoad,
+                                    "load",
+                                    " - validates if user program input is hexidemcimals");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -270,6 +277,8 @@ module TSOS {
                         break;
                     case "history":
                         _StdOut.putText("history -- Show all previous commands")
+                    case "load":
+                        _StdOut.putText("load -- validates if user program input is hexidemcimals")
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -338,6 +347,20 @@ module TSOS {
             let file: string = path.substring(path.lastIndexOf('/'), path.length-1);
             let dir: string = file.substring(0, file.lastIndexOf('/'));
             _StdOut.putText(APP_NAME + " is running at " + file +  " in " + dir)
+        }
+
+        public shellLoad() {
+            let prg_in: any = document.getElementById("taProgramInput");
+            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f]{2} ){0,31}[0-9A-Fa-f]{2}$\s*");
+            let code_lines: string[] = prg_in.value.split("\n");
+            for (let code of code_lines) {
+                console.log(code, regexp.test(code))
+                if (!regexp.test(code)) {
+                    console.log(regexp.test(code));
+                    break;
+                }
+            }
+            console.log(regexp.test(code_lines[code_lines.length-1]));
         }
 
     }
