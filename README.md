@@ -47,3 +47,7 @@ This will be especially helpful for an OS or a Compiler that may need to run in 
 
 **Where can I get more info on TypeScript**
 [Right this way!](http://www.typescriptlang.org/)
+
+Project 1
+=============
+Project 1 is commit and merged to master. Please pull from master.
