@@ -41,24 +41,14 @@ var TSOS;
             this.krnTrace("Creating and Launching the shell.");
             _OsShell = new TSOS.Shell();
             _OsShell.init();
+            // Set flag to mark Operating System to be on
+            os_on = true;
             // Finally, initiate student testing protocol.
             if (_GLaDOS) {
                 _GLaDOS.afterStartup();
             }
-            var status_txt = "Status: Off";
-            if (!os_status) {
-                os_status = true;
-                status_txt = "Status: On";
-            }
-            var cur_datetime = new Date;
-            var status_html = document.getElementById("status");
-            var date_html = document.getElementById("date");
-            var time_html = document.getElementById("time");
-            status_html.innerText = status_txt;
-            date_html.innerText = "Date: " + cur_datetime.getUTCMonth() + "/" + cur_datetime.getUTCDay() + "/"
-                + cur_datetime.getUTCFullYear();
-            time_html.innerText = "Time: " + cur_datetime.getHours() + ":" + cur_datetime.getMinutes()
-                + ":" + cur_datetime.getSeconds();
+            // Render the Graphic Taskbar content
+            this.krnUpdateStatus();
         };
         Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");
@@ -71,6 +61,7 @@ var TSOS;
             // More?
             //
             this.krnTrace("end shutdown OS");
+            os_on = false;
         };
         Kernel.prototype.krnOnCPUClockPulse = function () {
             /* This gets called from the host hardware simulation every time there is a hardware clock pulse.
@@ -78,11 +69,14 @@ var TSOS;
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.
             */
+            // Render graphic task bar content continuously
+            this.krnUpdateStatus();
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
+                console.log("Kernel Interrupt", interrupt.irq, interrupt.params);
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
@@ -164,9 +158,32 @@ var TSOS;
             }
         };
         Kernel.prototype.krnTrapError = function (msg) {
+            if (Array.isArray(msg)) {
+                msg = msg.join(" ");
+            }
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
             // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
+            _DrawingContext.fillStyle = 'blue';
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
+            _Console.currentYPosition = _Console.currentYPosition - _Canvas.height / 2;
+            _Console.putText("The OS is experiencing unexpected error due to: " + msg);
+            _Console.advanceLine();
+            _Console.putText("The OS will be shutdown and record this error to help prevent future error.");
+            _Console.advanceLine();
+            _Console.putText("Please reset the Operating System to continue.");
             this.krnShutdown();
+        };
+        // Update the host display on the graphic task bar
+        Kernel.prototype.krnUpdateStatus = function () {
+            var cur_datetime = new Date();
+            var date_html = document.getElementById("date");
+            var time_html = document.getElementById("time");
+            date_html.innerText = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/"
+                + ("0" + cur_datetime.getDate()).slice(-2) + "/"
+                + cur_datetime.getFullYear();
+            time_html.innerText = "Time: " + ("0" + cur_datetime.getHours()).slice(-2)
+                + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
+                + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
         };
         return Kernel;
     }());

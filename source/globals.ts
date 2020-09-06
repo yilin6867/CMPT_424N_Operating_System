@@ -73,4 +73,4 @@ var onDocumentLoad = function() {
 var history_cmd: string[] = [];
 var hist_cursor: number = history.length;
 
-var os_status: Boolean = false;
+var os_on: Boolean = false;

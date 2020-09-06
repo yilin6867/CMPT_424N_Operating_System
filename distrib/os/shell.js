@@ -57,6 +57,14 @@ var TSOS;
             //Load
             sc = new TSOS.ShellCommand(this.shellLoad, "load", " - validates if user program input is hexidemcimals");
             this.commandList[this.commandList.length] = sc;
+            // Invoke error
+            sc = new TSOS.ShellCommand(this.shellBsod, "bsod", "<Error Message> - invoke kernal error to test display " +
+                "of BSOD for given string of Error Message");
+            this.commandList[this.commandList.length] = sc;
+            // 
+            sc = new TSOS.ShellCommand(this.shellStatus, "status", "<String> - Render the status option on the Graphic Taskbar with "
+                + "given string of text.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -74,6 +82,7 @@ var TSOS;
             // ... and assign the command and args to local variables.
             var cmd = userCommand.command;
             var args = userCommand.args;
+            console.log(buffer);
             //
             // Determine the command and execute it.
             //
@@ -118,8 +127,10 @@ var TSOS;
             if (_StdOut.currentXPosition > 0) {
                 _StdOut.advanceLine();
             }
-            // ... and finally write the prompt again.
-            this.putPrompt();
+            // ... and finally write the prompt again if the Operating System is still running.
+            if (os_on) {
+                this.putPrompt();
+            }
         };
         Shell.prototype.parseInput = function (buffer) {
             var retVal = new TSOS.UserCommand();
@@ -224,8 +235,18 @@ var TSOS;
                         break;
                     case "history":
                         _StdOut.putText("history -- Show all previous commands");
+                        break;
                     case "load":
                         _StdOut.putText("load -- validates if user program input is hexidemcimals");
+                        break;
+                    case "bsod":
+                        _StdOut.putText("bsod <Error Message> -- invoke kernal error to test display " +
+                            "of BSOD for given string of Error Message");
+                        break;
+                    case "status":
+                        _StdOut.putText("<String> - Render the status option on the Graphic Taskbar with "
+                            + "given string of text.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -283,7 +304,8 @@ var TSOS;
             _StdOut.putText(date + " " + time);
         };
         Shell.prototype.shellHistory = function () {
-            for (var cmd in history_cmd) {
+            for (var _i = 0, history_cmd_1 = history_cmd; _i < history_cmd_1.length; _i++) {
+                var cmd = history_cmd_1[_i];
                 _StdOut.advanceLine();
                 _StdOut.putText(cmd);
             }
@@ -291,22 +313,30 @@ var TSOS;
         Shell.prototype.shellWhereami = function () {
             var path = window.location.pathname;
             var file = path.substring(path.lastIndexOf('/'), path.length - 1);
-            var dir = file.substring(0, file.lastIndexOf('/'));
-            _StdOut.putText(APP_NAME + " is running at " + file + " in " + dir);
+            _StdOut.putText(APP_NAME + " is running at " + file);
         };
         Shell.prototype.shellLoad = function () {
             var prg_in = document.getElementById("taProgramInput");
-            var regexp = new RegExp("^(?:[0-9A-Fa-f]{2} ){0,31}[0-9A-Fa-f]{2}$\s*");
+            var regexp = new RegExp("^(?:[0-9A-Fa-f\s]{2})");
             var code_lines = prg_in.value.split("\n");
             for (var _i = 0, code_lines_1 = code_lines; _i < code_lines_1.length; _i++) {
                 var code = code_lines_1[_i];
-                console.log(code, regexp.test(code));
                 if (!regexp.test(code)) {
-                    console.log(regexp.test(code));
-                    break;
+                    _StdOut.putText("The User Program Input is not valid input");
+                    return;
                 }
             }
-            console.log(regexp.test(code_lines[code_lines.length - 1]));
+            _StdOut.putText("The User Program Input is valid input");
+        };
+        Shell.prototype.shellStatus = function (status) {
+            var status_html = document.getElementById("status");
+            var status_txt = status.join(" ");
+            status_html.innerText = status_txt;
+        };
+        // function to test blue screen of death by invoke kernal trap error fucntion with given
+        // arguments as message
+        Shell.prototype.shellBsod = function (error) {
+            _Kernel.krnTrapError(error);
         };
         return Shell;
     }());

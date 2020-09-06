@@ -54,4 +54,4 @@ var onDocumentLoad = function () {
 // Store historical commands
 var history_cmd = [];
 var hist_cursor = history.length;
-var os_status = false;
+var os_on = false;

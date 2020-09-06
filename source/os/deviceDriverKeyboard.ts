@@ -33,7 +33,6 @@ module TSOS {
             var isShifted = params[1];
             _Kernel.krnTrace("Key code:" + key + " shifted:" + isShifted);
 
-            console.log("Key code is " + key)
             // Check to see if we even want to deal with the key that was pressed.
             _KernelInputQueue.enqueue(key);
         }

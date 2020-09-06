@@ -50,6 +50,7 @@ module TSOS {
                     // Store entered keys to history
                     if (this.buffer !== "") {
                         history_cmd.push(this.buffer);
+                        console.log(history_cmd)
                     }
                     hist_cursor = history_cmd.length;
                     // ... and reset our buffer.
@@ -78,7 +79,6 @@ module TSOS {
                     // Go to the buffer history to reload history command
                     // print history command
                     // Else statement to keep history cursor to be always first command
-                    console.log(chr, hist_cursor, history_cmd.length)
                     if (hist_cursor > 0) {
                         this.clear_text();
                         hist_cursor = hist_cursor - 1;
@@ -91,7 +91,6 @@ module TSOS {
                     // Clear current text on screen
                     // set cursor to load recent command to the buffer
                     // If no more history command present, currnt buffer set to ""
-                    console.log(chr, hist_cursor, history_cmd.length)
                     if (hist_cursor < history_cmd.length) {
                         this.clear_text();
                         hist_cursor = hist_cursor + 1;
@@ -107,7 +106,6 @@ module TSOS {
                     if (this.buffer !== "") {
                         let similar_cmd: string[] = [];
                         for (let cmd of _OsShell.commandList) {
-                            console.log(this.buffer, cmd.command, cmd.command.substr(0, this.buffer.length))
                             if (this.buffer ===  cmd.command.substr(0, this.buffer.length)) {
                                 similar_cmd.push(cmd.command);
                             }
@@ -141,7 +139,7 @@ module TSOS {
                         // ... and add it to our buffer.
                         this.buffer += chr;
                     }
-                }   
+                }       
                 // TODO: Add a case for Ctrl-C that would allow the user to break the current program.
             }
         }
@@ -154,7 +152,6 @@ module TSOS {
                 do the same thing, thereby encouraging confusion and decreasing readability, I
                 decided to write one function and use the term "text" to connote string or char.
             */
-            console.log(text);
             if (text !== "" && typeof text !== 'undefined') {
                 /*
                     Use for loop to print each chracter along the X line. If the current X position is 
@@ -192,7 +189,6 @@ module TSOS {
                 this.clearScreen()
                 _DrawingContext.putImageData(console_img, 0, -1 * this.get_deltaY());
                 this.currentYPosition = this.currentYPosition - this.get_deltaY();
-                console.log(-1 * this.get_deltaY(), this.currentYPosition);
             }
         }
 
