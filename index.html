@@ -3,9 +3,10 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
    <meta name="author"             content="Alan G. Labouseur" />
+   <meta name="modifier"             content="Yi Lin" />
    <link rel="stylesheet" href="tsos.css" type="text/css" media="screen" />
    <title>
-      TSOS - a browser-based virtual Operating System in TypeScript
+      Y_Lin_TypeScript_OS - a browser-based virtual Operating System in TypeScript
    </title>
 
    <!-- Globals CONSTANTS and _Variables. Must included be first. -->
@@ -31,12 +32,22 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip0.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip1.js"></script>
    
 </head>
 
 <body onload="onDocumentLoad()">
-
+<div id="header_bar">
+   <span id="date" style="display:inline; text-align: left;"> 
+      Date: mm/dd/yyyy
+   </span>
+   <span id="time" style="display:inline; text-align: center;">
+      Time: HH:MM:SS
+   </span>
+   <span id="status" style="display:inline; text-align: right;">
+      Status: String
+   </span>
+</div>
 <div id="divMain" style="width:100%;">
 
    <div id="divButtonBar" style="margin:4px;">

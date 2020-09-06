@@ -8,11 +8,13 @@
      ------------ */
 var TSOS;
 (function (TSOS) {
-    class Kernel {
+    var Kernel = /** @class */ (function () {
+        function Kernel() {
+        }
         //
         // OS Startup and Shutdown Routines
         //
-        krnBootstrap() {
+        Kernel.prototype.krnBootstrap = function () {
             TSOS.Control.hostLog("bootstrap", "host"); // Use hostLog because we ALWAYS want this, even if _Trace is off.
             // Initialize our global queues.
             _KernelInterruptQueue = new TSOS.Queue(); // A (currently) non-priority queue for interrupt requests (IRQs).
@@ -39,12 +41,16 @@ var TSOS;
             this.krnTrace("Creating and Launching the shell.");
             _OsShell = new TSOS.Shell();
             _OsShell.init();
+            // Set flag to mark Operating System to be on
+            os_on = true;
             // Finally, initiate student testing protocol.
             if (_GLaDOS) {
                 _GLaDOS.afterStartup();
             }
-        }
-        krnShutdown() {
+            // Render the Graphic Taskbar content
+            this.krnUpdateStatus();
+        };
+        Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");
             // TODO: Check for running processes.  If there are some, alert and stop. Else...
             // ... Disable the Interrupts.
@@ -55,18 +61,22 @@ var TSOS;
             // More?
             //
             this.krnTrace("end shutdown OS");
-        }
-        krnOnCPUClockPulse() {
+            os_on = false;
+        };
+        Kernel.prototype.krnOnCPUClockPulse = function () {
             /* This gets called from the host hardware simulation every time there is a hardware clock pulse.
                This is NOT the same as a TIMER, which causes an interrupt and is handled like other interrupts.
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.
             */
+            // Render graphic task bar content continuously
+            this.krnUpdateStatus();
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
+                console.log("Kernel Interrupt", interrupt.irq, interrupt.params);
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
@@ -75,21 +85,21 @@ var TSOS;
             else { // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
-        }
+        };
         //
         // Interrupt Handling
         //
-        krnEnableInterrupts() {
+        Kernel.prototype.krnEnableInterrupts = function () {
             // Keyboard
             TSOS.Devices.hostEnableKeyboardInterrupt();
             // Put more here.
-        }
-        krnDisableInterrupts() {
+        };
+        Kernel.prototype.krnDisableInterrupts = function () {
             // Keyboard
             TSOS.Devices.hostDisableKeyboardInterrupt();
             // Put more here.
-        }
-        krnInterruptHandler(irq, params) {
+        };
+        Kernel.prototype.krnInterruptHandler = function (irq, params) {
             // This is the Interrupt Handler Routine.  See pages 8 and 560.
             // Trace our entrance here so we can compute Interrupt Latency by analyzing the log file later on. Page 766.
             this.krnTrace("Handling IRQ~" + irq);
@@ -108,12 +118,12 @@ var TSOS;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
-        }
-        krnTimerISR() {
+        };
+        Kernel.prototype.krnTimerISR = function () {
             // The built-in TIMER (not clock) Interrupt Service Routine (as opposed to an ISR coming from a device driver). {
             // Check multiprogramming parameters and enforce quanta here. Call the scheduler / context switch here if necessary.
             // Or do it elsewhere in the Kernel. We don't really need this.
-        }
+        };
         //
         // System Calls... that generate software interrupts via tha Application Programming Interface library routines.
         //
@@ -131,7 +141,7 @@ var TSOS;
         //
         // OS Utility Routines
         //
-        krnTrace(msg) {
+        Kernel.prototype.krnTrace = function (msg) {
             // Check globals to see if trace is set ON.  If so, then (maybe) log the message.
             if (_Trace) {
                 if (msg === "Idle") {
@@ -146,13 +156,36 @@ var TSOS;
                     TSOS.Control.hostLog(msg, "OS");
                 }
             }
-        }
-        krnTrapError(msg) {
+        };
+        Kernel.prototype.krnTrapError = function (msg) {
+            if (Array.isArray(msg)) {
+                msg = msg.join(" ");
+            }
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
             // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
+            _DrawingContext.fillStyle = 'blue';
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
+            _Console.currentYPosition = _Console.currentYPosition - _Canvas.height / 2;
+            _Console.putText("The OS is experiencing unexpected error due to: " + msg);
+            _Console.advanceLine();
+            _Console.putText("The OS will be shutdown and record this error to help prevent future error.");
+            _Console.advanceLine();
+            _Console.putText("Please reset the Operating System to continue.");
             this.krnShutdown();
-        }
-    }
+        };
+        // Update the host display on the graphic task bar
+        Kernel.prototype.krnUpdateStatus = function () {
+            var cur_datetime = new Date();
+            var date_html = document.getElementById("date");
+            var time_html = document.getElementById("time");
+            date_html.innerText = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/"
+                + ("0" + cur_datetime.getDate()).slice(-2) + "/"
+                + cur_datetime.getFullYear();
+            time_html.innerText = "Time: " + ("0" + cur_datetime.getHours()).slice(-2)
+                + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
+                + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
+        };
+        return Kernel;
+    }());
     TSOS.Kernel = Kernel;
 })(TSOS || (TSOS = {}));
-//# sourceMappingURL=kernel.js.map
