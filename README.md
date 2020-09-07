@@ -50,4 +50,4 @@ This will be especially helpful for an OS or a Compiler that may need to run in 
 
 Project 1
 =============
-Project 1 is commit and merged to master. Please pull from master.
+Project 1 is commited and merged to master. Please pull from master.

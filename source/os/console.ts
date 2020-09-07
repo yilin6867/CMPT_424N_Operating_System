@@ -154,15 +154,16 @@ module TSOS {
             */
             if (text !== "" && typeof text !== 'undefined') {
                 /*
-                    Use for loop to print each chracter along the X line. If the current X position is 
-                    bigger than the width of the console canvas then current X value is set to zero and 
-                    the current Y value set current Y values plus 1.5 times of font size to insure the
-                    remaining text is printed on the new line
+                    Use for loop to print each chracter along the X line.
                 */
                 for (let i: number = 0; i < text.length; i++) {
                     let print_txt : string = text.charAt(i);
                     let offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize
                         , print_txt);
+                    
+                    // If the current X position plus next input size is bigger than the 
+                    // width of the console canvas, then store current x position for backspace purpose and 
+                    // advance to the next with curr
                     if (this.currentXPosition + offset > _Canvas.width) {
                         this.end_of_line.push(this.currentXPosition);
                         this.advanceLine();
@@ -177,13 +178,12 @@ module TSOS {
         
         public advanceLine(): void {
             this.currentXPosition = 0;
-            /*
-             * Font size measures from the baseline to the highest point in the font.
-             * Font descent measures from the baseline to the lowest point in the font.
-             * Font height margin is extra spacing between the lines.
-             */
             this.currentYPosition += this.get_deltaY();
-
+            /*
+                If the current Y position is greate than the canvas height then
+                save image of the canvas, remove all drawing on the canvas
+                and print the save image at y position less than origin of the canvas
+            */
             if (this.currentYPosition > _Canvas.height) {
                 let console_img : ImageData = _DrawingContext.getImageData(0,0, _Canvas.width, _Canvas.height);
                 this.clearScreen()
@@ -200,6 +200,11 @@ module TSOS {
         
         // Return change in Y value from line to line 
         public get_deltaY() : number {
+             /*
+             * Font size measures from the baseline to the highest point in the font.
+             * Font descent measures from the baseline to the lowest point in the font.
+             * Font height margin is extra spacing between the lines.
+             */
             return _DefaultFontSize + 
                     _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                     _FontHeightMargin;

@@ -259,10 +259,10 @@ module TSOS {
         }
 
         public shellShutdown(args: string[]) {
-             _StdOut.putText("Shutting down...");
-             // Call Kernel shutdown routine.
+            _StdOut.putText("Shutting down...");
+            // Call Kernel shutdown routine.
             _Kernel.krnShutdown();
-            // TODO: Stop the final prompt from being displayed. If possible. Not a high priority. (Damn OCD!)
+            
         }
 
         public shellCls(args: string[]) {         
@@ -377,6 +377,7 @@ module TSOS {
             _StdOut.putText(APP_NAME + " is running at " + file)
         }
 
+        // Use to load user program input. Currently validating user input
         public shellLoad() {
             let prg_in: any = document.getElementById("taProgramInput");
             let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f\s]{2})");
@@ -390,6 +391,7 @@ module TSOS {
             _StdOut.putText("The User Program Input is valid input")
         }
 
+        // 
         public shellStatus(status: string[]) {
             let status_html: HTMLElement = document.getElementById("status");
             let status_txt = status.join(" ");
