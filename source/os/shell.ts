@@ -133,7 +133,6 @@ module TSOS {
             // ... and assign the command and args to local variables.
             var cmd = userCommand.command;
             var args = userCommand.args;
-            console.log(buffer)
             //
             // Determine the command and execute it.
             //

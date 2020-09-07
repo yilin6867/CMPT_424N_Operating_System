@@ -50,7 +50,6 @@ module TSOS {
                     // Store entered keys to history
                     if (this.buffer !== "") {
                         history_cmd.push(this.buffer);
-                        console.log(history_cmd)
                     }
                     hist_cursor = history_cmd.length;
                     // ... and reset our buffer.
