@@ -49,7 +49,6 @@ var TSOS;
                     // Store entered keys to history
                     if (this.buffer !== "") {
                         history_cmd.push(this.buffer);
-                        console.log(history_cmd);
                     }
                     hist_cursor = history_cmd.length;
                     // ... and reset our buffer.
@@ -156,14 +155,14 @@ var TSOS;
             */
             if (text !== "" && typeof text !== 'undefined') {
                 /*
-                    Use for loop to print each chracter along the X line. If the current X position is
-                    bigger than the width of the console canvas then current X value is set to zero and
-                    the current Y value set current Y values plus 1.5 times of font size to insure the
-                    remaining text is printed on the new line
+                    Use for loop to print each chracter along the X line.
                 */
                 for (var i = 0; i < text.length; i++) {
                     var print_txt = text.charAt(i);
                     var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, print_txt);
+                    // If the current X position plus next input size is bigger than the 
+                    // width of the console canvas, then store current x position for backspace purpose and 
+                    // advance to the next with curr
                     if (this.currentXPosition + offset > _Canvas.width) {
                         this.end_of_line.push(this.currentXPosition);
                         this.advanceLine();
@@ -175,12 +174,12 @@ var TSOS;
         };
         Console.prototype.advanceLine = function () {
             this.currentXPosition = 0;
-            /*
-             * Font size measures from the baseline to the highest point in the font.
-             * Font descent measures from the baseline to the lowest point in the font.
-             * Font height margin is extra spacing between the lines.
-             */
             this.currentYPosition += this.get_deltaY();
+            /*
+                If the current Y position is greate than the canvas height then
+                save image of the canvas, remove all drawing on the canvas
+                and print the save image at y position less than origin of the canvas
+            */
             if (this.currentYPosition > _Canvas.height) {
                 var console_img = _DrawingContext.getImageData(0, 0, _Canvas.width, _Canvas.height);
                 this.clearScreen();
@@ -195,6 +194,11 @@ var TSOS;
         };
         // Return change in Y value from line to line 
         Console.prototype.get_deltaY = function () {
+            /*
+            * Font size measures from the baseline to the highest point in the font.
+            * Font descent measures from the baseline to the lowest point in the font.
+            * Font height margin is extra spacing between the lines.
+            */
             return _DefaultFontSize +
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
@@ -202,19 +206,17 @@ var TSOS;
         // Clear text for replace current printed text with history text
         Console.prototype.clear_text = function () {
             var height = -1 * this.get_deltaY();
+            var clear_x = _DrawingContext.measureText(this.currentFont, this.currentFontSize, ">");
             if (this.end_of_line.length > 0) {
                 this.end_of_line.push(_Canvas.width);
-                console.log(this.end_of_line.length);
-                while (this.end_of_line.length > 0) {
+                while (this.end_of_line.length > 1) {
                     _DrawingContext.clearRect(0, this.currentYPosition + _FontHeightMargin, this.end_of_line.pop(), height);
                     this.currentYPosition -= this.get_deltaY();
                 }
-                this.advanceLine();
-                this.currentXPosition = 0;
-                _OsShell.putPrompt();
+                _DrawingContext.clearRect(clear_x, this.currentYPosition + _FontHeightMargin, this.end_of_line.pop(), height);
+                this.currentXPosition = clear_x;
             }
             else {
-                var clear_x = _DrawingContext.measureText(this.currentFont, this.currentFontSize, ">");
                 this.currentXPosition = clear_x;
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
                 _DrawingContext.clearRect(clear_x, this.currentYPosition + _FontHeightMargin, offset, height);

@@ -212,20 +212,19 @@ module TSOS {
         // Clear text for replace current printed text with history text
         public clear_text(): void {
             let height = -1 * this.get_deltaY();
+            let clear_x: number = _DrawingContext.measureText(this.currentFont, this.currentFontSize
+                , ">");
             if (this.end_of_line.length > 0) {
                 this.end_of_line.push(_Canvas.width);
-                console.log(this.end_of_line.length)
-                while(this.end_of_line.length > 0) {
+                while(this.end_of_line.length > 1) {
                     _DrawingContext.clearRect(0, this.currentYPosition + _FontHeightMargin
                         , this.end_of_line.pop(), height);
                     this.currentYPosition -= this.get_deltaY();
                 }
-                this.advanceLine();
-                this.currentXPosition = 0;
-                _OsShell.putPrompt();
+                _DrawingContext.clearRect(clear_x, this.currentYPosition + _FontHeightMargin
+                    , this.end_of_line.pop(), height);
+                this.currentXPosition = clear_x;
             } else {
-                let clear_x: number = _DrawingContext.measureText(this.currentFont, this.currentFontSize
-                    , ">");
                 this.currentXPosition = clear_x;
                 let offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize
                     , this.buffer);

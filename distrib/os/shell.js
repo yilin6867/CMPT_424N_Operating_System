@@ -82,7 +82,6 @@ var TSOS;
             // ... and assign the command and args to local variables.
             var cmd = userCommand.command;
             var args = userCommand.args;
-            console.log(buffer);
             //
             // Determine the command and execute it.
             //
@@ -203,7 +202,6 @@ var TSOS;
             _StdOut.putText("Shutting down...");
             // Call Kernel shutdown routine.
             _Kernel.krnShutdown();
-            // TODO: Stop the final prompt from being displayed. If possible. Not a high priority. (Damn OCD!)
         };
         Shell.prototype.shellCls = function (args) {
             _StdOut.clearScreen();
@@ -233,12 +231,19 @@ var TSOS;
                     case "shutdown":
                         _StdOut.putText("shutdown -- Shutdown the virtual OS l");
                         break;
+                    case "date":
+                        _StdOut.putText("date -- return the current date and time");
+                        break;
+                    case "whereami":
+                        _StdOut.putText("whereami -- return the current directory and file the os is located");
+                        break;
                     case "history":
                         _StdOut.putText("history -- Show all previous commands");
                         break;
                     case "load":
                         _StdOut.putText("load -- validates if user program input is hexidemcimals");
                         break;
+                        ;
                     case "bsod":
                         _StdOut.putText("bsod <Error Message> -- invoke kernal error to test display " +
                             "of BSOD for given string of Error Message");
@@ -315,9 +320,10 @@ var TSOS;
             var file = path.substring(path.lastIndexOf('/'), path.length - 1);
             _StdOut.putText(APP_NAME + " is running at " + file);
         };
+        // Use to load user program input. Currently validating user input
         Shell.prototype.shellLoad = function () {
             var prg_in = document.getElementById("taProgramInput");
-            var regexp = new RegExp("^(?:[0-9A-Fa-f\s]{2})");
+            var regexp = new RegExp("^(?:[0-9A-Fa-f ]{2}[ ]*)*(?:[0-9A-Fa-f ]{2})$");
             var code_lines = prg_in.value.split("\n");
             for (var _i = 0, code_lines_1 = code_lines; _i < code_lines_1.length; _i++) {
                 var code = code_lines_1[_i];
@@ -328,6 +334,7 @@ var TSOS;
             }
             _StdOut.putText("The User Program Input is valid input");
         };
+        // 
         Shell.prototype.shellStatus = function (status) {
             var status_html = document.getElementById("status");
             var status_txt = status.join(" ");

@@ -293,19 +293,25 @@ module TSOS {
                     case "shutdown":
                         _StdOut.putText("shutdown -- Shutdown the virtual OS l");
                         break;
+                    case "date":
+                        _StdOut.putText("date -- return the current date and time");
+                        break;
+                    case "whereami":
+                        _StdOut.putText("whereami -- return the current directory and file the os is located");
+                        break;
                     case "history":
-                        _StdOut.putText("history -- Show all previous commands")
+                        _StdOut.putText("history -- Show all previous commands");
                         break;
                     case "load":
                         _StdOut.putText("load -- validates if user program input is hexidemcimals")
-                        break;
+                        break;;
                     case "bsod":
                         _StdOut.putText("bsod <Error Message> -- invoke kernal error to test display " +
                                         "of BSOD for given string of Error Message");
                         break;
                     case "status":
                         _StdOut.putText("<String> - Render the status option on the Graphic Taskbar with "
-                                        + "given string of text.")
+                                        + "given string of text.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -379,8 +385,9 @@ module TSOS {
         // Use to load user program input. Currently validating user input
         public shellLoad() {
             let prg_in: any = document.getElementById("taProgramInput");
-            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f\s]{2})");
+            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f ]{2}[ ]*)*(?:[0-9A-Fa-f ]{2})$");
             let code_lines: string[] = prg_in.value.split("\n");
+            
             for (let code of code_lines) {
                 if (!regexp.test(code)) {
                     _StdOut.putText("The User Program Input is not valid input")

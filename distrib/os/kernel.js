@@ -157,12 +157,12 @@ var TSOS;
                 }
             }
         };
+        // Display Blue Screen of Death to the user when encounter operating system error
         Kernel.prototype.krnTrapError = function (msg) {
             if (Array.isArray(msg)) {
                 msg = msg.join(" ");
             }
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
-            // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
             _DrawingContext.fillStyle = 'blue';
             _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
             _Console.currentYPosition = _Console.currentYPosition - _Canvas.height / 2;
