@@ -175,7 +175,7 @@ module TSOS {
                 _StdOut.advanceLine();
             }
             // ... and finally write the prompt again if the Operating System is still running.
-            if (os_on) {
+            if (osOn) {
                 this.putPrompt();
             }
         }
@@ -370,7 +370,7 @@ module TSOS {
         }
 
         public shellHistory() {
-            for (let cmd of history_cmd) {
+            for (let cmd of historyCMD) {
                 _StdOut.advanceLine();
                 _StdOut.putText(cmd);
             }

@@ -49,9 +49,9 @@ module TSOS {
 
                     // Store entered keys to history
                     if (this.buffer !== "") {
-                        history_cmd.push(this.buffer);
+                        historyCMD.push(this.buffer);
                     }
-                    hist_cursor = history_cmd.length;
+                    histCursor = historyCMD.length;
                     // ... and reset our buffer.
                     this.buffer = "";
                     this.end_of_line = []
@@ -78,22 +78,22 @@ module TSOS {
                     // Go to the buffer history to reload history command
                     // print history command
                     // Else statement to keep history cursor to be always first command
-                    if (hist_cursor > 0) {
+                    if (histCursor > 0) {
                         this.clear_text();
-                        hist_cursor = hist_cursor - 1;
-                        this.buffer = history_cmd[hist_cursor];
+                        histCursor = histCursor - 1;
+                        this.buffer = historyCMD[histCursor];
                         this.putText(this.buffer);
                     } else {
-                        hist_cursor = 0;
+                        histCursor = 0;
                     }
                 } else if (chr === 40 || chr === "ArrowDown") {
                     // Clear current text on screen
                     // set cursor to load recent command to the buffer
                     // If no more history command present, currnt buffer set to ""
-                    if (hist_cursor < history_cmd.length) {
+                    if (histCursor < historyCMD.length) {
                         this.clear_text();
-                        hist_cursor = hist_cursor + 1;
-                        this.buffer = history_cmd[hist_cursor];
+                        histCursor = histCursor + 1;
+                        this.buffer = historyCMD[histCursor];
                         if (typeof this.buffer === 'undefined') {
                             this.buffer = ""
                         }
@@ -251,6 +251,25 @@ module TSOS {
                 }
             }
             return suggest;
+        }
+
+        public showBsod(msg) {
+            _DrawingContext.fillStyle='blue';
+            _DrawingContext.fillRect(0,0,_Canvas.width,_Canvas.height);
+            _Console.currentYPosition = _Console.currentYPosition - _Canvas.height/2
+            _Console.putText("The OS is experiencing unexpected error due to: " + msg);
+            _Console.advanceLine()
+            _Console.putText("The OS will be shutdown and record this error to help prevent future error.");
+            _Console.advanceLine()
+            _Console.putText("Please reset the Operating System to continue.");
+        }
+
+        public showSysDatetime(date:string, time:string) {
+            let date_html: HTMLElement = document.getElementById("date");
+            let time_html: HTMLElement = document.getElementById("time");
+
+            date_html.innerText = date;
+            time_html.innerText = time;
         }
     }
  }

@@ -42,13 +42,13 @@ var TSOS;
             _OsShell = new TSOS.Shell();
             _OsShell.init();
             // Set flag to mark Operating System to be on
-            os_on = true;
+            osOn = true;
             // Finally, initiate student testing protocol.
             if (_GLaDOS) {
                 _GLaDOS.afterStartup();
             }
             // Render the Graphic Taskbar content
-            this.krnUpdateStatus();
+            this.krnUpdateDatetime();
         };
         Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");
@@ -61,7 +61,7 @@ var TSOS;
             // More?
             //
             this.krnTrace("end shutdown OS");
-            os_on = false;
+            osOn = false;
         };
         Kernel.prototype.krnOnCPUClockPulse = function () {
             /* This gets called from the host hardware simulation every time there is a hardware clock pulse.
@@ -70,13 +70,12 @@ var TSOS;
                that it has to look for interrupts and process them if it finds any.
             */
             // Render graphic task bar content continuously
-            this.krnUpdateStatus();
+            this.krnUpdateDatetime();
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
-                console.log("Kernel Interrupt", interrupt.irq, interrupt.params);
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
@@ -163,27 +162,19 @@ var TSOS;
                 msg = msg.join(" ");
             }
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
-            _DrawingContext.fillStyle = 'blue';
-            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
-            _Console.currentYPosition = _Console.currentYPosition - _Canvas.height / 2;
-            _Console.putText("The OS is experiencing unexpected error due to: " + msg);
-            _Console.advanceLine();
-            _Console.putText("The OS will be shutdown and record this error to help prevent future error.");
-            _Console.advanceLine();
-            _Console.putText("Please reset the Operating System to continue.");
+            _Console.showBsod(msg);
             this.krnShutdown();
         };
         // Update the host display on the graphic task bar
-        Kernel.prototype.krnUpdateStatus = function () {
+        Kernel.prototype.krnUpdateDatetime = function () {
             var cur_datetime = new Date();
-            var date_html = document.getElementById("date");
-            var time_html = document.getElementById("time");
-            date_html.innerText = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/"
+            sysDate = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/"
                 + ("0" + cur_datetime.getDate()).slice(-2) + "/"
                 + cur_datetime.getFullYear();
-            time_html.innerText = "Time: " + ("0" + cur_datetime.getHours()).slice(-2)
+            sysTime = "Time: " + ("0" + cur_datetime.getHours()).slice(-2)
                 + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
                 + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
+            _Console.showSysDatetime(sysDate, sysTime);
         };
         return Kernel;
     }());

@@ -49,7 +49,7 @@ module TSOS {
             _OsShell.init();
 
             // Set flag to mark Operating System to be on
-            os_on = true;
+            osOn = true;
 
             // Finally, initiate student testing protocol.
             if (_GLaDOS) {
@@ -57,7 +57,7 @@ module TSOS {
             }
 
             // Render the Graphic Taskbar content
-            this.krnUpdateStatus()
+            this.krnUpdateDatetime()
         }
 
         public krnShutdown() {
@@ -71,7 +71,7 @@ module TSOS {
             // More?
             //
             this.krnTrace("end shutdown OS");
-            os_on = false
+            osOn = false
         }
 
 
@@ -83,14 +83,13 @@ module TSOS {
             */
             
             // Render graphic task bar content continuously
-            this.krnUpdateStatus()
+            this.krnUpdateDatetime()
 
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
-                console.log("Kernel Interrupt", interrupt.irq, interrupt.params)
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
@@ -181,31 +180,23 @@ module TSOS {
         // Display Blue Screen of Death to the user when encounter operating system error
         public krnTrapError(msg) {
             if (Array.isArray(msg)) {
-                msg = msg.join(" ")
+                msg = msg.join(" ");
             }
             Control.hostLog("OS ERROR - TRAP: " + msg);
-            _DrawingContext.fillStyle='blue';
-            _DrawingContext.fillRect(0,0,_Canvas.width,_Canvas.height);
-            _Console.currentYPosition = _Console.currentYPosition - _Canvas.height/2
-            _Console.putText("The OS is experiencing unexpected error due to: " + msg);
-            _Console.advanceLine()
-            _Console.putText("The OS will be shutdown and record this error to help prevent future error.");
-            _Console.advanceLine()
-            _Console.putText("Please reset the Operating System to continue.");
+            _Console.showBsod(msg);
             this.krnShutdown();
         }
 
         // Update the host display on the graphic task bar
-        public krnUpdateStatus(): void {
+        public krnUpdateDatetime(): void {
             let cur_datetime: Date = new Date();
-            let date_html: HTMLElement = document.getElementById("date");
-            let time_html: HTMLElement = document.getElementById("time");
-            date_html.innerText = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/" 
-                                    + ("0" + cur_datetime.getDate()).slice(-2) + "/" 
-                                    + cur_datetime.getFullYear();
-            time_html.innerText = "Time: "  + ("0" + cur_datetime.getHours()).slice(-2) 
-                                    + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
-                                    + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
+            sysDate = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/" 
+                                + ("0" + cur_datetime.getDate()).slice(-2) + "/" 
+                                + cur_datetime.getFullYear();
+            sysTime = "Time: "  + ("0" + cur_datetime.getHours()).slice(-2) 
+                        + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
+                        + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
+            _Console.showSysDatetime(sysDate, sysTime);
         }
 
     }

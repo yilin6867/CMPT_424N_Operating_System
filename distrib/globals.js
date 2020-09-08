@@ -52,6 +52,8 @@ var onDocumentLoad = function () {
     TSOS.Control.hostInit();
 };
 // Store historical commands
-var history_cmd = [];
-var hist_cursor = history.length;
-var os_on = false;
+var historyCMD = [];
+var histCursor = history.length;
+var osOn = false;
+var sysTime = null;
+var sysDate = null;

@@ -70,7 +70,10 @@ var onDocumentLoad = function() {
 };
 
 // Store historical commands
-var history_cmd: string[] = [];
-var hist_cursor: number = history.length;
+var historyCMD: string[] = [];
+var histCursor: number = history.length;
 
-var os_on: Boolean = false;
+var osOn: Boolean = false;
+
+var sysTime : string = null;
+var sysDate : string = null;
