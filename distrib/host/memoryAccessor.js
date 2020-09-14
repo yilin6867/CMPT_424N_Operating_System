@@ -8,27 +8,23 @@
 var TSOS;
 (function (TSOS) {
     var MemoryAccessor = /** @class */ (function () {
-        function MemoryAccessor(nextChunk, memoryChunkNum, memoryChunkSize) {
+        function MemoryAccessor(nextChunk, memorySize) {
             if (nextChunk === void 0) { nextChunk = 0; }
-            if (memoryChunkNum === void 0) { memoryChunkNum = _Memory.getChunkNum(); }
-            if (memoryChunkSize === void 0) { memoryChunkSize = _Memory.getChunkSize(); }
+            if (memorySize === void 0) { memorySize = _Memory.getMemorySize(); }
             this.nextChunk = nextChunk;
-            this.memoryChunkNum = memoryChunkNum;
-            this.memoryChunkSize = memoryChunkSize;
+            this.memorySize = memorySize;
         }
         MemoryAccessor.prototype.init = function () {
         };
-        MemoryAccessor.prototype.read = function (chunk, element) {
-            return _Memory.readData(chunk, element);
+        MemoryAccessor.prototype.read = function (chunk, counter) {
+            var nibbleSize = 4;
+            return _Memory.readData(chunk, counter * nibbleSize);
         };
         MemoryAccessor.prototype.write = function (data) {
-            return _Memory.writeData(_Memory.getNextChunk(), data);
+            return _Memory.writeData(data);
         };
-        MemoryAccessor.prototype.getChunkNum = function () {
-            return this.memoryChunkNum;
-        };
-        MemoryAccessor.prototype.getChunkSize = function () {
-            return this.memoryChunkSize;
+        MemoryAccessor.prototype.getMemorySize = function () {
+            return this.memorySize;
         };
         return MemoryAccessor;
     }());

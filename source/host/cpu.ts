@@ -22,7 +22,7 @@ module TSOS {
                     public Yreg: number = 0,
                     public Zflag: number = 0,
                     public isExecuting: boolean = false,
-                    public runningPCB: pcb
+                    public runningPCB: pcb = null
         ) {
         }
 
@@ -39,12 +39,12 @@ module TSOS {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
-            while(this.runningPCB) {
-                let startChunk = this.runningPCB.getChunk();
-                let startEle = this.runningPCB.getElement();
-                let user_program = _MemoryAccessor.read(startChunk, startEle);
-            }
-            
+            let programBase = this.runningPCB.getBasedAddr();
+            let counter = this.runningPCB.getCounter();
+            let returnValues = _MemoryAccessor.read(programBase, counter);
+            let hexicode = returnValues[0];
+            console.log(hexicode);
+            this.isExecuting = false;
         }
 
         public writeData(data: string) {
@@ -58,16 +58,24 @@ module TSOS {
                 }
             }
             let binaryCode: string[] = binaryCodes.join("").split("");
-            console.log(binaryCode)
             let writeInfo :number[] = _MemoryAccessor.write(binaryCode);
-            let newPCB: pcb = new pcb(1, _MemoryManager.getNextPID(), writeInfo[0], writeInfo[1]);
+            if (writeInfo.length == 0) {
+                return []
+            }
+            let newPCB: pcb = new pcb(1, _MemoryManager.getNextPID(), writeInfo[0]);
             _MemoryManager.addPCB(newPCB);
-            return [newPCB.getPid(), newPCB.getChunk() * 8 + newPCB.getElement()];
+            return [newPCB.getPid(), newPCB.getBasedAddr()];
         }
 
-        public readData(pid:number) {
-            let readPBC: pcb = _MemoryManager.getPCBbyID(pid);
+        public readData(pid:string) {
+            let readPBC: pcb = _MemoryManager.getPCBbyID(pid[0]);
+            console.log(readPBC)
             this.runningPCB = readPBC;
+        }
+
+        public runUserProgram(pid: string) {
+            this.readData(pid);
+            this.isExecuting = true;
         }
     }
 }

@@ -9,25 +9,22 @@ module TSOS {
     export class MemoryAccessor {
         constructor(
             public nextChunk: number = 0
-            , public memoryChunkNum: number = _Memory.getChunkNum()
-            , public memoryChunkSize: number = _Memory.getChunkSize()
+            , public memorySize: number = _Memory.getMemorySize()
         ) {
         }
         public init() {
         }
 
-        public read(chunk: number, element: number) {
-            return _Memory.readData(chunk, element);
+        public read(chunk: number, counter: number) {
+            let nibbleSize = 4;
+            return _Memory.readData(chunk, counter * nibbleSize);
         }
 
         public write(data: string[]) {
-            return _Memory.writeData(_Memory.getNextChunk(), data);
+            return _Memory.writeData(data);
         }
-        public getChunkNum(): number {
-            return this.memoryChunkNum
-        }
-        public getChunkSize(): number {
-            return this.memoryChunkSize
+        public getMemorySize(): number {
+            return this.memorySize;
         }
     }
 }

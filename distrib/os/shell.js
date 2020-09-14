@@ -61,9 +61,10 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellBsod, "bsod", "<Error Message> - invoke kernal error to test display " +
                 "of BSOD for given string of Error Message");
             this.commandList[this.commandList.length] = sc;
-            // 
             sc = new TSOS.ShellCommand(this.shellStatus, "status", "<String> - Render the status option on the Graphic Taskbar with "
                 + "given string of text.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Run the process for give process id");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -330,10 +331,20 @@ var TSOS;
                 return;
             }
             _StdOut.putText("The User Program Input is valid input");
-            var write_info = _MemoryManager.write(codes);
-            _StdOut.putText("The User Program with PID of " + write_info[0] + " is load into chunk " + write_info[1]);
+            var writeInfo = _MemoryManager.write(codes);
+            if (writeInfo.length > 0) {
+                _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into chunk " + writeInfo[1]);
+            }
+            else {
+                _StdOut.putText("The user program exceed the memory space");
+            }
         };
-        // 
+        // run the user input program with given pid
+        Shell.prototype.shellRun = function (pid) {
+            var returnMSG = _CPU.runUserProgram(pid);
+            console.log(returnMSG);
+        };
+        // update the status on the os task bar
         Shell.prototype.shellStatus = function (status) {
             var status_html = document.getElementById("status");
             var status_txt = status.join(" ");

@@ -9,7 +9,7 @@ module TSOS {
     export class MemoryManager {
         constructor(
             public pcbs = new Map<number, pcb>()
-            , public memoryChunkSize = _MemoryAccessor.getChunkSize()
+            , public memorySize = _MemoryAccessor.getMemorySize()
         ) {
             
         }
@@ -18,8 +18,8 @@ module TSOS {
             this.pcbs.set(newpcb.getPid(), newpcb);
         }
 
-        public getPCBbyID(pid: number) {
-            this.pcbs.get(pid);
+        public getPCBbyID(pid: string) {
+            return this.pcbs.get(parseInt(pid));
         }
         public getNextPID() {
             return this.pcbs.size;
@@ -38,14 +38,13 @@ module TSOS {
             // process states: new <1>, ready<2>, running<3>, waiting<4>, terminate<5>
             public pState: number 
             , public pid : number
-            , public chunk: number
-            , public element: number
+            , public based_address: number
+            , public counter: number = 0
             , public register: number = null
         ){
         }
-        public updatePcounter(curChunk: number, curElement: number) {
-            this.chunk = curChunk;
-            this.element = curElement;
+        public updatePcounter(newCounter: number) {
+            this.counter = newCounter;
         }
         public updateStates(pState: number) {
             this.pState = pState;
@@ -57,13 +56,11 @@ module TSOS {
         public getPid(): number {
             return this.pid;
         }
-
-        public getChunk(): number {
-            return this.chunk;
+        public getBasedAddr(): number {
+            return this.based_address;
         }
-
-        public getElement(): number {
-            return this.element;
+        public getCounter(): number {
+            return this.counter;
         }
     }
 }

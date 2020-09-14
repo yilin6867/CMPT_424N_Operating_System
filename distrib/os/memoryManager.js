@@ -8,17 +8,17 @@
 var TSOS;
 (function (TSOS) {
     var MemoryManager = /** @class */ (function () {
-        function MemoryManager(pcbs, memoryChunkSize) {
+        function MemoryManager(pcbs, memorySize) {
             if (pcbs === void 0) { pcbs = new Map(); }
-            if (memoryChunkSize === void 0) { memoryChunkSize = _MemoryAccessor.getChunkSize(); }
+            if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             this.pcbs = pcbs;
-            this.memoryChunkSize = memoryChunkSize;
+            this.memorySize = memorySize;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
             this.pcbs.set(newpcb.getPid(), newpcb);
         };
         MemoryManager.prototype.getPCBbyID = function (pid) {
-            this.pcbs.get(pid);
+            return this.pcbs.get(parseInt(pid));
         };
         MemoryManager.prototype.getNextPID = function () {
             return this.pcbs.size;
@@ -35,17 +35,17 @@ var TSOS;
     var pcb = /** @class */ (function () {
         function pcb(
         // process states: new <1>, ready<2>, running<3>, waiting<4>, terminate<5>
-        pState, pid, chunk, element, register) {
+        pState, pid, based_address, counter, register) {
+            if (counter === void 0) { counter = 0; }
             if (register === void 0) { register = null; }
             this.pState = pState;
             this.pid = pid;
-            this.chunk = chunk;
-            this.element = element;
+            this.based_address = based_address;
+            this.counter = counter;
             this.register = register;
         }
-        pcb.prototype.updatePcounter = function (curChunk, curElement) {
-            this.chunk = curChunk;
-            this.element = curElement;
+        pcb.prototype.updatePcounter = function (newCounter) {
+            this.counter = newCounter;
         };
         pcb.prototype.updateStates = function (pState) {
             this.pState = pState;
@@ -56,11 +56,11 @@ var TSOS;
         pcb.prototype.getPid = function () {
             return this.pid;
         };
-        pcb.prototype.getChunk = function () {
-            return this.chunk;
+        pcb.prototype.getBasedAddr = function () {
+            return this.based_address;
         };
-        pcb.prototype.getElement = function () {
-            return this.element;
+        pcb.prototype.getCounter = function () {
+            return this.counter;
         };
         return pcb;
     }());

@@ -13,19 +13,21 @@
 var TSOS;
 (function (TSOS) {
     var Cpu = /** @class */ (function () {
-        function Cpu(PC, Acc, Xreg, Yreg, Zflag, isExecuting) {
+        function Cpu(PC, Acc, Xreg, Yreg, Zflag, isExecuting, runningPCB) {
             if (PC === void 0) { PC = 0; }
             if (Acc === void 0) { Acc = 0; }
             if (Xreg === void 0) { Xreg = 0; }
             if (Yreg === void 0) { Yreg = 0; }
             if (Zflag === void 0) { Zflag = 0; }
             if (isExecuting === void 0) { isExecuting = false; }
+            if (runningPCB === void 0) { runningPCB = null; }
             this.PC = PC;
             this.Acc = Acc;
             this.Xreg = Xreg;
             this.Yreg = Yreg;
             this.Zflag = Zflag;
             this.isExecuting = isExecuting;
+            this.runningPCB = runningPCB;
         }
         Cpu.prototype.init = function () {
             this.PC = 0;
@@ -39,6 +41,12 @@ var TSOS;
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
+            var programBase = this.runningPCB.getBasedAddr();
+            var counter = this.runningPCB.getCounter();
+            var returnValues = _MemoryAccessor.read(programBase, counter);
+            var hexicode = returnValues[0];
+            console.log(hexicode);
+            this.isExecuting = false;
         };
         Cpu.prototype.writeData = function (data) {
             var opcodes = data.split(" ");
@@ -52,18 +60,22 @@ var TSOS;
                 }
             }
             var binaryCode = binaryCodes.join("").split("");
-            console.log(binaryCode);
             var writeInfo = _MemoryAccessor.write(binaryCode);
-            var newPCB = new TSOS.pcb(1, _MemoryManager.getNextPID(), writeInfo[0], writeInfo[1]);
+            if (writeInfo.length == 0) {
+                return [];
+            }
+            var newPCB = new TSOS.pcb(1, _MemoryManager.getNextPID(), writeInfo[0]);
             _MemoryManager.addPCB(newPCB);
-            return [newPCB.getPid(), newPCB.getChunk() * 8 + newPCB.getElement()];
+            return [newPCB.getPid(), newPCB.getBasedAddr()];
         };
         Cpu.prototype.readData = function (pid) {
-            var readPBC = _MemoryManager.getPCBbyID(pid);
-            var startChunk = readPBC.getChunk();
-            var startEle = readPBC.getElement();
-            var user_program = _MemoryAccessor.read(startChunk, startEle);
-            return user_program;
+            var readPBC = _MemoryManager.getPCBbyID(pid[0]);
+            console.log(readPBC);
+            this.runningPCB = readPBC;
+        };
+        Cpu.prototype.runUserProgram = function (pid) {
+            this.readData(pid);
+            this.isExecuting = true;
         };
         return Cpu;
     }());
