@@ -323,16 +323,15 @@ var TSOS;
         // Use to load user program input. Currently validating user input
         Shell.prototype.shellLoad = function () {
             var prg_in = document.getElementById("taProgramInput");
-            var regexp = new RegExp("^(?:[0-9A-Fa-f ]{2}[ ]*)*(?:[0-9A-Fa-f ]{2})$");
-            var code_lines = prg_in.value.split("\n");
-            for (var _i = 0, code_lines_1 = code_lines; _i < code_lines_1.length; _i++) {
-                var code = code_lines_1[_i];
-                if (!regexp.test(code)) {
-                    _StdOut.putText("The User Program Input is not valid input");
-                    return;
-                }
+            var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
+            var codes = prg_in.value.split("\n").join(" ");
+            if (!regexp.test(codes)) {
+                _StdOut.putText("The User Program Input is not valid input");
+                return;
             }
             _StdOut.putText("The User Program Input is valid input");
+            var write_info = _MemoryManager.write(codes);
+            _StdOut.putText("The User Program with PID of " + write_info[0] + " is load into chunk " + write_info[1]);
         };
         // 
         Shell.prototype.shellStatus = function (status) {

@@ -40,6 +40,31 @@ var TSOS;
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
         };
+        Cpu.prototype.writeData = function (data) {
+            var opcodes = data.split(" ");
+            var binaryCodes = [];
+            for (var _i = 0, opcodes_1 = opcodes; _i < opcodes_1.length; _i++) {
+                var code = opcodes_1[_i];
+                for (var i = 0; i < code.length; i++) {
+                    var binary = ("0000" + (parseInt(code.charAt(i), 16)).toString(2));
+                    var nibble = binary.substr(binary.length - 4);
+                    binaryCodes.push(nibble);
+                }
+            }
+            var binaryCode = binaryCodes.join("").split("");
+            console.log(binaryCode);
+            var writeInfo = _MemoryAccessor.write(binaryCode);
+            var newPCB = new TSOS.pcb(1, _MemoryManager.getNextPID(), writeInfo[0], writeInfo[1]);
+            _MemoryManager.addPCB(newPCB);
+            return [newPCB.getPid(), newPCB.getChunk() * 8 + newPCB.getElement()];
+        };
+        Cpu.prototype.readData = function (pid) {
+            var readPBC = _MemoryManager.getPCBbyID(pid);
+            var startChunk = readPBC.getChunk();
+            var startEle = readPBC.getElement();
+            var user_program = _MemoryAccessor.read(startChunk, startEle);
+            return user_program;
+        };
         return Cpu;
     }());
     TSOS.Cpu = Cpu;

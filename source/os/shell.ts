@@ -385,19 +385,19 @@ module TSOS {
         // Use to load user program input. Currently validating user input
         public shellLoad() {
             let prg_in: any = document.getElementById("taProgramInput");
-            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f ]{2}[ ]*)*(?:[0-9A-Fa-f ]{2})$");
-            let code_lines: string[] = prg_in.value.split("\n");
-            
-            for (let code of code_lines) {
-                if (!regexp.test(code)) {
-                    _StdOut.putText("The User Program Input is not valid input")
-                    return;
-                }
+            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
+            let codes: string = prg_in.value.split("\n").join(" ")
+            if (!regexp.test(codes)) {
+                _StdOut.putText("The User Program Input is not valid input")
+                return;
             }
             _StdOut.putText("The User Program Input is valid input")
+            let write_info = _MemoryManager.write(codes);
+            _StdOut.putText("The User Program with PID of " + write_info[0] + " is load into chunk " + write_info[1]);
         }
+        
 
-        // 
+        // update the status on the os task bar
         public shellStatus(status: string[]) {
             let status_html: HTMLElement = document.getElementById("status");
             let status_txt = status.join(" ");

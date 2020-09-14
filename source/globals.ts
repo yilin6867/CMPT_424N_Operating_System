@@ -59,7 +59,7 @@ var _SarcasticMode: boolean = false;
 // Global Device Driver Objects - page 12
 var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard  = null;
 
-var _hardwareClockID: NodeJS.Timeout = null;
+var _hardwareClockID: any = null;
 
 // For testing (and enrichment)...
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
@@ -77,3 +77,9 @@ var osOn: Boolean = false;
 
 var sysTime : string = null;
 var sysDate : string = null;
+
+//
+var _Memory: TSOS.Memory;
+var _MemoryAccessor: TSOS.MemoryAccessor;	
+//	Software	(OS)
+var _MemoryManager: any = null;	
