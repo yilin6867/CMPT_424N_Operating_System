@@ -278,7 +278,7 @@ var TSOS;
             var cellNum = 0;
             for (var _i = 0, cpuInfo_1 = cpuInfo; _i < cpuInfo_1.length; _i++) {
                 var info = cpuInfo_1[_i];
-                cpuTable.rows[1].cells[cellNum] = info;
+                cpuTable.rows[1].cells[cellNum].innerHTML = info;
                 cellNum = cellNum + 1;
             }
         };

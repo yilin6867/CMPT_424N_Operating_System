@@ -24,14 +24,19 @@ module TSOS {
             return this.memorySize;
         }
 
-        public writeData(binaryData: string[]): number[] {
+        public writeData(binaryData: string[], addr): number[] {
             let startIdx = this.curEle;
             for(let data of binaryData) {
-                if (this.curEle >= this.getMemorySize()) {
-                    return []
+                if (addr != null) {
+                    this,this.memoryArr[addr] = data
+                    addr = addr + 1
+                } else {
+                    if (this.curEle >= this.getMemorySize()) {
+                        return []
+                    }
+                    this.memoryArr[this.curEle] = data;
+                    this.curEle = this.curEle + 1;
                 }
-                this.memoryArr[this.curEle] = data;
-                this.curEle = this.curEle + 1;
             }
             return [startIdx, this.curEle];
         }
@@ -46,6 +51,7 @@ module TSOS {
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
+            console.log("read data " + hexCodes + " for counter " + counter)
             return [hexCodes.trim(), String(counter)];
         }
 

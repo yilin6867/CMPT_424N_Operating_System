@@ -18,12 +18,12 @@ module TSOS {
         }
 
         public read(counter: number) {
-            let nibbleSize = 4;
-            return _Memory.readData(counter * nibbleSize);
+            let opCodeSize = 8;
+            return _Memory.readData(counter * opCodeSize);
         }
 
-        public write(data: string[]) {
-            return _Memory.writeData(data);
+        public write(data: string[], addr: number) {
+            return _Memory.writeData(data, addr);
         }
         public getMemorySize(): number {
             return this.memorySize;

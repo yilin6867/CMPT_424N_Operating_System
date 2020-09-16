@@ -21,11 +21,11 @@ var TSOS;
         MemoryAccessor.prototype.init = function () {
         };
         MemoryAccessor.prototype.read = function (counter) {
-            var nibbleSize = 4;
-            return _Memory.readData(counter * nibbleSize);
+            var opCodeSize = 8;
+            return _Memory.readData(counter * opCodeSize);
         };
-        MemoryAccessor.prototype.write = function (data) {
-            return _Memory.writeData(data);
+        MemoryAccessor.prototype.write = function (data, addr) {
+            return _Memory.writeData(data, addr);
         };
         MemoryAccessor.prototype.getMemorySize = function () {
             return this.memorySize;

@@ -292,7 +292,7 @@ module TSOS {
             let cpuTable: any = document.getElementById("cpuTable");
             let cellNum: number = 0;
             for (let info of cpuInfo) {
-                cpuTable.rows[1].cells[cellNum] = info;
+                cpuTable.rows[1].cells[cellNum].innerHTML = info;
                 cellNum = cellNum +1;
             }
         }

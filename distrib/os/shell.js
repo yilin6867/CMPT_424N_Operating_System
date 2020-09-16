@@ -335,7 +335,7 @@ var TSOS;
             _StdOut.advanceLine();
             if (writeInfo.length > 0) {
                 _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
-                    + " between address " + writeInfo[2] + " and address " + writeInfo[3] / 8);
+                    + " between address " + writeInfo[2] / 8 + " and address " + writeInfo[3] / 8);
             }
             else {
                 _StdOut.putText("However, the user program exceed the memory space");
@@ -344,7 +344,6 @@ var TSOS;
         // run the user input program with given pid
         Shell.prototype.shellRun = function (pid) {
             var returnMSG = _CPU.runUserProgram(pid);
-            console.log(returnMSG);
         };
         // update the status on the os task bar
         Shell.prototype.shellStatus = function (status) {

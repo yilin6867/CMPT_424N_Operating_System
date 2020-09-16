@@ -28,7 +28,7 @@ module TSOS {
             return _CPU.readData(pid);
         }
         public write(data: string) {
-            return _CPU.writeData(data);
+            return _CPU.writeProgram(data);
         }
         public getPBCsInfo() {
             let pbcsInfo: string[][] = [];
@@ -55,7 +55,8 @@ module TSOS {
         ){
         }
         public updateCounter(newCounter: any) {
-            this.counter = newCounter /8;
+            this.counter = (newCounter / 8);
+            console.log("New counter" + this.counter)
         }
         public updateStates(pState: number) {
             this.pState = pState;
@@ -64,7 +65,7 @@ module TSOS {
             return this.pid;
         }
         public getCounter(): number {
-            return this.counter * 8;
+            return this.counter;
         }
 
         public getInfo(): any[] {

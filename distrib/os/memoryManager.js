@@ -27,7 +27,7 @@ var TSOS;
             return _CPU.readData(pid);
         };
         MemoryManager.prototype.write = function (data) {
-            return _CPU.writeData(data);
+            return _CPU.writeProgram(data);
         };
         MemoryManager.prototype.getPBCsInfo = function () {
             var pbcsInfo = [];
@@ -60,7 +60,8 @@ var TSOS;
             this.z_reg = z_reg;
         }
         pcb.prototype.updateCounter = function (newCounter) {
-            this.counter = newCounter / 8;
+            this.counter = (newCounter / 8);
+            console.log("New counter" + this.counter);
         };
         pcb.prototype.updateStates = function (pState) {
             this.pState = pState;
@@ -69,7 +70,7 @@ var TSOS;
             return this.pid;
         };
         pcb.prototype.getCounter = function () {
-            return this.counter * 8;
+            return this.counter;
         };
         pcb.prototype.getInfo = function () {
             return [this.pid, this.pState, this.location, this.priority,

@@ -25,15 +25,21 @@ var TSOS;
         Memory.prototype.getMemorySize = function () {
             return this.memorySize;
         };
-        Memory.prototype.writeData = function (binaryData) {
+        Memory.prototype.writeData = function (binaryData, addr) {
             var startIdx = this.curEle;
             for (var _i = 0, binaryData_1 = binaryData; _i < binaryData_1.length; _i++) {
                 var data = binaryData_1[_i];
-                if (this.curEle >= this.getMemorySize()) {
-                    return [];
+                if (addr != null) {
+                    this, this.memoryArr[addr] = data;
+                    addr = addr + 1;
                 }
-                this.memoryArr[this.curEle] = data;
-                this.curEle = this.curEle + 1;
+                else {
+                    if (this.curEle >= this.getMemorySize()) {
+                        return [];
+                    }
+                    this.memoryArr[this.curEle] = data;
+                    this.curEle = this.curEle + 1;
+                }
             }
             return [startIdx, this.curEle];
         };
@@ -47,6 +53,7 @@ var TSOS;
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
+            console.log("read data " + hexCodes + " for counter " + counter);
             return [hexCodes.trim(), String(counter)];
         };
         Memory.prototype.getLoadMemory = function () {
