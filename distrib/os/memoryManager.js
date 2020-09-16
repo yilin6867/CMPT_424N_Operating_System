@@ -9,19 +9,19 @@ var TSOS;
 (function (TSOS) {
     var MemoryManager = /** @class */ (function () {
         function MemoryManager(pcbs, memorySize) {
-            if (pcbs === void 0) { pcbs = new Map(); }
+            if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
-            this.pcbs.set(newpcb.getPid(), newpcb);
+            this.pcbs.push(newpcb);
         };
         MemoryManager.prototype.getPCBbyID = function (pid) {
-            return this.pcbs.get(parseInt(pid));
+            return this.pcbs[parseInt(pid)];
         };
         MemoryManager.prototype.getNextPID = function () {
-            return this.pcbs.size;
+            return this.pcbs.length;
         };
         MemoryManager.prototype.readData = function (pid) {
             return _CPU.readData(pid);
@@ -29,38 +29,51 @@ var TSOS;
         MemoryManager.prototype.write = function (data) {
             return _CPU.writeData(data);
         };
+        MemoryManager.prototype.getPBCsInfo = function () {
+            var pbcsInfo = [];
+            for (var _i = 0, _a = this.pcbs; _i < _a.length; _i++) {
+                var pcb_1 = _a[_i];
+                pbcsInfo.push(pcb_1.getInfo());
+            }
+            return pbcsInfo;
+        };
         return MemoryManager;
     }());
     TSOS.MemoryManager = MemoryManager;
     var pcb = /** @class */ (function () {
         function pcb(
-        // process states: new <1>, ready<2>, running<3>, waiting<4>, terminate<5>
-        pState, pid, based_address, counter, register) {
-            if (counter === void 0) { counter = 0; }
-            if (register === void 0) { register = null; }
+        // process states: new <0>, ready<1>, running<2>, waiting<3>, terminate<4>
+        pState, pid, priority, counter, accumulator, location, x_reg, y_reg, z_reg) {
+            if (accumulator === void 0) { accumulator = 0; }
+            if (location === void 0) { location = "Memory"; }
+            if (x_reg === void 0) { x_reg = 0; }
+            if (y_reg === void 0) { y_reg = 0; }
+            if (z_reg === void 0) { z_reg = 0; }
             this.pState = pState;
             this.pid = pid;
-            this.based_address = based_address;
+            this.priority = priority;
             this.counter = counter;
-            this.register = register;
+            this.accumulator = accumulator;
+            this.location = location;
+            this.x_reg = x_reg;
+            this.y_reg = y_reg;
+            this.z_reg = z_reg;
         }
-        pcb.prototype.updatePcounter = function (newCounter) {
-            this.counter = newCounter;
+        pcb.prototype.updateCounter = function (newCounter) {
+            this.counter = newCounter / 8;
         };
         pcb.prototype.updateStates = function (pState) {
             this.pState = pState;
         };
-        pcb.prototype.updateRegister = function (value) {
-            this.register = value;
-        };
         pcb.prototype.getPid = function () {
             return this.pid;
         };
-        pcb.prototype.getBasedAddr = function () {
-            return this.based_address;
-        };
         pcb.prototype.getCounter = function () {
-            return this.counter;
+            return this.counter * 8;
+        };
+        pcb.prototype.getInfo = function () {
+            return [this.pid, this.pState, this.location, this.priority,
+                this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg];
         };
         return pcb;
     }());

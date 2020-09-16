@@ -95,12 +95,37 @@
          <br>
          <textarea name="taHostLog"
                    id  ="taHostLog"
-                   rows="26"
+                   rows="6"
                    cols="48"
          ></textarea>
       </label>
    </div>
-
+   <div id ="cpuDisplay" style="margin-left:520px">
+      <label>
+         CPU Display
+         <br>
+         <table id="cpuTable">
+            <thead>
+               <tr>
+                  <th>PC</th>
+                  <th>ACC</th>
+                  <th>X Reg</th>
+                  <th>Y Reg</th>
+                  <th>Zflag</th>
+               </tr>
+             </thead>
+             <tbody>
+               <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+               </tr>
+            </tbody>
+         </table>
+      </label>
+   </div>
    <div id="divUserProgramInput" style="margin-left:520px;">
       <label>
          User Program Input
@@ -112,7 +137,39 @@
          ></textarea>
       </label>
    </div>
+   <div id="memoryDisplay" style="margin-left:520px">
+      <label>
+         Memory Display
+         <br>
+         <table id="memoryTable">
+         </table>
+      </label>
+   </div>
+   <div id="pbcDisplay" style="width:500px; float:left">
+      <label>
+         PCB Display
+         <br>
+         <table id="pcbTable">
+            <thead>
+               <tr>
+                  <th>PID</th>
+                  <th>State</th>
+                  <th>Location</th>
+                  <th>Priorities</th>
+                  <th>PC</th>
+                  <th>Accu</th>
+                  <th>X Reg</th>
+                  <th>Y Reg</th>
+                  <th>Zflag</th>
+               </tr>
+             </thead>
+             <tbody id="pcbTableBody">
+            </tbody>
+         </table>
+      </label>
+   </div>
 </div>
+
 
 <p class="footerText" style="clear:both;">
    <br>

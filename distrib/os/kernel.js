@@ -47,7 +47,7 @@ var TSOS;
                 _GLaDOS.afterStartup();
             }
             // Render the Graphic Taskbar content
-            this.krnUpdateDatetime();
+            this.krnUpdateDisplayValue();
         };
         Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");
@@ -68,8 +68,8 @@ var TSOS;
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.
             */
-            // Render graphic task bar content continuously
-            this.krnUpdateDatetime();
+            // Render OS values dynamically in the console
+            this.krnUpdateDisplayValue();
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
                 // Process the first interrupt on the interrupt queue.
@@ -165,7 +165,7 @@ var TSOS;
             this.krnShutdown();
         };
         // Update the host display on the graphic task bar
-        Kernel.prototype.krnUpdateDatetime = function () {
+        Kernel.prototype.krnUpdateDisplayValue = function () {
             var cur_datetime = new Date();
             sysDate = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/"
                 + ("0" + cur_datetime.getDate()).slice(-2) + "/"
@@ -174,6 +174,9 @@ var TSOS;
                 + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
                 + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
+            _Console.showMemory(_CPU.getLoadMemory());
+            _Console.showCPU(_CPU.getInfo());
+            _Console.showPCB(_CPU.getPCBs());
         };
         return Kernel;
     }());

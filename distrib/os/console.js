@@ -256,6 +256,46 @@ var TSOS;
             date_html.innerText = date;
             time_html.innerText = time;
         };
+        Console.prototype.showMemory = function (memoryMatrix) {
+            var memoryTable = document.getElementById("memoryTable");
+            var htmlScript = "";
+            var rowNum = 0;
+            var segNum = 0;
+            for (var _i = 0, memoryMatrix_1 = memoryMatrix; _i < memoryMatrix_1.length; _i++) {
+                var row = memoryMatrix_1[_i];
+                htmlScript = htmlScript + "<tr>" + "<td bgcolor='lightblue'>" + String(segNum) + rowNum + "</td>";
+                for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
+                    var col = row_1[_a];
+                    htmlScript = htmlScript + "<td>" + col + "</td>";
+                    rowNum = rowNum + 1;
+                }
+                htmlScript = htmlScript + " </tr>";
+            }
+            memoryTable.innerHTML = htmlScript;
+        };
+        Console.prototype.showCPU = function (cpuInfo) {
+            var cpuTable = document.getElementById("cpuTable");
+            var cellNum = 0;
+            for (var _i = 0, cpuInfo_1 = cpuInfo; _i < cpuInfo_1.length; _i++) {
+                var info = cpuInfo_1[_i];
+                cpuTable.rows[1].cells[cellNum] = info;
+                cellNum = cellNum + 1;
+            }
+        };
+        Console.prototype.showPCB = function (pcbsInfo) {
+            var pcbTable = document.getElementById("pcbTableBody");
+            var bodyScript = "";
+            for (var _i = 0, pcbsInfo_1 = pcbsInfo; _i < pcbsInfo_1.length; _i++) {
+                var pcbInfo = pcbsInfo_1[_i];
+                bodyScript = bodyScript + "<tr>";
+                for (var _a = 0, pcbInfo_1 = pcbInfo; _a < pcbInfo_1.length; _a++) {
+                    var info = pcbInfo_1[_a];
+                    bodyScript = bodyScript + "<td>" + info + "</td>";
+                }
+                bodyScript = bodyScript + "</tr>";
+            }
+            pcbTable.innerHTML = bodyScript;
+        };
         return Console;
     }());
     TSOS.Console = Console;

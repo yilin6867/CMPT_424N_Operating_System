@@ -36,6 +36,9 @@ h3 {
   cursor: default;
 }
 
+#divLog {
+}
+
 .normal_button {
   width: 100px;
 }
@@ -60,4 +63,27 @@ h3 {
 
 span {
   margin: 1% 5% 1% 5%;
+}
+
+table {
+  border: 1px solid black;
+  background-color: white;
+  display: block;
+}
+
+#memoryTable {
+  width: 360px;
+  overflow-y:auto;
+  height:180px;
+}
+
+th, td {
+  border: 2px solid black;
+  width: 10%;
+  height: auto;
+}
+
+#cpuTable {
+  width: 360px;
+  height: auto;
 }

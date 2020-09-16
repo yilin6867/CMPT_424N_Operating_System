@@ -327,16 +327,18 @@ var TSOS;
             var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             var codes = prg_in.value.split("\n").join(" ");
             if (!regexp.test(codes)) {
-                _StdOut.putText("The User Program Input is not valid input");
+                _StdOut.putText("The User Program Input is not valid input.");
                 return;
             }
-            _StdOut.putText("The User Program Input is valid input");
             var writeInfo = _MemoryManager.write(codes);
+            _StdOut.putText("The User Program Input is valid input");
+            _StdOut.advanceLine();
             if (writeInfo.length > 0) {
-                _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into chunk " + writeInfo[1]);
+                _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
+                    + " between address " + writeInfo[2] + " and address " + writeInfo[3] / 8);
             }
             else {
-                _StdOut.putText("The user program exceed the memory space");
+                _StdOut.putText("However, the user program exceed the memory space");
             }
         };
         // run the user input program with given pid

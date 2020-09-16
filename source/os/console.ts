@@ -271,5 +271,43 @@ module TSOS {
             date_html.innerText = date;
             time_html.innerText = time;
         }
+
+        public showMemory(memoryMatrix: String[][]) {
+            let memoryTable = document.getElementById("memoryTable");
+            let htmlScript: string = "";
+            let rowNum : number = 0;
+            let segNum : number = 0;
+            for (let row of memoryMatrix) {
+                htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segNum) + rowNum + "</td>";
+                for (let col of row) {
+                    htmlScript = htmlScript + "<td>" + col + "</td>";
+                    rowNum = rowNum + 1
+                }
+                htmlScript = htmlScript + " </tr>";
+            }
+            memoryTable.innerHTML = htmlScript;
+        }
+
+        public showCPU(cpuInfo: any[]) {
+            let cpuTable: any = document.getElementById("cpuTable");
+            let cellNum: number = 0;
+            for (let info of cpuInfo) {
+                cpuTable.rows[1].cells[cellNum] = info;
+                cellNum = cellNum +1;
+            }
+        }
+
+        public showPCB(pcbsInfo: any[][]) {
+            let pcbTable: any = document.getElementById("pcbTableBody");
+            let bodyScript: string = "";
+            for (let pcbInfo of pcbsInfo) {
+                bodyScript = bodyScript + "<tr>";
+                for (let info of pcbInfo) {
+                    bodyScript = bodyScript + "<td>" + info + "</td>";
+                }
+                bodyScript = bodyScript + "</tr>";
+            }
+            pcbTable.innerHTML = bodyScript;
+        }
     }
  }

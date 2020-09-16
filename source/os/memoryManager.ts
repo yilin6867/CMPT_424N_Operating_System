@@ -8,21 +8,21 @@
 module TSOS {
     export class MemoryManager {
         constructor(
-            public pcbs = new Map<number, pcb>()
+            public pcbs = new Array()
             , public memorySize = _MemoryAccessor.getMemorySize()
         ) {
             
         }
         
         public addPCB(newpcb: pcb) {
-            this.pcbs.set(newpcb.getPid(), newpcb);
+            this.pcbs.push(newpcb);
         }
 
         public getPCBbyID(pid: string) {
-            return this.pcbs.get(parseInt(pid));
+            return this.pcbs[parseInt(pid)];
         }
         public getNextPID() {
-            return this.pcbs.size;
+            return this.pcbs.length;
         }
         public readData(pid) {
             return _CPU.readData(pid);
@@ -30,37 +30,47 @@ module TSOS {
         public write(data: string) {
             return _CPU.writeData(data);
         }
+        public getPBCsInfo() {
+            let pbcsInfo: string[][] = [];
+            for (let pcb of this.pcbs) {
+                pbcsInfo.push(pcb.getInfo());
+            }
+            return pbcsInfo;
+        }
     }
 
     export class pcb {
 
         constructor(
-            // process states: new <1>, ready<2>, running<3>, waiting<4>, terminate<5>
+            // process states: new <0>, ready<1>, running<2>, waiting<3>, terminate<4>
             public pState: number 
             , public pid : number
-            , public based_address: number
-            , public counter: number = 0
-            , public register: number = null
+            , public priority: number
+            , public counter: number
+            , public accumulator: any = 0
+            , public location: string = "Memory"
+            , public x_reg: number = 0
+            , public y_reg: number = 0
+            , public z_reg: number = 0
         ){
         }
-        public updatePcounter(newCounter: number) {
-            this.counter = newCounter;
+        public updateCounter(newCounter: any) {
+            this.counter = newCounter /8;
         }
         public updateStates(pState: number) {
             this.pState = pState;
         }
-
-        public updateRegister(value: number) {
-            this.register = value;
-        }
         public getPid(): number {
             return this.pid;
         }
-        public getBasedAddr(): number {
-            return this.based_address;
-        }
         public getCounter(): number {
-            return this.counter;
+            return this.counter * 8;
         }
+
+        public getInfo(): any[] {
+            return [this.pid, this.pState, this.location, this.priority
+                , this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg]
+        }
+
     }
 }

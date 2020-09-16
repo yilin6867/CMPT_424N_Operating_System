@@ -56,7 +56,7 @@ module TSOS {
             }
 
             // Render the Graphic Taskbar content
-            this.krnUpdateDatetime()
+            this.krnUpdateDisplayValue();
         }
 
         public krnShutdown() {
@@ -81,8 +81,8 @@ module TSOS {
                that it has to look for interrupts and process them if it finds any.                          
             */
             
-            // Render graphic task bar content continuously
-            this.krnUpdateDatetime()
+            // Render OS values dynamically in the console
+            this.krnUpdateDisplayValue();
 
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
@@ -187,7 +187,7 @@ module TSOS {
         }
 
         // Update the host display on the graphic task bar
-        public krnUpdateDatetime(): void {
+        public krnUpdateDisplayValue(): void {
             let cur_datetime: Date = new Date();
             sysDate = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/" 
                                 + ("0" + cur_datetime.getDate()).slice(-2) + "/" 
@@ -196,6 +196,10 @@ module TSOS {
                         + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
                         + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
+            
+            _Console.showMemory(_CPU.getLoadMemory());
+            _Console.showCPU(_CPU.getInfo());
+            _Console.showPCB(_CPU.getPCBs());
         }
 
     }

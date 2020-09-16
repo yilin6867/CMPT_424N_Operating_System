@@ -36,19 +36,21 @@ module TSOS {
             return [startIdx, this.curEle];
         }
 
-        public readData(startChunk: number, counter: number) {
+        public readData(counter: number) {
             let nextEle = 4;
             let hexCodes = ""
             let hex = ""
             for (let _ = 0; _ < 2; _++) {
                 let nibble  = parseInt(this.memoryArr.slice(counter, counter+nextEle).join(""), 2);
                 hex = nibble.toString(16).toUpperCase();
-                console.log(counter, nextEle)
-                console.log(this.memoryArr.slice(counter, nextEle).join(""), nibble, hex)
-                hexCodes = hexCodes + hex
+                hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
-            return [hexCodes.trim(), nextEle];
+            return [hexCodes.trim(), String(counter)];
+        }
+
+        public getLoadMemory(): string[] {
+            return this.memoryArr.slice();
         }
     }
 }

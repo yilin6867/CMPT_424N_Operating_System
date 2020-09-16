@@ -10,14 +10,16 @@ module TSOS {
         constructor(
             public nextChunk: number = 0
             , public memorySize: number = _Memory.getMemorySize()
+            , public hexArrSize: number = 64
+            , public hexArrNum: number = 32
         ) {
         }
         public init() {
         }
 
-        public read(chunk: number, counter: number) {
+        public read(counter: number) {
             let nibbleSize = 4;
-            return _Memory.readData(chunk, counter * nibbleSize);
+            return _Memory.readData(counter * nibbleSize);
         }
 
         public write(data: string[]) {
@@ -25,6 +27,10 @@ module TSOS {
         }
         public getMemorySize(): number {
             return this.memorySize;
+        }
+
+        public getLoadMemory() {
+            return _Memory.getLoadMemory();
         }
     }
 }

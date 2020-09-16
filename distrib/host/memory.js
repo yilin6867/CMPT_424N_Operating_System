@@ -37,19 +37,20 @@ var TSOS;
             }
             return [startIdx, this.curEle];
         };
-        Memory.prototype.readData = function (startChunk, counter) {
+        Memory.prototype.readData = function (counter) {
             var nextEle = 4;
             var hexCodes = "";
             var hex = "";
             for (var _ = 0; _ < 2; _++) {
                 var nibble = parseInt(this.memoryArr.slice(counter, counter + nextEle).join(""), 2);
                 hex = nibble.toString(16).toUpperCase();
-                console.log(counter, nextEle);
-                console.log(this.memoryArr.slice(counter, nextEle).join(""), nibble, hex);
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
-            return [hexCodes.trim(), nextEle];
+            return [hexCodes.trim(), String(counter)];
+        };
+        Memory.prototype.getLoadMemory = function () {
+            return this.memoryArr.slice();
         };
         return Memory;
     }());

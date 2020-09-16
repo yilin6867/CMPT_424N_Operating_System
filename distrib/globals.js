@@ -62,3 +62,4 @@ var _Memory;
 var _MemoryAccessor;
 //	Software	(OS)
 var _MemoryManager = null;
+var memoryHexMatr;
