@@ -263,7 +263,8 @@ var TSOS;
             var segNum = 0;
             for (var _i = 0, memoryMatrix_1 = memoryMatrix; _i < memoryMatrix_1.length; _i++) {
                 var row = memoryMatrix_1[_i];
-                htmlScript = htmlScript + "<tr>" + "<td bgcolor='lightblue'>" + String(segNum) + rowNum + "</td>";
+                htmlScript = htmlScript + "<tr>" + "<td bgcolor='lightblue'>" + String(segNum)
+                    + rowNum.toString(16).toUpperCase() + "</td>";
                 for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
                     var col = row_1[_a];
                     htmlScript = htmlScript + "<td>" + col + "</td>";

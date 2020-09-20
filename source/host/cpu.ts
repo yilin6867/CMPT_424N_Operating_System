@@ -11,12 +11,11 @@
      Operating System Concepts 8th edition by Silberschatz, Galvin, and Gagne.  ISBN 978-0-470-12872-5
      ------------ */
 
-
 module TSOS {
 
     export class Cpu {
 
-        constructor(public PC: number = 0,
+        constructor(public PC: string = "00",
                     public Acc: any = 0,
                     public Xreg: any = 0,
                     public Yreg: any = 0,
@@ -27,11 +26,11 @@ module TSOS {
         }
 
         public init(): void {
-            this.PC = 0;
-            this.Acc = null;
+            this.PC = "00";
+            this.Acc = 0;
             this.Xreg = 0;
             this.Yreg = 0;
-            this.Zflag = null;
+            this.Zflag = 0;
             this.isExecuting = false;
         }
 
@@ -39,68 +38,100 @@ module TSOS {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
-            let counter = this.runningPCB.getCounter();
-            console.log("Running counter" + counter)
-            let returnValues = _MemoryAccessor.read(counter);
-            this.runningPCB.updateCounter(returnValues[1])
-            this.PC = parseInt(returnValues[1]) / 8
-            let hexicode = returnValues[0];
-            console.log(hexicode)
-            let nextReturn: string[] = _MemoryAccessor.read(this.runningPCB.getCounter())
-            this.runningPCB.updateCounter(nextReturn[1]);
-            this.PC = parseInt(returnValues[1]) / 8
-            switch(hexicode) {
-                case "A9":
-                    this.ldaConst(nextReturn[0]);
-                    break;
-                case "AD":
-                    this.ldaVar(nextReturn[0]);
-                    break;
-                case "8D":
-                    this.store(nextReturn[0]);
-                    break;
-                case "6D":
-                    this.add(nextReturn[0]);
-                    break;
-                case "A2":
-                    this.storeXReg(nextReturn[0]);
-                    break;
-                case "AE":
-                    this.storeXRegVar(nextReturn[0]);
-                case "A0":
-                    this.storeYReg(nextReturn[0]);
-                case "AC":
-                    this.storeYRegVar(nextReturn[0]);
-                case "EA":
-                    return;
-                case "00":
-                    this.isExecuting = false;
-                case "EC":
-                    this.ifeqX(nextReturn[0]);
-                case "D0":
-                    this.branchOnZ(nextReturn[0]);
-                case "EE":
-                    this.incrAcc();
-                case "FF":
-                    this.systemCall();
+            if (this.runningPCB.state < 4) {
+                this.runningPCB.state = 1
+                let counter = this.runningPCB.getCounter();
+                let returnValues: any[] = _MemoryAccessor.read(counter);
+                this.updateCounters(returnValues[1]);
+
+                let hexicode = returnValues[0];
+                let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.getCounter())
+                this.runningPCB.updateStates(2);
+                console.log(hexicode)
+                console.log(returnValues)
+                switch(hexicode) {
+                    case "A9":
+                        this.ldaConst(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "AD":
+                        this.ldaVar(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "8D":
+                        this.store(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        this.isExecuting=false;
+                        break;
+                    case "6D":
+                        this.add(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "A2":
+                        this.storeXReg(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "AE":
+                        this.storeXRegVar(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "A0":
+                        this.storeYReg(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "AC":
+                        this.storeYRegVar(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "EA":
+                        this.updateCounters(nextReturn[1]);
+                        return;
+                    case "00":
+                        break;
+                    case "EC":
+                        this.ifeqX(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "D0":
+                        this.branchOnZ(nextReturn[0]);
+                        break;
+                    case "EE":
+                        this.incrAcc(nextReturn[0]);
+                        this.updateCounters(nextReturn[1]);
+                        break;
+                    case "FF":
+                        this.systemCall();
+                        break;
+                }
+                if (this.runningPCB.getCounter() >= this.runningPCB.limit_ct) {
+                    this.isExecuting = false
+                    this.runningPCB.updateStates(4)
+                }
             }
         }
 
         public ldaConst(hex: string) {
             this.Acc = hex
+            console.log("set const acc " + this.Acc)
             this.runningPCB.accumulator = hex;
+            
         }
         public ldaVar(counter) {
             let varData = this.readData(counter);
             this.Acc = varData[0];
+            console.log("set vat  acc " + this.Acc)
             this.runningPCB.accumulator = varData[0];
         }
         public store(counter: string) {
             let cnter: number = parseInt(counter, 16)
-            this.writeData(this.Acc, cnter);
+            console.log("Store " + this.Acc + " in " + counter + " " + cnter)
+            let writeReturn = this.writeData(this.Acc, cnter);
+            console.log(writeReturn);
         }
         public storeXReg(hex:string) {
             this.Xreg = hex;
+            this.runningPCB.x_reg = hex;
+            console.log("Load x register const " + hex)
         }
         public storeXRegVar(counter) {
             let varData = this.readData(counter);
@@ -111,21 +142,27 @@ module TSOS {
         }
         public storeYRegVar(counter) {
             let varData = this.readData(counter);
+            console.log("data store in y reg var " + varData + " " + counter)
             this.Yreg = varData[0];
         }
-        public ifeqX(hex) {
-            if(this.Xreg == hex) {
+        public ifeqX(addr) {
+            let byteValue = this.readData(addr)
+            console.log("Comparing " + this.Xreg + " " + byteValue[0])
+            if(this.Xreg == byteValue[0]) {
                 this.Zflag = 0
             }
         }
         public branchOnZ(brCounter) {
             if(this.Zflag == 0) {
-                this.PC = parseInt(brCounter, 16)
-                this.runningPCB.counter = parseInt(brCounter, 16)
+                this.PC = brCounter
+                this.runningPCB.updateCounter(parseInt(brCounter, 16))
             }
         }
-        public incrAcc() {
-            this.Acc = (parseInt(this.Acc,16) +1).toString(16);
+        public incrAcc(nextByte) {
+            let incre = (parseInt(nextByte, 16) + 1).toString(16).toUpperCase();
+            incre = this.pad(incre, 2)
+            this.writeData(incre, parseInt(this.PC, 16));
+            console.log("increment " + nextByte + " to " + incre + " at " + this.PC);
         }
         public add(hexVal) {
             let accBin = this.hexToBinary(this.Acc.toString(16));
@@ -153,8 +190,6 @@ module TSOS {
                 
             this.Acc = parseInt(carry ? carry + sum : sum, 2).toString(16).toUpperCase();
             this.runningPCB.accumulator = this.Acc;
-            this.isExecuting=false
-
         }
 
         public systemCall() {
@@ -165,8 +200,14 @@ module TSOS {
                 _Console.putText(charVal);
             }
         }
-        public readData(counter: number) {
-            return _MemoryAccessor.read(counter);
+
+        public updateCounters(newCounter) {
+            this.runningPCB.updateCounter(newCounter);
+            this.PC = this.runningPCB.getCounter().toString(16);
+        }
+        public readData(counter: string) {
+            let counterNum = parseInt(counter, 16);
+            return _MemoryAccessor.read(counterNum);
         }
 
         public writeData(data: string, addr: number) {
@@ -180,7 +221,7 @@ module TSOS {
                 }
             }
             let binaryCode: string[] = binaryCodes.join("").split("");
-            let writeInfo :number[] = _MemoryAccessor.write(binaryCode, addr);
+            let writeInfo :number[] = _MemoryAccessor.write(binaryCode, addr * 8);
             return writeInfo;
         }
         public writeProgram(codes: string, addr: number = null) {
@@ -188,19 +229,30 @@ module TSOS {
             if (writeInfo.length == 0) {
                 return []
             }
-            let newPCB: pcb = new pcb(0, _MemoryManager.getNextPID(), 32, writeInfo[0]/8);
+            let newPCB: pcb = new pcb(0, _MemoryManager.getNextPID(), 32, writeInfo[0].toString(16), writeInfo[1]);
             _MemoryManager.addPCB(newPCB);
             return [newPCB.getPid(), newPCB.getCounter(), writeInfo[0], writeInfo[1]];
         }
 
         public readPCB(pid:string) {
-            let readPCB: pcb = _MemoryManager.getPCBbyID(pid[0]);
-            this.runningPCB = readPCB;
+            let readPCB: pcb = _MemoryManager.getPCBbyID(pid);
+            if (typeof readPCB === "string") {
+                return readPCB
+            }
+            else {
+                this.runningPCB = readPCB;
+                return undefined
+            }
         }
 
         public runUserProgram(pid: string) {
-            this.readPCB(pid);
-            this.isExecuting = true;
+            let returnMsg = this.readPCB(pid);
+            if (typeof returnMsg === "undefined") {
+                this.isExecuting = true;
+            }
+            else {
+                _StdOut.putText(returnMsg)
+            }
         }
 
         public getLoadMemory(): string[][]{

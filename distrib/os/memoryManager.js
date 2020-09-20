@@ -18,7 +18,12 @@ var TSOS;
             this.pcbs.push(newpcb);
         };
         MemoryManager.prototype.getPCBbyID = function (pid) {
-            return this.pcbs[parseInt(pid)];
+            if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
+                return this.pcbs[parseInt(pid)];
+            }
+            else {
+                return "There is not user program with pid of " + pid;
+            }
         };
         MemoryManager.prototype.getNextPID = function () {
             return this.pcbs.length;
@@ -43,16 +48,17 @@ var TSOS;
     var pcb = /** @class */ (function () {
         function pcb(
         // process states: new <0>, ready<1>, running<2>, waiting<3>, terminate<4>
-        pState, pid, priority, counter, accumulator, location, x_reg, y_reg, z_reg) {
+        state, pid, priority, counter, limit_ct, accumulator, location, x_reg, y_reg, z_reg) {
             if (accumulator === void 0) { accumulator = 0; }
             if (location === void 0) { location = "Memory"; }
             if (x_reg === void 0) { x_reg = 0; }
             if (y_reg === void 0) { y_reg = 0; }
             if (z_reg === void 0) { z_reg = 0; }
-            this.pState = pState;
+            this.state = state;
             this.pid = pid;
             this.priority = priority;
             this.counter = counter;
+            this.limit_ct = limit_ct;
             this.accumulator = accumulator;
             this.location = location;
             this.x_reg = x_reg;
@@ -60,20 +66,19 @@ var TSOS;
             this.z_reg = z_reg;
         }
         pcb.prototype.updateCounter = function (newCounter) {
-            this.counter = (newCounter / 8);
-            console.log("New counter" + this.counter);
+            this.counter = newCounter.toString(16);
         };
-        pcb.prototype.updateStates = function (pState) {
-            this.pState = pState;
+        pcb.prototype.updateStates = function (state) {
+            this.state = state;
         };
         pcb.prototype.getPid = function () {
             return this.pid;
         };
         pcb.prototype.getCounter = function () {
-            return this.counter;
+            return parseInt(this.counter, 16);
         };
         pcb.prototype.getInfo = function () {
-            return [this.pid, this.pState, this.location, this.priority,
+            return [this.pid, this.state, this.location, this.priority,
                 this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg];
         };
         return pcb;

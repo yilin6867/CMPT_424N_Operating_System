@@ -19,7 +19,12 @@ module TSOS {
         }
 
         public getPCBbyID(pid: string) {
-            return this.pcbs[parseInt(pid)];
+            if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
+                return this.pcbs[parseInt(pid)];
+            }
+            else {
+                return "There is not user program with pid of " + pid
+            }
         }
         public getNextPID() {
             return this.pcbs.length;
@@ -43,33 +48,33 @@ module TSOS {
 
         constructor(
             // process states: new <0>, ready<1>, running<2>, waiting<3>, terminate<4>
-            public pState: number 
+            public state: number 
             , public pid : number
             , public priority: number
-            , public counter: number
+            , public counter: string
+            , public limit_ct: number
             , public accumulator: any = 0
             , public location: string = "Memory"
-            , public x_reg: number = 0
-            , public y_reg: number = 0
-            , public z_reg: number = 0
+            , public x_reg: any = 0
+            , public y_reg: any = 0
+            , public z_reg: any = 0
         ){
         }
-        public updateCounter(newCounter: any) {
-            this.counter = (newCounter / 8);
-            console.log("New counter" + this.counter)
+        public updateCounter(newCounter: number) {
+            this.counter = newCounter.toString(16);
         }
-        public updateStates(pState: number) {
-            this.pState = pState;
+        public updateStates(state: number) {
+            this.state = state;
         }
         public getPid(): number {
             return this.pid;
         }
         public getCounter(): number {
-            return this.counter;
+            return parseInt(this.counter, 16);
         }
 
         public getInfo(): any[] {
-            return [this.pid, this.pState, this.location, this.priority
+            return [this.pid, this.state, this.location, this.priority
                 , this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg]
         }
 

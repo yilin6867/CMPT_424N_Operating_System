@@ -25,10 +25,11 @@ module TSOS {
         }
 
         public writeData(binaryData: string[], addr): number[] {
-            let startIdx = this.curEle;
+            let startIdx = addr != null ? addr : this.curEle;
             for(let data of binaryData) {
                 if (addr != null) {
-                    this,this.memoryArr[addr] = data
+                    console.log("Writing at " + addr)
+                    this.memoryArr[addr] = data
                     addr = addr + 1
                 } else {
                     if (this.curEle >= this.getMemorySize()) {
@@ -38,7 +39,7 @@ module TSOS {
                     this.curEle = this.curEle + 1;
                 }
             }
-            return [startIdx, this.curEle];
+            return [startIdx, addr != null ? addr : this.curEle ];
         }
 
         public readData(counter: number) {
@@ -51,8 +52,7 @@ module TSOS {
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
-            console.log("read data " + hexCodes + " for counter " + counter)
-            return [hexCodes.trim(), String(counter)];
+            return [hexCodes.trim(), counter/8];
         }
 
         public getLoadMemory(): string[] {

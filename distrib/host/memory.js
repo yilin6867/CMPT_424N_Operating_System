@@ -26,11 +26,12 @@ var TSOS;
             return this.memorySize;
         };
         Memory.prototype.writeData = function (binaryData, addr) {
-            var startIdx = this.curEle;
+            var startIdx = addr != null ? addr : this.curEle;
             for (var _i = 0, binaryData_1 = binaryData; _i < binaryData_1.length; _i++) {
                 var data = binaryData_1[_i];
                 if (addr != null) {
-                    this, this.memoryArr[addr] = data;
+                    console.log("Writing at " + addr);
+                    this.memoryArr[addr] = data;
                     addr = addr + 1;
                 }
                 else {
@@ -41,7 +42,7 @@ var TSOS;
                     this.curEle = this.curEle + 1;
                 }
             }
-            return [startIdx, this.curEle];
+            return [startIdx, addr != null ? addr : this.curEle];
         };
         Memory.prototype.readData = function (counter) {
             var nextEle = 4;
@@ -53,8 +54,7 @@ var TSOS;
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
-            console.log("read data " + hexCodes + " for counter " + counter);
-            return [hexCodes.trim(), String(counter)];
+            return [hexCodes.trim(), counter / 8];
         };
         Memory.prototype.getLoadMemory = function () {
             return this.memoryArr.slice();
