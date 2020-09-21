@@ -174,9 +174,18 @@ var TSOS;
                 + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
                 + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
-            _Console.showMemory(_CPU.getLoadMemory());
-            _Console.showCPU(_CPU.getInfo());
+            var cpuInfo = _CPU.getInfo();
+            _Console.showMemory(_CPU.getLoadMemory(), cpuInfo[0]);
+            _Console.showCPU(cpuInfo);
             _Console.showPCB(_CPU.getPCBs());
+        };
+        // Tell the CPU to turn on single step and off if it is on
+        Kernel.prototype.turnSingleStep = function () {
+            _CPU.singleStep = _CPU.singleStep ? false : true;
+        };
+        // Tell the CPU to execute next step
+        Kernel.prototype.nextStep = function () {
+            _CPU.isExecuting = true;
         };
         return Kernel;
     }());

@@ -19,19 +19,21 @@ module TSOS {
                     public Acc: any = 0,
                     public Xreg: any = 0,
                     public Yreg: any = 0,
-                    public Zflag: number = 0,
+                    public Zflag: number = 1,
                     public isExecuting: boolean = false,
-                    public runningPCB: pcb = null
+                    public runningPCB: pcb = null,
+                    public singleStep: boolean = false
         ) {
         }
 
         public init(): void {
             this.PC = "00";
-            this.Acc = 0;
-            this.Xreg = 0;
-            this.Yreg = 0;
-            this.Zflag = 0;
+            this.Acc = "00";
+            this.Xreg = "00";
+            this.Yreg = "00";
+            this.Zflag = 1;
             this.isExecuting = false;
+            this.singleStep = false
         }
 
         public cycle(): void {
@@ -40,15 +42,16 @@ module TSOS {
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             if (this.runningPCB.state < 4) {
                 this.runningPCB.state = 1
-                let counter = this.runningPCB.getCounter();
+                let counter = parseInt(this.runningPCB.getCounter(), 16);
                 let returnValues: any[] = _MemoryAccessor.read(counter);
-                this.updateCounters(returnValues[1]);
-
                 let hexicode = returnValues[0];
-                let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.getCounter())
+
+                this.updateCounters(returnValues[1]);
+                let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
+                let nextReturn: any[] = _MemoryAccessor.read(nextCounter);
                 this.runningPCB.updateStates(2);
-                console.log(hexicode)
-                console.log(returnValues)
+                console.log("running " + hexicode + " at " + this.pad(counter.toString(16).toUpperCase(), 2)
+                             + " next counter" + this.PC)
                 switch(hexicode) {
                     case "A9":
                         this.ldaConst(nextReturn[0]);
@@ -61,10 +64,11 @@ module TSOS {
                     case "8D":
                         this.store(nextReturn[0]);
                         this.updateCounters(nextReturn[1]);
-                        this.isExecuting=false;
                         break;
                     case "6D":
-                        this.add(nextReturn[0]);
+                        let addResult = this.add(nextReturn[0]);
+                        this.Acc = addResult;
+                        this.runningPCB.accumulator = addResult;
                         this.updateCounters(nextReturn[1]);
                         break;
                     case "A2":
@@ -85,7 +89,7 @@ module TSOS {
                         break;
                     case "EA":
                         this.updateCounters(nextReturn[1]);
-                        return;
+                        break;
                     case "00":
                         break;
                     case "EC":
@@ -93,7 +97,7 @@ module TSOS {
                         this.updateCounters(nextReturn[1]);
                         break;
                     case "D0":
-                        this.branchOnZ(nextReturn[0]);
+                        this.branchOnZ(nextReturn[0], nextReturn[1]);
                         break;
                     case "EE":
                         this.incrAcc(nextReturn[0]);
@@ -103,9 +107,13 @@ module TSOS {
                         this.systemCall();
                         break;
                 }
-                if (this.runningPCB.getCounter() >= this.runningPCB.limit_ct) {
+
+                if (parseInt(this.runningPCB.getCounter(), 16) >= this.runningPCB.limit_ct/8) {
                     this.isExecuting = false
                     this.runningPCB.updateStates(4)
+                }
+                if (this.singleStep) {
+                    this.isExecuting = false
                 }
             }
         }
@@ -126,7 +134,6 @@ module TSOS {
             let cnter: number = parseInt(counter, 16)
             console.log("Store " + this.Acc + " in " + counter + " " + cnter)
             let writeReturn = this.writeData(this.Acc, cnter);
-            console.log(writeReturn);
         }
         public storeXReg(hex:string) {
             this.Xreg = hex;
@@ -142,7 +149,7 @@ module TSOS {
         }
         public storeYRegVar(counter) {
             let varData = this.readData(counter);
-            console.log("data store in y reg var " + varData + " " + counter)
+            console.log("data store in y reg var " + varData[0] + " " + counter)
             this.Yreg = varData[0];
         }
         public ifeqX(addr) {
@@ -150,19 +157,25 @@ module TSOS {
             console.log("Comparing " + this.Xreg + " " + byteValue[0])
             if(this.Xreg == byteValue[0]) {
                 this.Zflag = 0
+            } else {
+                this.Zflag = 1
             }
         }
-        public branchOnZ(brCounter) {
+        public branchOnZ(brCounter, nextCounter) {
             if(this.Zflag == 0) {
-                this.PC = brCounter
-                this.runningPCB.updateCounter(parseInt(brCounter, 16))
+                this.runningPCB.updateCounter(brCounter)
+                this.PC = this.runningPCB.getCounter()
+                console.log("Branch to " + this.PC + " for z " + this.Zflag)
+                this.isExecuting = false
+            } else {
+                this.updateCounters(nextCounter)
             }
         }
-        public incrAcc(nextByte) {
-            let incre = (parseInt(nextByte, 16) + 1).toString(16).toUpperCase();
-            incre = this.pad(incre, 2)
-            this.writeData(incre, parseInt(this.PC, 16));
-            console.log("increment " + nextByte + " to " + incre + " at " + this.PC);
+        public incrAcc(addr) {
+            let byteValue = this.readData(addr)
+            let incre = (parseInt(String(byteValue[0]) ,16) + 1).toString(16)
+            this.writeData(incre, parseInt(addr, 16));
+            console.log("increment " + byteValue[0] + " at " + addr + " to " + incre + " at " + addr);
         }
         public add(hexVal) {
             let accBin = this.hexToBinary(this.Acc.toString(16));
@@ -187,9 +200,7 @@ module TSOS {
                 carry = fullAdd[1];
                 }
             }
-                
-            this.Acc = parseInt(carry ? carry + sum : sum, 2).toString(16).toUpperCase();
-            this.runningPCB.accumulator = this.Acc;
+            return parseInt(carry ? carry + sum : sum, 2).toString(16).toUpperCase();
         }
 
         public systemCall() {
@@ -197,13 +208,14 @@ module TSOS {
                 _Console.putText(this.Yreg);
             } else if(this.Xreg == "02") {
                 let charVal = String.fromCharCode(parseInt(this.Yreg))
+                console.log(charVal);
                 _Console.putText(charVal);
             }
         }
 
         public updateCounters(newCounter) {
             this.runningPCB.updateCounter(newCounter);
-            this.PC = this.runningPCB.getCounter().toString(16);
+            this.PC = this.runningPCB.getCounter();
         }
         public readData(counter: string) {
             let counterNum = parseInt(counter, 16);
@@ -214,6 +226,7 @@ module TSOS {
             let opcodes: string[] = data.split(" ");
             let binaryCodes: string[] = []
             for (let code of opcodes) {
+                console.log("writing " + code)
                 for (let i = 0; i < code.length; i++) {
                     let binary = this.pad(this.hexToBinary(code.charAt(i)), 4);
                     let nibble = binary.substr(binary.length - 4);

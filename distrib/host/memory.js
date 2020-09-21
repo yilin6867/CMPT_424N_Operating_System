@@ -26,11 +26,17 @@ var TSOS;
             return this.memorySize;
         };
         Memory.prototype.writeData = function (binaryData, addr) {
-            var startIdx = addr != null ? addr : this.curEle;
+            if (addr === void 0) { addr = null; }
+            var startIdx;
+            if (addr != null) {
+                startIdx = addr;
+            }
+            else {
+                startIdx = this.curEle;
+            }
             for (var _i = 0, binaryData_1 = binaryData; _i < binaryData_1.length; _i++) {
                 var data = binaryData_1[_i];
                 if (addr != null) {
-                    console.log("Writing at " + addr);
                     this.memoryArr[addr] = data;
                     addr = addr + 1;
                 }

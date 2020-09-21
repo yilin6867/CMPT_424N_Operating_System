@@ -24,11 +24,15 @@ module TSOS {
             return this.memorySize;
         }
 
-        public writeData(binaryData: string[], addr): number[] {
-            let startIdx = addr != null ? addr : this.curEle;
+        public writeData(binaryData: string[], addr=null): number[] {
+            let startIdx;
+            if (addr != null) {
+                startIdx = addr
+            } else {
+                startIdx = this.curEle
+            }
             for(let data of binaryData) {
                 if (addr != null) {
-                    console.log("Writing at " + addr)
                     this.memoryArr[addr] = data
                     addr = addr + 1
                 } else {

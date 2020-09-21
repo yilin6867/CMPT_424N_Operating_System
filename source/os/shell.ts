@@ -395,16 +395,17 @@ module TSOS {
             let codes: string = prg_in.value.split("\n").join(" ")
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.")
-                return;
-            }
-            let writeInfo: number[] = _MemoryManager.write(codes);
-            _StdOut.putText("The User Program Input is valid input")
-            _StdOut.advanceLine()
-            if (writeInfo.length > 0) {
-                _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
-                    + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8);
             } else {
-                _StdOut.putText("However, the user program exceed the memory space")
+                console.log(codes)
+                let writeInfo: number[] = _MemoryManager.write(codes);
+                _StdOut.putText("The User Program Input is valid input")
+                _StdOut.advanceLine()
+                if (writeInfo.length > 0) {
+                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
+                        + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8);
+                } else {
+                    _StdOut.putText("However, the user program exceed the memory space")
+                }
             }
         }
 

@@ -66,7 +66,7 @@ var TSOS;
             this.z_reg = z_reg;
         }
         pcb.prototype.updateCounter = function (newCounter) {
-            this.counter = newCounter.toString(16);
+            this.counter = this.pad(newCounter.toString(16).toUpperCase(), 2);
         };
         pcb.prototype.updateStates = function (state) {
             this.state = state;
@@ -75,11 +75,17 @@ var TSOS;
             return this.pid;
         };
         pcb.prototype.getCounter = function () {
-            return parseInt(this.counter, 16);
+            return this.counter;
         };
         pcb.prototype.getInfo = function () {
             return [this.pid, this.state, this.location, this.priority,
                 this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg];
+        };
+        pcb.prototype.pad = function (num, size) {
+            var s = num + "";
+            while (s.length < size)
+                s = "0" + s;
+            return s;
         };
         return pcb;
     }());

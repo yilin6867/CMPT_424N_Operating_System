@@ -256,7 +256,7 @@ var TSOS;
             date_html.innerText = date;
             time_html.innerText = time;
         };
-        Console.prototype.showMemory = function (memoryMatrix) {
+        Console.prototype.showMemory = function (memoryMatrix, counter) {
             var memoryTable = document.getElementById("memoryTable");
             var htmlScript = "";
             var rowNum = 0;
@@ -267,7 +267,12 @@ var TSOS;
                     + rowNum.toString(16).toUpperCase() + "</td>";
                 for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
                     var col = row_1[_a];
-                    htmlScript = htmlScript + "<td>" + col + "</td>";
+                    if (rowNum == parseInt(counter, 16)) {
+                        htmlScript = htmlScript + "<td bgcolor='green'>" + col + "</td>";
+                    }
+                    else {
+                        htmlScript = htmlScript + "<td>" + col + "</td>";
+                    }
                     rowNum = rowNum + 1;
                 }
                 htmlScript = htmlScript + " </tr>";

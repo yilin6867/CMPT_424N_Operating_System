@@ -272,7 +272,7 @@ module TSOS {
             time_html.innerText = time;
         }
 
-        public showMemory(memoryMatrix: String[][]) {
+        public showMemory(memoryMatrix: String[][], counter) {
             let memoryTable = document.getElementById("memoryTable");
             let htmlScript: string = "";
             let rowNum : number = 0;
@@ -281,7 +281,11 @@ module TSOS {
                 htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segNum) 
                             + rowNum.toString(16).toUpperCase() + "</td>";
                 for (let col of row) {
-                    htmlScript = htmlScript + "<td>" + col + "</td>";
+                    if (rowNum == parseInt(counter, 16)) {
+                        htmlScript = htmlScript + "<td bgcolor='green'>" + col + "</td>";
+                    } else {
+                        htmlScript = htmlScript + "<td>" + col + "</td>";
+                    }
                     rowNum = rowNum + 1
                 }
                 htmlScript = htmlScript + " </tr>";

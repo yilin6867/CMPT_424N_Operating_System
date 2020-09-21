@@ -61,7 +61,7 @@ module TSOS {
         ){
         }
         public updateCounter(newCounter: number) {
-            this.counter = newCounter.toString(16);
+            this.counter = this.pad(newCounter.toString(16).toUpperCase(), 2);
         }
         public updateStates(state: number) {
             this.state = state;
@@ -69,14 +69,18 @@ module TSOS {
         public getPid(): number {
             return this.pid;
         }
-        public getCounter(): number {
-            return parseInt(this.counter, 16);
+        public getCounter(): string {
+            return this.counter;
         }
 
         public getInfo(): any[] {
             return [this.pid, this.state, this.location, this.priority
                 , this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg]
         }
-
+        public pad(num, size) {
+            var s = num+"";
+            while (s.length < size) s = "0" + s;
+            return s;
+        }
     }
 }
