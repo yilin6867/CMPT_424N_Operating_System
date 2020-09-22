@@ -108,6 +108,10 @@ var TSOS;
         Control.hostBtnNextStep_click = function (btn) {
             _Kernel.nextStep();
         };
+        //
+        Control.hostBtnLoadMemSegment = function (btn, segment) {
+            _Kernel.showMemory(segment);
+        };
         return Control;
     }());
     TSOS.Control = Control;

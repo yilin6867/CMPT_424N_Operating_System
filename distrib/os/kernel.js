@@ -48,6 +48,8 @@ var TSOS;
             }
             // Render the Graphic Taskbar content
             this.krnUpdateDisplayValue();
+            // Render memory
+            document.getElementById("memorySeg1").click();
         };
         Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");
@@ -175,9 +177,15 @@ var TSOS;
                 + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
             var cpuInfo = _CPU.getInfo();
-            _Console.showMemory(_CPU.getLoadMemory(), cpuInfo[0]);
+            if (_CPU.isExecuting) {
+                _Console.showMemCounter(cpuInfo[0]);
+            }
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_CPU.getPCBs());
+        };
+        Kernel.prototype.showMemory = function (segment) {
+            var cpuInfo = _CPU.getInfo();
+            _Console.showMemory(_CPU.getLoadMemory(segment), cpuInfo[0]);
         };
         // Tell the CPU to turn on single step and off if it is on
         Kernel.prototype.turnSingleStep = function () {

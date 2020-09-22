@@ -10,19 +10,21 @@ var TSOS;
     var Console = /** @class */ (function () {
         function Console(currentFont, currentFontSize, currentXPosition, currentYPosition, buffer, 
         // Record cursor of end of line before proceed to next line
-        end_of_line) {
+        end_of_line, highlightMem) {
             if (currentFont === void 0) { currentFont = _DefaultFontFamily; }
             if (currentFontSize === void 0) { currentFontSize = _DefaultFontSize; }
             if (currentXPosition === void 0) { currentXPosition = 0; }
             if (currentYPosition === void 0) { currentYPosition = _DefaultFontSize; }
             if (buffer === void 0) { buffer = ""; }
             if (end_of_line === void 0) { end_of_line = []; }
+            if (highlightMem === void 0) { highlightMem = [0, 1]; }
             this.currentFont = currentFont;
             this.currentFontSize = currentFontSize;
             this.currentXPosition = currentXPosition;
             this.currentYPosition = currentYPosition;
             this.buffer = buffer;
             this.end_of_line = end_of_line;
+            this.highlightMem = highlightMem;
         }
         Console.prototype.init = function () {
             this.clearScreen();
@@ -267,17 +269,21 @@ var TSOS;
                     + rowNum.toString(16).toUpperCase() + "</td>";
                 for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
                     var col = row_1[_a];
-                    if (rowNum == parseInt(counter, 16)) {
-                        htmlScript = htmlScript + "<td bgcolor='green'>" + col + "</td>";
-                    }
-                    else {
-                        htmlScript = htmlScript + "<td>" + col + "</td>";
-                    }
+                    htmlScript = htmlScript + "<td>" + col + "</td>";
                     rowNum = rowNum + 1;
                 }
                 htmlScript = htmlScript + " </tr>";
             }
             memoryTable.innerHTML = htmlScript;
+        };
+        Console.prototype.showMemCounter = function (counter) {
+            var memoryTable = document.getElementById("memoryTable");
+            var showCounter = parseInt(counter, 16);
+            var col = showCounter % 8 + 1;
+            var row = Math.floor(showCounter / 8);
+            memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
+            memoryTable.rows[row].cells[col].style.backgroundColor = "red";
+            this.highlightMem = [row, col];
         };
         Console.prototype.showCPU = function (cpuInfo) {
             var cpuTable = document.getElementById("cpuTable");

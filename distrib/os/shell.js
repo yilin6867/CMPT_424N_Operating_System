@@ -326,12 +326,13 @@ var TSOS;
             var prg_in = document.getElementById("taProgramInput");
             var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             var codes = prg_in.value.split("\n").join(" ");
+            var segment = _MemoryManager.memoryFill.indexOf(false);
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             }
             else {
                 console.log(codes);
-                var writeInfo = _MemoryManager.write(codes);
+                var writeInfo = _MemoryManager.write(segment, codes);
                 _StdOut.putText("The User Program Input is valid input");
                 _StdOut.advanceLine();
                 if (writeInfo.length > 0) {
@@ -341,6 +342,7 @@ var TSOS;
                 else {
                     _StdOut.putText("However, the user program exceed the memory space");
                 }
+                _Kernel.showMemory(segment);
             }
         };
         // run the user input program with given pid

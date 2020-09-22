@@ -36,9 +36,6 @@ h3 {
   cursor: default;
 }
 
-#divLog {
-}
-
 .normal_button {
   width: 100px;
 }
@@ -86,4 +83,13 @@ th, td {
 #cpuTable {
   width: 360px;
   height: auto;
+}
+
+.tabcontent {
+  animation: fadeEffect 1s;
+}
+
+@keyframes fadeEffect {
+  from {opacity: 0;}
+  to {opacity: 1;}
 }

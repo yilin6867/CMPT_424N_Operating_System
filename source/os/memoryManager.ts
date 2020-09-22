@@ -10,6 +10,7 @@ module TSOS {
         constructor(
             public pcbs = new Array()
             , public memorySize = _MemoryAccessor.getMemorySize()
+            , public memoryFill = [false, false, false]
         ) {
             
         }
@@ -32,8 +33,8 @@ module TSOS {
         public readData(pid) {
             return _CPU.readData(pid);
         }
-        public write(data: string) {
-            return _CPU.writeProgram(data);
+        public write(segment: number, data: string) {
+            return _CPU.writeProgram(segment, data);
         }
         public getPBCsInfo() {
             let pbcsInfo: string[][] = [];
@@ -51,10 +52,10 @@ module TSOS {
             public state: number 
             , public pid : number
             , public priority: number
+            , public location: number
             , public counter: string
             , public limit_ct: number
             , public accumulator: any = 0
-            , public location: string = "Memory"
             , public x_reg: any = 0
             , public y_reg: any = 0
             , public z_reg: any = 0

@@ -20,18 +20,43 @@ var TSOS;
         }
         MemoryAccessor.prototype.init = function () {
         };
-        MemoryAccessor.prototype.read = function (counter) {
+        MemoryAccessor.prototype.read = function (segment, counter, numCounter) {
             var opCodeSize = 8;
-            return _Memory.readData(counter * opCodeSize);
+            var param = ["", ""];
+            if (numCounter == null) {
+                var i = 0;
+                do {
+                    var nextReturn = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    console.log("Read " + nextReturn);
+                    param[0] = param[0] + " " + nextReturn[0];
+                    param[1] = nextReturn[1];
+                    console.log(param[0].slice(param[0].length - 2, param[0].length));
+                    i = i + 1;
+                } while (param[0].slice(param[0].length - 2, param[0].length) !== "00");
+                return param;
+            }
+            else {
+                for (var i = 0; i < numCounter; i++) {
+                    var nextReturn = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    console.log("Read " + nextReturn);
+                    param[0] = nextReturn[0] + param[0];
+                    param[1] = nextReturn[1];
+                }
+                console.log("return  " + param);
+                return param;
+            }
         };
-        MemoryAccessor.prototype.write = function (data, addr) {
-            return _Memory.writeData(data, addr);
+        MemoryAccessor.prototype.write = function (segment, data, addr) {
+            return _Memory.writeData(segment, data, addr * 8);
         };
         MemoryAccessor.prototype.getMemorySize = function () {
             return this.memorySize;
         };
-        MemoryAccessor.prototype.getLoadMemory = function () {
-            return _Memory.getLoadMemory();
+        MemoryAccessor.prototype.getLoadMemory = function (segment) {
+            return _Memory.getLoadMemory(segment);
+        };
+        MemoryAccessor.prototype.removeMemory = function (segment, start, end) {
+            return _Memory.remove(segment, start * 8, end * 8);
         };
         return MemoryAccessor;
     }());

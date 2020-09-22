@@ -8,11 +8,13 @@
 var TSOS;
 (function (TSOS) {
     var MemoryManager = /** @class */ (function () {
-        function MemoryManager(pcbs, memorySize) {
+        function MemoryManager(pcbs, memorySize, memoryFill) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
+            if (memoryFill === void 0) { memoryFill = [false, false, false]; }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
+            this.memoryFill = memoryFill;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
             this.pcbs.push(newpcb);
@@ -31,8 +33,8 @@ var TSOS;
         MemoryManager.prototype.readData = function (pid) {
             return _CPU.readData(pid);
         };
-        MemoryManager.prototype.write = function (data) {
-            return _CPU.writeProgram(data);
+        MemoryManager.prototype.write = function (segment, data) {
+            return _CPU.writeProgram(segment, data);
         };
         MemoryManager.prototype.getPBCsInfo = function () {
             var pbcsInfo = [];
@@ -48,19 +50,18 @@ var TSOS;
     var pcb = /** @class */ (function () {
         function pcb(
         // process states: new <0>, ready<1>, running<2>, waiting<3>, terminate<4>
-        state, pid, priority, counter, limit_ct, accumulator, location, x_reg, y_reg, z_reg) {
+        state, pid, priority, location, counter, limit_ct, accumulator, x_reg, y_reg, z_reg) {
             if (accumulator === void 0) { accumulator = 0; }
-            if (location === void 0) { location = "Memory"; }
             if (x_reg === void 0) { x_reg = 0; }
             if (y_reg === void 0) { y_reg = 0; }
             if (z_reg === void 0) { z_reg = 0; }
             this.state = state;
             this.pid = pid;
             this.priority = priority;
+            this.location = location;
             this.counter = counter;
             this.limit_ct = limit_ct;
             this.accumulator = accumulator;
-            this.location = location;
             this.x_reg = x_reg;
             this.y_reg = y_reg;
             this.z_reg = z_reg;

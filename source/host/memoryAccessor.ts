@@ -17,20 +17,45 @@ module TSOS {
         public init() {
         }
 
-        public read(counter: number) {
+        public read(segment: number, counter: number, numCounter: number) {
             let opCodeSize = 8;
-            return _Memory.readData(counter * opCodeSize);
+            let param = ["", ""];
+            if (numCounter == null) {
+                let i = 0
+                do {
+                    let nextReturn: any[] = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    console.log("Read "+ nextReturn)
+                    param[0] = param[0] + " " + nextReturn[0]
+                    param[1] = nextReturn[1]
+                    console.log(param[0].slice(param[0].length -2 , param[0].length))
+                    i = i + 1
+                } while (param[0].slice(param[0].length -2 , param[0].length) !== "00")
+                return param;
+            } else {
+                for (let i = 0; i < numCounter; i++) {
+                    let nextReturn: any[] = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    console.log("Read "+ nextReturn)
+                    param[0] = nextReturn[0] + param[0]
+                    param[1] = nextReturn[1]
+                }   
+                console.log("return  "+ param)
+                return param
+            }
         }
 
-        public write(data: string[], addr: number) {
-            return _Memory.writeData(data, addr);
+        public write(segment: number, data: string[], addr: number) {
+            return _Memory.writeData(segment, data, addr * 8);
         }
         public getMemorySize(): number {
             return this.memorySize;
         }
 
-        public getLoadMemory() {
-            return _Memory.getLoadMemory();
+        public getLoadMemory(segment: number) {
+            return _Memory.getLoadMemory(segment);
+        }
+
+        public removeMemory(segment:number, start:number, end:number) {
+            return _Memory.remove(segment, start * 8, end * 8);
         }
     }
 }

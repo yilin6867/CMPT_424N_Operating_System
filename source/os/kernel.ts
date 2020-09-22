@@ -57,6 +57,8 @@ module TSOS {
 
             // Render the Graphic Taskbar content
             this.krnUpdateDisplayValue();
+            // Render memory
+            document.getElementById("memorySeg1").click();
         }
 
         public krnShutdown() {
@@ -197,9 +199,16 @@ module TSOS {
                         + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
             let cpuInfo = _CPU.getInfo();
-            _Console.showMemory(_CPU.getLoadMemory(), cpuInfo[0]);
+            if (_CPU.isExecuting) {
+                _Console.showMemCounter(cpuInfo[0]);
+            }
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_CPU.getPCBs());
+        }
+
+        public showMemory(segment: number): void {
+            let cpuInfo = _CPU.getInfo();
+            _Console.showMemory(_CPU.getLoadMemory(segment), cpuInfo[0]);
         }
 
         // Tell the CPU to turn on single step and off if it is on
@@ -208,7 +217,9 @@ module TSOS {
         }
         // Tell the CPU to execute next step
         public nextStep(): void {
-            _CPU.isExecuting = true;
+            if (_CPU.runningPCB.state < 4) {
+                _CPU.isExecuting = true;
+            }
         }
     }
 }

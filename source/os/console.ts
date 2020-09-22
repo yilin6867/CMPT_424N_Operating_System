@@ -17,6 +17,7 @@ module TSOS {
                     public buffer = "",
                     // Record cursor of end of line before proceed to next line
                     public end_of_line: number[] = [],
+                    public highlightMem = [0, 1]
                 ) {
         }
 
@@ -281,16 +282,22 @@ module TSOS {
                 htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segNum) 
                             + rowNum.toString(16).toUpperCase() + "</td>";
                 for (let col of row) {
-                    if (rowNum == parseInt(counter, 16)) {
-                        htmlScript = htmlScript + "<td bgcolor='green'>" + col + "</td>";
-                    } else {
-                        htmlScript = htmlScript + "<td>" + col + "</td>";
-                    }
+                    htmlScript = htmlScript + "<td>" + col + "</td>";
                     rowNum = rowNum + 1
                 }
                 htmlScript = htmlScript + " </tr>";
             }
             memoryTable.innerHTML = htmlScript;
+        }
+
+        public showMemCounter(counter) {
+            let memoryTable:any = document.getElementById("memoryTable");
+            let showCounter = parseInt(counter, 16)
+            let col = showCounter % 8 +1
+            let row = Math.floor(showCounter /8)
+            memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
+            memoryTable.rows[row].cells[col].style.backgroundColor = "red";
+            this.highlightMem = [row, col]
         }
 
         public showCPU(cpuInfo: any[]) {

@@ -130,5 +130,10 @@ module TSOS {
         public static hostBtnNextStep_click(btn): void {
             _Kernel.nextStep();
         }
+
+        //
+        public static hostBtnLoadMemSegment(btn, segment:number): void {
+            _Kernel.showMemory(segment)
+        }
     }
 }

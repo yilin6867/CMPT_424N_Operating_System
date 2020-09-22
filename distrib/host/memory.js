@@ -13,19 +13,21 @@ var TSOS;
         // there is 256 bytes in total for the memory
         memorySize, memoryArr, curEle) {
             if (memorySize === void 0) { memorySize = 8 * 256; }
-            if (memoryArr === void 0) { memoryArr = []; }
+            if (memoryArr === void 0) { memoryArr = [[]]; }
             if (curEle === void 0) { curEle = 0; }
             this.memorySize = memorySize;
             this.memoryArr = memoryArr;
             this.curEle = curEle;
         }
         Memory.prototype.init = function () {
-            this.memoryArr = new Array(this.memorySize).fill(0);
+            for (var i = 0; i < this.memoryArr.length; i++) {
+                this.memoryArr[i] = new Array(this.memorySize).fill(0);
+            }
         };
         Memory.prototype.getMemorySize = function () {
             return this.memorySize;
         };
-        Memory.prototype.writeData = function (binaryData, addr) {
+        Memory.prototype.writeData = function (segment, binaryData, addr) {
             if (addr === void 0) { addr = null; }
             var startIdx;
             if (addr != null) {
@@ -37,33 +39,38 @@ var TSOS;
             for (var _i = 0, binaryData_1 = binaryData; _i < binaryData_1.length; _i++) {
                 var data = binaryData_1[_i];
                 if (addr != null) {
-                    this.memoryArr[addr] = data;
+                    this.memoryArr[segment][addr] = data;
                     addr = addr + 1;
                 }
                 else {
                     if (this.curEle >= this.getMemorySize()) {
                         return [];
                     }
-                    this.memoryArr[this.curEle] = data;
+                    this.memoryArr[segment][this.curEle] = data;
                     this.curEle = this.curEle + 1;
                 }
             }
             return [startIdx, addr != null ? addr : this.curEle];
         };
-        Memory.prototype.readData = function (counter) {
+        Memory.prototype.readData = function (segment, counter) {
             var nextEle = 4;
             var hexCodes = "";
             var hex = "";
             for (var _ = 0; _ < 2; _++) {
-                var nibble = parseInt(this.memoryArr.slice(counter, counter + nextEle).join(""), 2);
+                var nibble = parseInt(this.memoryArr[segment].slice(counter, counter + nextEle).join(""), 2);
                 hex = nibble.toString(16).toUpperCase();
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
             return [hexCodes.trim(), counter / 8];
         };
-        Memory.prototype.getLoadMemory = function () {
-            return this.memoryArr.slice();
+        Memory.prototype.getLoadMemory = function (segment) {
+            return this.memoryArr[segment].slice();
+        };
+        Memory.prototype.remove = function (segment, start, end) {
+            for (start < end; start++;) {
+                this.memoryArr[segment][start] = "0";
+            }
         };
         return Memory;
     }());
