@@ -68,7 +68,6 @@ var TSOS;
             document.getElementById("btnHaltOS").disabled = false;
             document.getElementById("btnReset").disabled = false;
             document.getElementById("btnSingleStep").disabled = false;
-            document.getElementById("btnNextStep").disabled = false;
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
@@ -102,6 +101,7 @@ var TSOS;
         };
         // Tell the kernal to turn on single step for the CPU to execute one op code at a time.
         Control.hostBtnSingleStep_click = function (btn) {
+            document.getElementById("btnNextStep").disabled = false;
             _Kernel.turnSingleStep();
         };
         // Tell the kernal to have CPU execute next step

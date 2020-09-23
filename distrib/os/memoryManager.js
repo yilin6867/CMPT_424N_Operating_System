@@ -30,11 +30,14 @@ var TSOS;
         MemoryManager.prototype.getNextPID = function () {
             return this.pcbs.length;
         };
-        MemoryManager.prototype.readData = function (pid) {
-            return _CPU.readData(pid);
-        };
         MemoryManager.prototype.write = function (segment, data) {
-            return _CPU.writeProgram(segment, data);
+            if (_CPU.readData(segment, "00")[0] != "00") {
+                return _CPU.writeProgram(segment, data);
+            }
+            else {
+                _CPU.removeMemory(segment, 0, 255);
+                return _CPU.writeProgram(segment, data);
+            }
         };
         MemoryManager.prototype.getPBCsInfo = function () {
             var pbcsInfo = [];

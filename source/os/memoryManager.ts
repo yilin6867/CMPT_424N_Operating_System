@@ -30,11 +30,13 @@ module TSOS {
         public getNextPID() {
             return this.pcbs.length;
         }
-        public readData(pid) {
-            return _CPU.readData(pid);
-        }
         public write(segment: number, data: string) {
-            return _CPU.writeProgram(segment, data);
+            if (_CPU.readData(segment, "00")[0] != "00") {
+                return _CPU.writeProgram(segment, data);
+            } else {
+                _CPU.removeMemory(segment, 0, 255)
+                return _CPU.writeProgram(segment, data);
+            }
         }
         public getPBCsInfo() {
             let pbcsInfo: string[][] = [];

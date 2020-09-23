@@ -58,7 +58,6 @@ module TSOS {
                         break;
                     case "8D":
                         this.store();
-                        this.isExecuting = false
                         break;
                     case "6D":
                         let addResult = this.add();
@@ -118,7 +117,7 @@ module TSOS {
         public ldaVar() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2)
-            let varData = this.readData(nextReturn[0]);
+            let varData = this.readData(this.runningPCB.location, nextReturn[0]);
             this.Acc = varData[0];
             console.log("set vat  acc " + this.Acc)
             this.runningPCB.accumulator = varData[0];
@@ -143,7 +142,7 @@ module TSOS {
         public storeXRegVar() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
-            let varData = this.readData(nextReturn[0]);
+            let varData = this.readData(this.runningPCB.location, nextReturn[0]);
             this.Xreg = varData[0];
             this.updateCounters(nextReturn[1])
         }
@@ -156,7 +155,7 @@ module TSOS {
         public storeYRegVar() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
-            let varData = this.readData(nextReturn[0]);
+            let varData = this.readData(this.runningPCB.location, nextReturn[0]);
             console.log("data store in y reg var " + varData[0] + " " + nextReturn[0])
             this.Yreg = varData[0];
             this.updateCounters(nextReturn[1])
@@ -164,7 +163,7 @@ module TSOS {
         public ifeqX() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
-            let byteValue = this.readData(nextReturn[0])
+            let byteValue = this.readData(this.runningPCB.location, nextReturn[0])
             console.log("Comparing " + this.Xreg + " " + byteValue[0])
             if(this.Xreg == byteValue[0]) {
                 this.Zflag = 1
@@ -185,13 +184,12 @@ module TSOS {
                 }
                 this.PC = this.runningPCB.getCounter()
                 console.log("Branch to " + this.PC + " for z " + this.Zflag)
-                this.isExecuting = false
             }
         }
         public incrAcc() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
-            let byteValue = this.readData(nextReturn[0])
+            let byteValue = this.readData(this.runningPCB.location, nextReturn[0])
             let incre = (parseInt(String(byteValue[0]) ,16) + 1).toString(16)
             this.writeData(this.runningPCB.location, incre, parseInt(nextReturn[0], 16));
             console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
@@ -200,7 +198,7 @@ module TSOS {
         public add() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
-            let readData = this.readData(nextReturn[0]);
+            let readData = this.readData(this.runningPCB.location, nextReturn[0]);
             let accBin = this.hexToBinary(this.Acc.toString(16));
             let binVal = this.hexToBinary(readData[0]);
             let tmpSize = Math.max(accBin.length, binVal.length);
@@ -249,9 +247,9 @@ module TSOS {
             this.PC = this.runningPCB.getCounter();
             console.log("Update counter to " + this.runningPCB.getCounter())
         }
-        public readData(counter: string) {
+        public readData(segment:number, counter: string) {
             let counterNum = parseInt(counter, 16);
-            return _MemoryAccessor.read(this.runningPCB.location, counterNum, 1);
+            return _MemoryAccessor.read(segment, counterNum, 1);
         }
 
         public writeData(segment: number, data: string, addr: number) {
@@ -306,9 +304,14 @@ module TSOS {
         public terminates() {
             this.isExecuting = false
             this.runningPCB.updateStates(4);
-            _MemoryAccessor.removeMemory(this.runningPCB.location, this.runningPCB.location
-                                            , this.runningPCB.limit_ct);
-            _Console.putText("Process " + this.runningPCB.getPid() + " finish")
+            this.removeMemory(this.runningPCB.location, 0, this.runningPCB.limit_ct)
+            _Console.putText("Process " + this.runningPCB.getPid() + " is finished")
+            _Console.advanceLine()
+            _OsShell.putPrompt()
+        }
+        
+        public removeMemory(location: number, startCounter: number, endCounter: number) {
+            _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         }
 
         public getLoadMemory(segment:number): string[][]{

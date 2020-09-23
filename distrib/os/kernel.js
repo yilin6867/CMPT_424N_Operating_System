@@ -193,7 +193,9 @@ var TSOS;
         };
         // Tell the CPU to execute next step
         Kernel.prototype.nextStep = function () {
-            _CPU.isExecuting = true;
+            if (_CPU.runningPCB.state < 4) {
+                _CPU.isExecuting = true;
+            }
         };
         return Kernel;
     }());
