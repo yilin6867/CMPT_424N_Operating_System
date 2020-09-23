@@ -11,7 +11,7 @@ var TSOS;
         function MemoryManager(pcbs, memorySize, memoryFill) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
-            if (memoryFill === void 0) { memoryFill = [false, false, false]; }
+            if (memoryFill === void 0) { memoryFill = [false]; }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
             this.memoryFill = memoryFill;
@@ -31,10 +31,18 @@ var TSOS;
             return this.pcbs.length;
         };
         MemoryManager.prototype.write = function (segment, data) {
-            if (_CPU.readData(segment, "00")[0] != "00") {
-                return _CPU.writeProgram(segment, data);
+            if (segment === -1) {
+                segment = 0;
+            }
+            console.log("Read first counter " + _CPU.readData(segment, "00"));
+            console.log(_CPU.readData(segment, "00")[0] === "00");
+            if (_CPU.readData(segment, "00")[0] === "00") {
+                var writeReturn = _CPU.writeProgram(segment, data);
+                this.memoryFill[_MemoryManager.memoryFill.indexOf(false)] = true;
+                return writeReturn;
             }
             else {
+                console.log("Start removing memory at ", segment, 0, 255);
                 _CPU.removeMemory(segment, 0, 255);
                 return _CPU.writeProgram(segment, data);
             }

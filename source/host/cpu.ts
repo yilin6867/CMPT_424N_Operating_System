@@ -256,7 +256,6 @@ module TSOS {
             let opcodes: string[] = data.split(" ");
             let binaryCodes: string[] = []
             for (let code of opcodes) {
-                console.log("writing " + code)
                 for (let i = 0; i < code.length; i++) {
                     let binary = this.pad(this.hexToBinary(code.charAt(i)), 4);
                     let nibble = binary.substr(binary.length - 4);
@@ -265,8 +264,6 @@ module TSOS {
             }
             let binaryCode: string[] = binaryCodes.join("").split("");
             let writeInfo :number[] = _MemoryAccessor.write(segment, binaryCode, addr);
-            console.log("Memory during write data")
-            console.log(_Memory.memoryArr)
             return writeInfo;
         }
         public writeProgram(segment: number, codes: string, addr: number = null) {
@@ -311,6 +308,7 @@ module TSOS {
         }
         
         public removeMemory(location: number, startCounter: number, endCounter: number) {
+            console.log("remove at cpu stage")
             _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         }
 

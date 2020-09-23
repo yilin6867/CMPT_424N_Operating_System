@@ -326,7 +326,7 @@ var TSOS;
             var prg_in = document.getElementById("taProgramInput");
             var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             var codes = prg_in.value.split("\n").join(" ");
-            var segment = _MemoryManager.memoryFill.indexOf(false);
+            var segment = _MemoryManager.memoryFill.indexOf(false) === -1 ? 0 : _MemoryManager.memoryFill.indexOf(false);
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             }

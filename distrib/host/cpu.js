@@ -260,7 +260,6 @@ var TSOS;
             var binaryCodes = [];
             for (var _i = 0, opcodes_1 = opcodes; _i < opcodes_1.length; _i++) {
                 var code = opcodes_1[_i];
-                console.log("writing " + code);
                 for (var i = 0; i < code.length; i++) {
                     var binary = this.pad(this.hexToBinary(code.charAt(i)), 4);
                     var nibble = binary.substr(binary.length - 4);
@@ -269,8 +268,6 @@ var TSOS;
             }
             var binaryCode = binaryCodes.join("").split("");
             var writeInfo = _MemoryAccessor.write(segment, binaryCode, addr);
-            console.log("Memory during write data");
-            console.log(_Memory.memoryArr);
             return writeInfo;
         };
         Cpu.prototype.writeProgram = function (segment, codes, addr) {
@@ -311,6 +308,7 @@ var TSOS;
             _OsShell.putPrompt();
         };
         Cpu.prototype.removeMemory = function (location, startCounter, endCounter) {
+            console.log("remove at cpu stage");
             _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         };
         Cpu.prototype.getLoadMemory = function (segment) {

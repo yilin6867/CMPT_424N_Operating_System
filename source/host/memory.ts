@@ -66,9 +66,13 @@ module TSOS {
         }
 
         public remove(segment: number, start: number, end: number) {
-            for (start < end; start ++;) {
-                this.memoryArr[segment][start] = "0";
+            console.log("remove memory from ", segment, start, end)
+            console.log(start < end)
+            for (let memoryIdx = start; memoryIdx < end; memoryIdx ++) {
+                console.log("removing ", segment, memoryIdx)
+                this.memoryArr[segment][memoryIdx] = "0";
             }
+            console.log(this.memoryArr)
         }
     }
 }

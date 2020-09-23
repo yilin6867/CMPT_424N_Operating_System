@@ -55,7 +55,8 @@ module TSOS {
         }
 
         public removeMemory(segment:number, start:number, end:number) {
-            return _Memory.remove(segment, start * 8, end * 8);
+            console.log("remove at memory access stage")
+            _Memory.remove(segment, start * 8, end * 8);
         }
     }
 }

@@ -56,7 +56,8 @@ var TSOS;
             return _Memory.getLoadMemory(segment);
         };
         MemoryAccessor.prototype.removeMemory = function (segment, start, end) {
-            return _Memory.remove(segment, start * 8, end * 8);
+            console.log("remove at memory access stage");
+            _Memory.remove(segment, start * 8, end * 8);
         };
         return MemoryAccessor;
     }());

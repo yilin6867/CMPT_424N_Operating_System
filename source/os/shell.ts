@@ -393,7 +393,7 @@ module TSOS {
             let prg_in: any = document.getElementById("taProgramInput");
             let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             let codes: string = prg_in.value.split("\n").join(" ")
-            let segment = _MemoryManager.memoryFill.indexOf(false)
+            let segment = _MemoryManager.memoryFill.indexOf(false) === -1 ? 0 : _MemoryManager.memoryFill.indexOf(false)
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             } else {
