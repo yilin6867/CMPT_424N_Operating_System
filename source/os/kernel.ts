@@ -206,6 +206,10 @@ module TSOS {
             _Console.showPCB(_CPU.getPCBs());
         }
 
+        public runProgram(pid: string): void {
+            _CPU.runUserProgram(pid);
+        }
+
         public showMemory(segment: number): void {
             let cpuInfo = _CPU.getInfo();
             _Console.showMemory(_CPU.getLoadMemory(segment), cpuInfo[0]);

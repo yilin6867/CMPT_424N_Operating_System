@@ -11,7 +11,7 @@ var TSOS;
         function MemoryManager(pcbs, memorySize, memoryFill) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
-            if (memoryFill === void 0) { memoryFill = [false]; }
+            if (memoryFill === void 0) { memoryFill = new Array(_CPU.getMemorySegments()).fill(false); }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
             this.memoryFill = memoryFill;
@@ -33,19 +33,17 @@ var TSOS;
         MemoryManager.prototype.write = function (segment, data) {
             if (segment === -1) {
                 segment = 0;
-            }
-            console.log("Read first counter " + _CPU.readData(segment, "00"));
-            console.log(_CPU.readData(segment, "00")[0] === "00");
-            if (_CPU.readData(segment, "00")[0] === "00") {
-                var writeReturn = _CPU.writeProgram(segment, data);
-                this.memoryFill[_MemoryManager.memoryFill.indexOf(false)] = true;
-                return writeReturn;
-            }
-            else {
-                console.log("Start removing memory at ", segment, 0, 255);
                 _CPU.removeMemory(segment, 0, 255);
-                return _CPU.writeProgram(segment, data);
+                console.log("overwrite memory " + this.pcbs[this.pcbs.length - 1]);
+                this.pcbs[this.pcbs.length - 1].updateStates(4);
             }
+            var writeReturn = _CPU.writeProgram(segment, data);
+            var nextSegment = this.memoryFill.indexOf(false);
+            if (nextSegment >= 0) {
+                this.memoryFill[this.memoryFill.indexOf(false)] = true;
+            }
+            writeReturn.push(segment);
+            return writeReturn;
         };
         MemoryManager.prototype.getPBCsInfo = function () {
             var pbcsInfo = [];

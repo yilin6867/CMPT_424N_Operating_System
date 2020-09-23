@@ -326,28 +326,28 @@ var TSOS;
             var prg_in = document.getElementById("taProgramInput");
             var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             var codes = prg_in.value.split("\n").join(" ");
-            var segment = _MemoryManager.memoryFill.indexOf(false) === -1 ? 0 : _MemoryManager.memoryFill.indexOf(false);
+            var segment = _MemoryManager.memoryFill.indexOf(false);
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             }
             else {
-                console.log(codes);
+                console.log(segment);
                 var writeInfo = _MemoryManager.write(segment, codes);
                 _StdOut.putText("The User Program Input is valid input");
                 _StdOut.advanceLine();
-                if (writeInfo.length > 0) {
+                if (writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
                         + " between address " + writeInfo[2] / 8 + " and address " + writeInfo[3] / 8);
                 }
                 else {
                     _StdOut.putText("However, the user program exceed the memory space");
                 }
-                _Kernel.showMemory(segment);
+                _Kernel.showMemory(writeInfo[4]);
             }
         };
         // run the user input program with given pid
         Shell.prototype.shellRun = function (pid) {
-            var returnMSG = _CPU.runUserProgram(pid);
+            _Kernel.runProgram(pid);
         };
         // update the status on the os task bar
         Shell.prototype.shellStatus = function (status) {

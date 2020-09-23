@@ -68,13 +68,9 @@ var TSOS;
             return this.memoryArr[segment].slice();
         };
         Memory.prototype.remove = function (segment, start, end) {
-            console.log("remove memory from ", segment, start, end);
-            console.log(start < end);
             for (var memoryIdx = start; memoryIdx < end; memoryIdx++) {
-                console.log("removing ", segment, memoryIdx);
                 this.memoryArr[segment][memoryIdx] = "0";
             }
-            console.log(this.memoryArr);
         };
         return Memory;
     }());

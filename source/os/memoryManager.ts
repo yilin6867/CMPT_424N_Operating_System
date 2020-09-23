@@ -10,7 +10,7 @@ module TSOS {
         constructor(
             public pcbs = new Array()
             , public memorySize = _MemoryAccessor.getMemorySize()
-            , public memoryFill = [false]
+            , public memoryFill = new Array(_CPU.getMemorySegments()).fill(false)
         ) {
             
         }
@@ -33,18 +33,17 @@ module TSOS {
         public write(segment: number, data: string) {
             if (segment === -1) {
                 segment = 0;
+                _CPU.removeMemory(segment, 0, 255);
+                console.log("overwrite memory " + this.pcbs[this.pcbs.length -1])
+                this.pcbs[this.pcbs.length -1].updateStates(4);
             }
-            console.log("Read first counter " + _CPU.readData(segment, "00"))
-            console.log(_CPU.readData(segment, "00")[0] === "00")
-            if (_CPU.readData(segment, "00")[0] === "00") {
-                let writeReturn = _CPU.writeProgram(segment, data);
-                this.memoryFill[_MemoryManager.memoryFill.indexOf(false)] = true
-                return writeReturn
-            } else {
-                console.log("Start removing memory at ", segment, 0, 255)
-                _CPU.removeMemory(segment, 0, 255)
-                return _CPU.writeProgram(segment, data);
+            let writeReturn = _CPU.writeProgram(segment, data);
+            let nextSegment = this.memoryFill.indexOf(false);
+            if (nextSegment >= 0) {
+                this.memoryFill[this.memoryFill.indexOf(false)] = true;
             }
+            writeReturn.push(segment)
+            return writeReturn;
         }
         public getPBCsInfo() {
             let pbcsInfo: string[][] = [];

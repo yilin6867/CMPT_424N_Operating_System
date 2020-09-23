@@ -282,21 +282,21 @@ var TSOS;
         };
         Cpu.prototype.readPCB = function (pid) {
             var readPCB = _MemoryManager.getPCBbyID(pid);
-            if (typeof readPCB === "string") {
-                return readPCB;
-            }
-            else {
-                this.runningPCB = readPCB;
-                return undefined;
-            }
+            return readPCB;
         };
         Cpu.prototype.runUserProgram = function (pid) {
-            var returnMsg = this.readPCB(pid);
-            if (typeof returnMsg === "undefined") {
-                this.isExecuting = true;
+            var returnInfo = this.readPCB(pid);
+            if (typeof returnInfo !== "string") {
+                if (returnInfo.state === 4) {
+                    _StdOut.putText("The user program have been terminated");
+                }
+                else {
+                    this.runningPCB = returnInfo;
+                    this.isExecuting = true;
+                }
             }
             else {
-                _StdOut.putText(returnMsg);
+                _StdOut.putText(returnInfo);
             }
         };
         Cpu.prototype.terminates = function () {
@@ -308,7 +308,6 @@ var TSOS;
             _OsShell.putPrompt();
         };
         Cpu.prototype.removeMemory = function (location, startCounter, endCounter) {
-            console.log("remove at cpu stage");
             _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         };
         Cpu.prototype.getLoadMemory = function (segment) {
@@ -331,6 +330,9 @@ var TSOS;
                 memoryArrMatrix[memoryChunk].push(hex);
             }
             return memoryArrMatrix;
+        };
+        Cpu.prototype.getMemorySegments = function () {
+            return _MemoryAccessor.getSegments();
         };
         Cpu.prototype.getInfo = function () {
             return [this.PC, this.Acc, this.Xreg, this.Yreg, this.Zflag];

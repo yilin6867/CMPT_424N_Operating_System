@@ -277,24 +277,23 @@ module TSOS {
             return [newPCB.getPid(), newPCB.getCounter(), writeInfo[0], writeInfo[1]];
         }
 
-        public readPCB(pid:string) {
+        public readPCB(pid:string): PCB {
             let readPCB: PCB = _MemoryManager.getPCBbyID(pid);
-            if (typeof readPCB === "string") {
-                return readPCB
-            }
-            else {
-                this.runningPCB = readPCB;
-                return undefined
-            }
+            return readPCB
         }
 
         public runUserProgram(pid: string) {
-            let returnMsg = this.readPCB(pid);
-            if (typeof returnMsg === "undefined") {
-                this.isExecuting = true;
+            let returnInfo: PCB = this.readPCB(pid);
+            if (typeof returnInfo !== "string") {
+                if (returnInfo.state === 4) {
+                    _StdOut.putText("The user program have been terminated")
+                } else {
+                    this.runningPCB = returnInfo;
+                    this.isExecuting = true;
+                }
             }
             else {
-                _StdOut.putText(returnMsg)
+                _StdOut.putText(returnInfo)
             }
         }
 
@@ -308,7 +307,6 @@ module TSOS {
         }
         
         public removeMemory(location: number, startCounter: number, endCounter: number) {
-            console.log("remove at cpu stage")
             _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         }
 
@@ -333,6 +331,10 @@ module TSOS {
                 memoryArrMatrix[memoryChunk].push(hex);
             }
             return memoryArrMatrix;
+        }
+
+        public getMemorySegments() {
+            return _MemoryAccessor.getSegments();
         }
 
         public getInfo() {

@@ -183,6 +183,9 @@ var TSOS;
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_CPU.getPCBs());
         };
+        Kernel.prototype.runProgram = function (pid) {
+            _CPU.runUserProgram(pid);
+        };
         Kernel.prototype.showMemory = function (segment) {
             var cpuInfo = _CPU.getInfo();
             _Console.showMemory(_CPU.getLoadMemory(segment), cpuInfo[0]);
