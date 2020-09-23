@@ -21,7 +21,7 @@ module TSOS {
                     public Yreg: any = 0,
                     public Zflag: number = 0,
                     public isExecuting: boolean = false,
-                    public runningPCB: pcb = null,
+                    public runningPCB: PCB = null,
                     public singleStep: boolean = false
         ) {
         }
@@ -271,14 +271,14 @@ module TSOS {
             if (writeInfo.length == 0) {
                 return []
             }
-            let newPCB: pcb = new pcb(0, _MemoryManager.getNextPID(), 32, segment
+            let newPCB: PCB = new PCB(0, _MemoryManager.getNextPID(), 32, segment
                                         , writeInfo[0].toString(16), writeInfo[1]);
             _MemoryManager.addPCB(newPCB);
             return [newPCB.getPid(), newPCB.getCounter(), writeInfo[0], writeInfo[1]];
         }
 
         public readPCB(pid:string) {
-            let readPCB: pcb = _MemoryManager.getPCBbyID(pid);
+            let readPCB: PCB = _MemoryManager.getPCBbyID(pid);
             if (typeof readPCB === "string") {
                 return readPCB
             }

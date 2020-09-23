@@ -276,7 +276,7 @@ var TSOS;
             if (writeInfo.length == 0) {
                 return [];
             }
-            var newPCB = new TSOS.pcb(0, _MemoryManager.getNextPID(), 32, segment, writeInfo[0].toString(16), writeInfo[1]);
+            var newPCB = new TSOS.PCB(0, _MemoryManager.getNextPID(), 32, segment, writeInfo[0].toString(16), writeInfo[1]);
             _MemoryManager.addPCB(newPCB);
             return [newPCB.getPid(), newPCB.getCounter(), writeInfo[0], writeInfo[1]];
         };
