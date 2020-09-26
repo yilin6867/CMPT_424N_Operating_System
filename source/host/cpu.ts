@@ -191,7 +191,7 @@ module TSOS {
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
             let byteValue = this.readData(this.runningPCB.location, nextReturn[0])
             let incre = (parseInt(String(byteValue[0]) ,16) + 1).toString(16)
-            this.writeData(this.runningPCB.location, incre, parseInt(nextReturn[0], 16));
+            this.writeData(this.runningPCB.location, this.pad(incre, 2), parseInt(nextReturn[0], 16));
             console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
             this.updateCounters(nextReturn[1])
         }
@@ -289,6 +289,11 @@ module TSOS {
                     _StdOut.putText("The user program have been terminated")
                 } else {
                     this.runningPCB = returnInfo;
+                    this.Acc = this.runningPCB.accumulator;
+                    this.PC = this.runningPCB.counter;
+                    this.Xreg = this.runningPCB.x_reg;
+                    this.Yreg = this.runningPCB.y_reg;
+                    this.Zflag = this.runningPCB.z_reg;
                     this.isExecuting = true;
                 }
             }
@@ -298,7 +303,7 @@ module TSOS {
         }
 
         public terminates() {
-            this.isExecuting = false
+            this.isExecuting = false;
             this.runningPCB.updateStates(4);
             this.removeMemory(this.runningPCB.location, 0, this.runningPCB.limit_ct)
             _Console.putText("Process " + this.runningPCB.getPid() + " is finished")

@@ -56,7 +56,7 @@ var TSOS;
             return _Memory.getLoadMemory(segment);
         };
         MemoryAccessor.prototype.removeMemory = function (segment, start, end) {
-            _Memory.remove(segment, start * 8, end * 8);
+            _Memory.remove(segment, start, end);
         };
         MemoryAccessor.prototype.getSegments = function () {
             return _Memory.memoryArr.length;

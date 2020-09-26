@@ -55,7 +55,7 @@ module TSOS {
         }
 
         public removeMemory(segment:number, start:number, end:number) {
-            _Memory.remove(segment, start * 8, end * 8);
+            _Memory.remove(segment, start, end);
         }
 
         public getSegments() {

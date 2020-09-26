@@ -122,7 +122,11 @@ module TSOS {
 
         // Tell the kernal to turn on single step for the CPU to execute one op code at a time.
         public static hostBtnSingleStep_click(btn): void {
-            (<HTMLButtonElement>document.getElementById("btnNextStep")).disabled = false;
+            if ((<HTMLButtonElement>document.getElementById("btnNextStep")).disabled == true) {
+                (<HTMLButtonElement>document.getElementById("btnNextStep")).disabled = false;
+            } else {
+                (<HTMLButtonElement>document.getElementById("btnNextStep")).disabled = true;
+            }
             _Kernel.turnSingleStep();
         }
 

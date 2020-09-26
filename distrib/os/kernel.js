@@ -178,6 +178,7 @@ var TSOS;
             _Console.showSysDatetime(sysDate, sysTime);
             var cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
+                document.getElementById("memorySeg1").click();
                 _Console.showMemCounter(cpuInfo[0]);
             }
             _Console.showCPU(cpuInfo);

@@ -33,7 +33,7 @@ var TSOS;
         MemoryManager.prototype.write = function (segment, data) {
             if (segment === -1) {
                 segment = 0;
-                _CPU.removeMemory(segment, 0, 255);
+                _CPU.removeMemory(segment, 0, this.memorySize);
                 console.log("overwrite memory " + this.pcbs[this.pcbs.length - 1]);
                 this.pcbs[this.pcbs.length - 1].updateStates(4);
             }

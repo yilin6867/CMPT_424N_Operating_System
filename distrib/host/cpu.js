@@ -194,7 +194,7 @@ var TSOS;
             var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
             var byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             var incre = (parseInt(String(byteValue[0]), 16) + 1).toString(16);
-            this.writeData(this.runningPCB.location, incre, parseInt(nextReturn[0], 16));
+            this.writeData(this.runningPCB.location, this.pad(incre, 2), parseInt(nextReturn[0], 16));
             console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
             this.updateCounters(nextReturn[1]);
         };
@@ -292,6 +292,11 @@ var TSOS;
                 }
                 else {
                     this.runningPCB = returnInfo;
+                    this.Acc = this.runningPCB.accumulator;
+                    this.PC = this.runningPCB.counter;
+                    this.Xreg = this.runningPCB.x_reg;
+                    this.Yreg = this.runningPCB.y_reg;
+                    this.Zflag = this.runningPCB.z_reg;
                     this.isExecuting = true;
                 }
             }
