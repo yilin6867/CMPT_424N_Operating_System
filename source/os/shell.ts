@@ -397,7 +397,6 @@ module TSOS {
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             } else {
-                console.log(segment);
                 let writeInfo: number[] = _MemoryManager.write(segment, codes);
                 _StdOut.putText("The User Program Input is valid input");
                 _StdOut.advanceLine();
@@ -427,6 +426,10 @@ module TSOS {
         // arguments as message
         public shellBsod(error: string[]) {
             _Kernel.krnTrapError(error);
+        }
+
+        public shellKill(pid: string) {
+            _Kernel.krnKill(parseInt(pid));
         }
     }
 }

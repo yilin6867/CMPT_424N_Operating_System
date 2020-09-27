@@ -331,7 +331,6 @@ var TSOS;
                 _StdOut.putText("The User Program Input is not valid input.");
             }
             else {
-                console.log(segment);
                 var writeInfo = _MemoryManager.write(segment, codes);
                 _StdOut.putText("The User Program Input is valid input");
                 _StdOut.advanceLine();
@@ -359,6 +358,9 @@ var TSOS;
         // arguments as message
         Shell.prototype.shellBsod = function (error) {
             _Kernel.krnTrapError(error);
+        };
+        Shell.prototype.shellKill = function (pid) {
+            _Kernel.krnKill(parseInt(pid));
         };
         return Shell;
     }());

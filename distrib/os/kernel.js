@@ -194,12 +194,18 @@ var TSOS;
         // Tell the CPU to turn on single step and off if it is on
         Kernel.prototype.turnSingleStep = function () {
             _CPU.singleStep = _CPU.singleStep ? false : true;
+            if (!_CPU.singleStep) {
+                _CPU.isExecuting = true;
+            }
         };
         // Tell the CPU to execute next step
-        Kernel.prototype.nextStep = function () {
+        Kernel.prototype.krnNextStep = function () {
             if (_CPU.runningPCB.state < 4) {
                 _CPU.isExecuting = true;
             }
+        };
+        Kernel.prototype.krnKill = function (pid) {
+            _CPU.kill(pid);
         };
         return Kernel;
     }());

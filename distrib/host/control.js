@@ -101,12 +101,17 @@ var TSOS;
         };
         // Tell the kernal to turn on single step for the CPU to execute one op code at a time.
         Control.hostBtnSingleStep_click = function (btn) {
-            document.getElementById("btnNextStep").disabled = false;
+            if (document.getElementById("btnNextStep").disabled == true) {
+                document.getElementById("btnNextStep").disabled = false;
+            }
+            else {
+                document.getElementById("btnNextStep").disabled = true;
+            }
             _Kernel.turnSingleStep();
         };
         // Tell the kernal to have CPU execute next step
         Control.hostBtnNextStep_click = function (btn) {
-            _Kernel.nextStep();
+            _Kernel.krnNextStep();
         };
         //
         Control.hostBtnLoadMemSegment = function (btn, segment) {

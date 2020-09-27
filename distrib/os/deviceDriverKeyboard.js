@@ -42,9 +42,10 @@ var TSOS;
             // Parse the params.  TODO: Check that the params are valid and osTrapError if not.
             var key = params[0];
             var isShifted = params[1];
-            _Kernel.krnTrace("Key code:" + key + " shifted:" + isShifted);
+            var isCtrl = params[2];
+            _Kernel.krnTrace("Key code:" + key + " shifted:" + isShifted + " control:" + isCtrl);
             // Check to see if we even want to deal with the key that was pressed.
-            _KernelInputQueue.enqueue(key);
+            _KernelInputQueue.enqueue([key, isShifted, isCtrl]);
         };
         return DeviceDriverKeyboard;
     }(TSOS.DeviceDriver));

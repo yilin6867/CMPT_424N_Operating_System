@@ -132,7 +132,7 @@ module TSOS {
 
         // Tell the kernal to have CPU execute next step
         public static hostBtnNextStep_click(btn): void {
-            _Kernel.nextStep();
+            _Kernel.krnNextStep();
         }
 
         //

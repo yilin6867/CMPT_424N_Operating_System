@@ -35,7 +35,6 @@ module TSOS {
             }
             for(let data of binaryData) {
                 if (addr != null) {
-                    console.log("Set value at address " + segment, addr + " to " + data)
                     this.memoryArr[segment][addr] = data
                     addr = addr + 1
                 } else {

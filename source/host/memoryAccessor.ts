@@ -24,21 +24,17 @@ module TSOS {
                 let i = 0
                 do {
                     let nextReturn: any[] = _Memory.readData(segment, (counter + i) * opCodeSize);
-                    console.log("Read "+ nextReturn)
                     param[0] = param[0] + " " + nextReturn[0]
                     param[1] = nextReturn[1]
-                    console.log(param[0].slice(param[0].length -2 , param[0].length))
                     i = i + 1
                 } while (param[0].slice(param[0].length -2 , param[0].length) !== "00")
                 return param;
             } else {
                 for (let i = 0; i < numCounter; i++) {
                     let nextReturn: any[] = _Memory.readData(segment, (counter + i) * opCodeSize);
-                    console.log("Read "+ nextReturn)
                     param[0] = nextReturn[0] + param[0]
                     param[1] = nextReturn[1]
-                }   
-                console.log("return  "+ param)
+                }
                 return param
             }
         }

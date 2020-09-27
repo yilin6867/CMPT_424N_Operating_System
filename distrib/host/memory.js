@@ -39,7 +39,6 @@ var TSOS;
             for (var _i = 0, binaryData_1 = binaryData; _i < binaryData_1.length; _i++) {
                 var data = binaryData_1[_i];
                 if (addr != null) {
-                    console.log("Set value at address " + segment, addr + " to " + data);
                     this.memoryArr[segment][addr] = data;
                     addr = addr + 1;
                 }

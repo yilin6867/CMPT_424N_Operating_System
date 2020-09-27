@@ -7,6 +7,7 @@
      Operating System Concepts 8th edition by Silberschatz, Galvin, and Gagne.  ISBN 978-0-470-12872-5
      ------------ */
 
+
 module TSOS {
 
     export class Kernel {
@@ -208,7 +209,8 @@ module TSOS {
         }
 
         public runProgram(pid: string): void {
-            _CPU.runUserProgram(pid);
+            let returnMSG = _CPU.runUserProgram(pid);
+            _StdOut.putText(returnMSG);
         }
 
         public showMemory(segment: number): void {
@@ -219,12 +221,19 @@ module TSOS {
         // Tell the CPU to turn on single step and off if it is on
         public turnSingleStep(): void {
             _CPU.singleStep = _CPU.singleStep ? false: true;
+            if (!_CPU.singleStep) {
+                _CPU.isExecuting = true;
+            }
         }
         // Tell the CPU to execute next step
-        public nextStep(): void {
+        public krnNextStep(): void {
             if (_CPU.runningPCB.state < 4) {
                 _CPU.isExecuting = true;
             }
+        }
+
+        public krnKill(pid: number) {
+            _CPU.kill(pid);
         }
     }
 }

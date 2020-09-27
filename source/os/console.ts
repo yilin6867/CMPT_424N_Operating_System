@@ -38,7 +38,10 @@ module TSOS {
         public handleInput(): void {
             while (_KernelInputQueue.getSize() > 0) {
                 // Get the next character from the kernel input queue.
-                var chr = _KernelInputQueue.dequeue();
+                var keyValues = _KernelInputQueue.dequeue();
+                var chr = keyValues[0];
+                var isShift = keyValues[1];
+                var isCtrl = keyValues[2];
                 
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" 
                 //(anything else that the keyboard device driver gave us).
@@ -131,10 +134,16 @@ module TSOS {
                             this.putText(suggest);
                         }
                     }
+                } else if (chr === 67 || chr === "c" && isCtrl === true) {
+                    console.log("Stoping the process")
+                    _OsShell.shellKill("-1");
+                    this.advanceLine();
+                    _OsShell.putPrompt();
                 } else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     if (chr.length < 2) {
+                        console.log(chr, isShift, isCtrl)
                         this.putText(chr);
                         // ... and add it to our buffer.
                         this.buffer += chr;

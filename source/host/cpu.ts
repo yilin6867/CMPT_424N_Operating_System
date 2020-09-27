@@ -95,14 +95,13 @@ module TSOS {
                         this.systemCall();
                         break;
                 }
-
                 if (parseInt(this.runningPCB.getCounter(), 16) >= this.runningPCB.limit_ct/8) {
                     this.isExecuting = false
                     this.runningPCB.updateStates(4)
                 }
                 if (this.singleStep) {
-                    this.isExecuting = false
-                }
+                    this.isExecuting = false;
+                } 
             }
         }
 
@@ -283,10 +282,10 @@ module TSOS {
         }
 
         public runUserProgram(pid: string) {
-            let returnInfo: PCB = this.readPCB(pid);
+            let returnInfo: any = this.readPCB(pid);
             if (typeof returnInfo !== "string") {
                 if (returnInfo.state === 4) {
-                    _StdOut.putText("The user program have been terminated")
+                    return "The user program have been terminated"
                 } else {
                     this.runningPCB = returnInfo;
                     this.Acc = this.runningPCB.accumulator;
@@ -298,7 +297,7 @@ module TSOS {
                 }
             }
             else {
-                _StdOut.putText(returnInfo)
+                return returnInfo
             }
         }
 
@@ -377,6 +376,14 @@ module TSOS {
             var s = num+"";
             while (s.length < size) s = "0" + s;
             return s;
+        }
+
+        public kill(pid: number) {
+            if (pid === -1) {
+                pid = this.runningPCB.getPid();
+            }
+            this.runningPCB.updateStates(4);
+            this.isExecuting = false;
         }
     }
 }

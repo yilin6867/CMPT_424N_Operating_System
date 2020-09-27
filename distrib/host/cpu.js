@@ -370,6 +370,13 @@ var TSOS;
                 s = "0" + s;
             return s;
         };
+        Cpu.prototype.kill = function (pid) {
+            if (pid === -1) {
+                pid = this.runningPCB.getPid();
+            }
+            this.runningPCB.updateStates(4);
+            this.isExecuting = false;
+        };
         return Cpu;
     }());
     TSOS.Cpu = Cpu;
