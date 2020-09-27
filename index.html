@@ -87,7 +87,7 @@
              class="normal_button"
              disabled="disabled"
              value="Single Step"
-             tabindex="2"
+             tabindex="3"
              onclick="TSOS.Control.hostBtnSingleStep_click(this);">
 
       <input type="button"
@@ -96,7 +96,7 @@
              class="normal_button"
              disabled="disabled"
              value="Next Step"
-             tabindex="2"
+             tabindex="4"
              onclick="TSOS.Control.hostBtnNextStep_click(this);">
    </div>
 
@@ -165,6 +165,13 @@
          <table id="memoryTable">
          </table>
       </label>
+      <input type="button"
+         id = "btnMemoryView"
+         name="btnMemoryView"
+         class="normal_button"
+         value="Binary View"
+         tabindex="0"
+         onclick="TSOS.Control.hostBtnMemoryView_click(this);">
    </div>
    <div id="pbcDisplay" style="width:500px; float:left">
       <label>

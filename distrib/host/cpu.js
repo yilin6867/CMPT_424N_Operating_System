@@ -288,7 +288,7 @@ var TSOS;
             var returnInfo = this.readPCB(pid);
             if (typeof returnInfo !== "string") {
                 if (returnInfo.state === 4) {
-                    _StdOut.putText("The user program have been terminated");
+                    return "The user program have been terminated";
                 }
                 else {
                     this.runningPCB = returnInfo;
@@ -301,7 +301,7 @@ var TSOS;
                 }
             }
             else {
-                _StdOut.putText(returnInfo);
+                return returnInfo;
             }
         };
         Cpu.prototype.terminates = function () {
@@ -315,7 +315,7 @@ var TSOS;
         Cpu.prototype.removeMemory = function (location, startCounter, endCounter) {
             _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         };
-        Cpu.prototype.getLoadMemory = function (segment) {
+        Cpu.prototype.getLoadMemory = function (segment, hexView) {
             var memoryArr = _MemoryAccessor.getLoadMemory(segment);
             var memoryArrMatrix = new Array(32).fill([]);
             var memoryChunk = 0;
@@ -328,7 +328,13 @@ var TSOS;
                 }
                 var hex = "";
                 for (var _ = 0; _ < 2; _++) {
-                    var nibble = parseInt(memoryArr.splice(0, 4).join(""), 2);
+                    var nibble = void 0;
+                    if (hexView) {
+                        nibble = parseInt(memoryArr.splice(0, 4).join(""), 2);
+                    }
+                    else {
+                        nibble = memoryArr.splice(0, 4).join("");
+                    }
                     hex = hex + nibble.toString(16).toUpperCase();
                     hexNum = hexNum + 4;
                 }

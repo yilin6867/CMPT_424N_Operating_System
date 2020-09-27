@@ -185,11 +185,13 @@ var TSOS;
             _Console.showPCB(_CPU.getPCBs());
         };
         Kernel.prototype.runProgram = function (pid) {
-            _CPU.runUserProgram(pid);
+            var returnMSG = _CPU.runUserProgram(pid);
+            _StdOut.putText(returnMSG);
         };
         Kernel.prototype.showMemory = function (segment) {
             var cpuInfo = _CPU.getInfo();
-            _Console.showMemory(_CPU.getLoadMemory(segment), cpuInfo[0]);
+            var isHexView = _MemoryManager.memoryHexView;
+            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         };
         // Tell the CPU to turn on single step and off if it is on
         Kernel.prototype.turnSingleStep = function () {
@@ -206,6 +208,10 @@ var TSOS;
         };
         Kernel.prototype.krnKill = function (pid) {
             _CPU.kill(pid);
+        };
+        Kernel.prototype.chgMemView = function () {
+            _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
+            this.showMemory(_CPU.runningPCB.location);
         };
         return Kernel;
     }());

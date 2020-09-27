@@ -215,7 +215,8 @@ module TSOS {
 
         public showMemory(segment: number): void {
             let cpuInfo = _CPU.getInfo();
-            _Console.showMemory(_CPU.getLoadMemory(segment), cpuInfo[0]);
+            let isHexView = _MemoryManager.memoryHexView;
+            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         }
 
         // Tell the CPU to turn on single step and off if it is on
@@ -234,6 +235,11 @@ module TSOS {
 
         public krnKill(pid: number) {
             _CPU.kill(pid);
+        }
+
+        public chgMemView() {
+            _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
+            this.showMemory(_CPU.runningPCB.location);
         }
     }
 }

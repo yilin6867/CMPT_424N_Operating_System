@@ -11,6 +11,8 @@ module TSOS {
             public pcbs = new Array()
             , public memorySize = _MemoryAccessor.getMemorySize()
             , public memoryFill = new Array(_CPU.getMemorySegments()).fill(false)
+            // false --> binary view
+            , public memoryHexView = true 
         ) {
             
         }

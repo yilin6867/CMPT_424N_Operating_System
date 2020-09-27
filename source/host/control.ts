@@ -137,7 +137,13 @@ module TSOS {
 
         //
         public static hostBtnLoadMemSegment(btn, segment:number): void {
-            _Kernel.showMemory(segment)
+            btn.style.backgroundColor = "darkgray";
+            _Kernel.showMemory(segment);
+        }
+
+        public static hostBtnMemoryView_click(btn): void {
+            _Kernel.chgMemView();
+            btn.value = btn.value === "Binary View" ? "Hexidecimal" : "Binary View";
         }
     }
 }

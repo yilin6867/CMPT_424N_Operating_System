@@ -314,7 +314,7 @@ module TSOS {
             _MemoryAccessor.removeMemory(location, startCounter, endCounter);
         }
 
-        public getLoadMemory(segment:number): string[][]{
+        public getLoadMemory(segment:number, hexView: boolean): string[][]{
             let memoryArr: string[] = _MemoryAccessor.getLoadMemory(segment);
             let memoryArrMatrix: string[][] = new Array(32).fill([]);
             let memoryChunk: number = 0;
@@ -327,10 +327,14 @@ module TSOS {
                 }
                 let hex = ""
                 for (let _ = 0; _ < 2; _++) {
-                    let nibble  = parseInt(memoryArr.splice(0, 4).join(""), 2);
+                    let nibble;
+                    if (hexView) {
+                        nibble  = parseInt(memoryArr.splice(0, 4).join(""), 2);
+                    } else {
+                        nibble  = memoryArr.splice(0, 4).join("");
+                    }
                     hex = hex + nibble.toString(16).toUpperCase();
                     hexNum = hexNum + 4;
-                    
                 }
                 memoryArrMatrix[memoryChunk].push(hex);
             }

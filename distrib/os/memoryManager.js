@@ -8,13 +8,17 @@
 var TSOS;
 (function (TSOS) {
     var MemoryManager = /** @class */ (function () {
-        function MemoryManager(pcbs, memorySize, memoryFill) {
+        function MemoryManager(pcbs, memorySize, memoryFill
+        // false --> binary view
+        , memoryHexView) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             if (memoryFill === void 0) { memoryFill = new Array(_CPU.getMemorySegments()).fill(false); }
+            if (memoryHexView === void 0) { memoryHexView = true; }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
             this.memoryFill = memoryFill;
+            this.memoryHexView = memoryHexView;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
             this.pcbs.push(newpcb);

@@ -68,10 +68,9 @@ table {
   display: block;
 }
 
-#memoryTable {
-  width: 360px;
-  overflow-y:auto;
-  height:180px;
+tab {
+  background-color: white;
+  border: 2px solid black;
 }
 
 th, td {
@@ -80,6 +79,11 @@ th, td {
   height: auto;
 }
 
+#memoryTable {
+  width: 360px;
+  overflow-y:auto;
+  height:180px;
+}
 #cpuTable {
   width: 360px;
   height: auto;

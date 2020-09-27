@@ -115,7 +115,12 @@ var TSOS;
         };
         //
         Control.hostBtnLoadMemSegment = function (btn, segment) {
+            btn.style.backgroundColor = "darkgray";
             _Kernel.showMemory(segment);
+        };
+        Control.hostBtnMemoryView_click = function (btn) {
+            _Kernel.chgMemView();
+            btn.value = btn.value === "Binary View" ? "Hexidecimal" : "Binary View";
         };
         return Control;
     }());
