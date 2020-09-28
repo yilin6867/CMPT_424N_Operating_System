@@ -57,3 +57,9 @@ var histCursor = history.length;
 var osOn = false;
 var sysTime = null;
 var sysDate = null;
+//
+var _Memory;
+var _MemoryAccessor;
+//	Software	(OS)
+var _MemoryManager = null;
+var memoryHexMatr;

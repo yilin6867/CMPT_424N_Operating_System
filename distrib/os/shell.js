@@ -61,9 +61,10 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellBsod, "bsod", "<Error Message> - invoke kernal error to test display " +
                 "of BSOD for given string of Error Message");
             this.commandList[this.commandList.length] = sc;
-            // 
             sc = new TSOS.ShellCommand(this.shellStatus, "status", "<String> - Render the status option on the Graphic Taskbar with "
                 + "given string of text.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Run the process for give process id");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -323,18 +324,31 @@ var TSOS;
         // Use to load user program input. Currently validating user input
         Shell.prototype.shellLoad = function () {
             var prg_in = document.getElementById("taProgramInput");
-            var regexp = new RegExp("^(?:[0-9A-Fa-f ]{2}[ ]*)*(?:[0-9A-Fa-f ]{2})$");
-            var code_lines = prg_in.value.split("\n");
-            for (var _i = 0, code_lines_1 = code_lines; _i < code_lines_1.length; _i++) {
-                var code = code_lines_1[_i];
-                if (!regexp.test(code)) {
-                    _StdOut.putText("The User Program Input is not valid input");
-                    return;
-                }
+            var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
+            var codes = prg_in.value.split("\n").join(" ");
+            var segment = _MemoryManager.memoryFill.indexOf(false);
+            if (!regexp.test(codes)) {
+                _StdOut.putText("The User Program Input is not valid input.");
             }
-            _StdOut.putText("The User Program Input is valid input");
+            else {
+                var writeInfo = _MemoryManager.write(segment, codes);
+                _StdOut.putText("The User Program Input is valid input");
+                _StdOut.advanceLine();
+                if (writeInfo.length > 1) {
+                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
+                        + " between address " + writeInfo[2] / 8 + " and address " + writeInfo[3] / 8);
+                }
+                else {
+                    _StdOut.putText("However, the user program exceed the memory space");
+                }
+                _Kernel.showMemory(writeInfo[4]);
+            }
         };
-        // 
+        // run the user input program with given pid
+        Shell.prototype.shellRun = function (pid) {
+            _Kernel.runProgram(pid);
+        };
+        // update the status on the os task bar
         Shell.prototype.shellStatus = function (status) {
             var status_html = document.getElementById("status");
             var status_txt = status.join(" ");
@@ -344,6 +358,9 @@ var TSOS;
         // arguments as message
         Shell.prototype.shellBsod = function (error) {
             _Kernel.krnTrapError(error);
+        };
+        Shell.prototype.shellKill = function (pid) {
+            _Kernel.krnKill(parseInt(pid));
         };
         return Shell;
     }());

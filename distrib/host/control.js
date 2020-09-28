@@ -64,14 +64,19 @@ var TSOS;
         Control.hostBtnStartOS_click = function (btn) {
             // Disable the (passed-in) start button...
             btn.disabled = true;
-            // .. enable the Halt and Reset buttons ...
+            // .. enable the Halt and Reset buttons ... and single step and next step buttons
             document.getElementById("btnHaltOS").disabled = false;
             document.getElementById("btnReset").disabled = false;
+            document.getElementById("btnSingleStep").disabled = false;
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
             _CPU = new TSOS.Cpu(); // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
+            // .. Create and initialize the Memory. Memory is part of hardware
+            _Memory = new TSOS.Memory();
+            _Memory.init();
+            _MemoryAccessor = new TSOS.MemoryAccessor();
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -93,6 +98,29 @@ var TSOS;
             // That boolean parameter is the 'forceget' flag. When it is true it causes the page to always
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
+        };
+        // Tell the kernal to turn on single step for the CPU to execute one op code at a time.
+        Control.hostBtnSingleStep_click = function (btn) {
+            if (document.getElementById("btnNextStep").disabled == true) {
+                document.getElementById("btnNextStep").disabled = false;
+            }
+            else {
+                document.getElementById("btnNextStep").disabled = true;
+            }
+            _Kernel.turnSingleStep();
+        };
+        // Tell the kernal to have CPU execute next step
+        Control.hostBtnNextStep_click = function (btn) {
+            _Kernel.krnNextStep();
+        };
+        //
+        Control.hostBtnLoadMemSegment = function (btn, segment) {
+            btn.style.backgroundColor = "darkgray";
+            _Kernel.showMemory(segment);
+        };
+        Control.hostBtnMemoryView_click = function (btn) {
+            _Kernel.chgMemView();
+            btn.value = btn.value === "Binary View" ? "Hexidecimal" : "Binary View";
         };
         return Control;
     }());

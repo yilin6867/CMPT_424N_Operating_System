@@ -7,6 +7,7 @@
      Operating System Concepts 8th edition by Silberschatz, Galvin, and Gagne.  ISBN 978-0-470-12872-5
      ------------ */
 
+
 module TSOS {
 
     export class Kernel {
@@ -35,10 +36,6 @@ module TSOS {
             _krnKeyboardDriver.driverEntry();                    // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
 
-            //
-            // ... more?
-            //
-
             // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
             this.krnTrace("Enabling the interrupts.");
             this.krnEnableInterrupts();
@@ -47,6 +44,9 @@ module TSOS {
             this.krnTrace("Creating and Launching the shell.");
             _OsShell = new Shell();
             _OsShell.init();
+
+            // Create manager for the memory
+            _MemoryManager = new MemoryManager();
 
             // Set flag to mark Operating System to be on
             osOn = true;
@@ -57,7 +57,9 @@ module TSOS {
             }
 
             // Render the Graphic Taskbar content
-            this.krnUpdateDatetime()
+            this.krnUpdateDisplayValue();
+            // Render memory
+            document.getElementById("memorySeg1").click();
         }
 
         public krnShutdown() {
@@ -82,8 +84,8 @@ module TSOS {
                that it has to look for interrupts and process them if it finds any.                          
             */
             
-            // Render graphic task bar content continuously
-            this.krnUpdateDatetime()
+            // Render OS values dynamically in the console
+            this.krnUpdateDisplayValue();
 
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
@@ -188,7 +190,7 @@ module TSOS {
         }
 
         // Update the host display on the graphic task bar
-        public krnUpdateDatetime(): void {
+        public krnUpdateDisplayValue(): void {
             let cur_datetime: Date = new Date();
             sysDate = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/" 
                                 + ("0" + cur_datetime.getDate()).slice(-2) + "/" 
@@ -197,7 +199,47 @@ module TSOS {
                         + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
                         + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
+            let cpuInfo = _CPU.getInfo();
+            if (_CPU.isExecuting) {
+                document.getElementById("memorySeg1").click();
+                _Console.showMemCounter(cpuInfo[0]);
+            }
+            _Console.showCPU(cpuInfo);
+            _Console.showPCB(_CPU.getPCBs());
         }
 
+        public runProgram(pid: string): void {
+            let returnMSG = _CPU.runUserProgram(pid);
+            _StdOut.putText(returnMSG);
+        }
+
+        public showMemory(segment: number): void {
+            let cpuInfo = _CPU.getInfo();
+            let isHexView = _MemoryManager.memoryHexView;
+            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
+        }
+
+        // Tell the CPU to turn on single step and off if it is on
+        public turnSingleStep(): void {
+            _CPU.singleStep = _CPU.singleStep ? false: true;
+            if (!_CPU.singleStep) {
+                _CPU.isExecuting = true;
+            }
+        }
+        // Tell the CPU to execute next step
+        public krnNextStep(): void {
+            if (_CPU.runningPCB.state < 4) {
+                _CPU.isExecuting = true;
+            }
+        }
+
+        public krnKill(pid: number) {
+            _CPU.kill(pid);
+        }
+
+        public chgMemView() {
+            _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
+            this.showMemory(_CPU.runningPCB.location);
+        }
     }
 }

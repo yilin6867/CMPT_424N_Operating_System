@@ -31,9 +31,6 @@ var TSOS;
             _krnKeyboardDriver = new TSOS.DeviceDriverKeyboard(); // Construct it.
             _krnKeyboardDriver.driverEntry(); // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
-            //
-            // ... more?
-            //
             // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
             this.krnTrace("Enabling the interrupts.");
             this.krnEnableInterrupts();
@@ -41,6 +38,8 @@ var TSOS;
             this.krnTrace("Creating and Launching the shell.");
             _OsShell = new TSOS.Shell();
             _OsShell.init();
+            // Create manager for the memory
+            _MemoryManager = new TSOS.MemoryManager();
             // Set flag to mark Operating System to be on
             osOn = true;
             // Finally, initiate student testing protocol.
@@ -48,7 +47,9 @@ var TSOS;
                 _GLaDOS.afterStartup();
             }
             // Render the Graphic Taskbar content
-            this.krnUpdateDatetime();
+            this.krnUpdateDisplayValue();
+            // Render memory
+            document.getElementById("memorySeg1").click();
         };
         Kernel.prototype.krnShutdown = function () {
             this.krnTrace("begin shutdown OS");
@@ -69,8 +70,8 @@ var TSOS;
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.
             */
-            // Render graphic task bar content continuously
-            this.krnUpdateDatetime();
+            // Render OS values dynamically in the console
+            this.krnUpdateDisplayValue();
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
                 // Process the first interrupt on the interrupt queue.
@@ -166,7 +167,7 @@ var TSOS;
             this.krnShutdown();
         };
         // Update the host display on the graphic task bar
-        Kernel.prototype.krnUpdateDatetime = function () {
+        Kernel.prototype.krnUpdateDisplayValue = function () {
             var cur_datetime = new Date();
             sysDate = "Date: " + ("0" + (cur_datetime.getMonth() + 1)).slice(-2) + "/"
                 + ("0" + cur_datetime.getDate()).slice(-2) + "/"
@@ -175,6 +176,42 @@ var TSOS;
                 + ":" + ("0" + cur_datetime.getMinutes()).slice(-2)
                 + ":" + ("0" + cur_datetime.getSeconds()).slice(-2);
             _Console.showSysDatetime(sysDate, sysTime);
+            var cpuInfo = _CPU.getInfo();
+            if (_CPU.isExecuting) {
+                document.getElementById("memorySeg1").click();
+                _Console.showMemCounter(cpuInfo[0]);
+            }
+            _Console.showCPU(cpuInfo);
+            _Console.showPCB(_CPU.getPCBs());
+        };
+        Kernel.prototype.runProgram = function (pid) {
+            var returnMSG = _CPU.runUserProgram(pid);
+            _StdOut.putText(returnMSG);
+        };
+        Kernel.prototype.showMemory = function (segment) {
+            var cpuInfo = _CPU.getInfo();
+            var isHexView = _MemoryManager.memoryHexView;
+            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
+        };
+        // Tell the CPU to turn on single step and off if it is on
+        Kernel.prototype.turnSingleStep = function () {
+            _CPU.singleStep = _CPU.singleStep ? false : true;
+            if (!_CPU.singleStep) {
+                _CPU.isExecuting = true;
+            }
+        };
+        // Tell the CPU to execute next step
+        Kernel.prototype.krnNextStep = function () {
+            if (_CPU.runningPCB.state < 4) {
+                _CPU.isExecuting = true;
+            }
+        };
+        Kernel.prototype.krnKill = function (pid) {
+            _CPU.kill(pid);
+        };
+        Kernel.prototype.chgMemView = function () {
+            _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
+            this.showMemory(_CPU.runningPCB.location);
         };
         return Kernel;
     }());

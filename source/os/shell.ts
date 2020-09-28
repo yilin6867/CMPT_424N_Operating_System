@@ -106,13 +106,19 @@ module TSOS {
                                 );
             this.commandList[this.commandList.length] = sc;
 
-            // 
             sc = new ShellCommand(this.shellStatus,
                                     "status",
                                     "<String> - Render the status option on the Graphic Taskbar with "
                                     + "given string of text."
                                 );
             this.commandList[this.commandList.length] = sc;
+            
+            sc = new ShellCommand(this.shellRun,
+                                    "run",
+                                    "<pid> - Run the process for give process id"
+                                );
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -385,19 +391,31 @@ module TSOS {
         // Use to load user program input. Currently validating user input
         public shellLoad() {
             let prg_in: any = document.getElementById("taProgramInput");
-            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f ]{2}[ ]*)*(?:[0-9A-Fa-f ]{2})$");
-            let code_lines: string[] = prg_in.value.split("\n");
-            
-            for (let code of code_lines) {
-                if (!regexp.test(code)) {
-                    _StdOut.putText("The User Program Input is not valid input")
-                    return;
+            let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
+            let codes: string = prg_in.value.split("\n").join(" ")
+            let segment = _MemoryManager.memoryFill.indexOf(false)
+            if (!regexp.test(codes)) {
+                _StdOut.putText("The User Program Input is not valid input.");
+            } else {
+                let writeInfo: number[] = _MemoryManager.write(segment, codes);
+                _StdOut.putText("The User Program Input is valid input");
+                _StdOut.advanceLine();
+                if (writeInfo.length > 1) {
+                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
+                        + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8);
+                } else {
+                    _StdOut.putText("However, the user program exceed the memory space")
                 }
+                _Kernel.showMemory(writeInfo[4]);
             }
-            _StdOut.putText("The User Program Input is valid input")
         }
 
-        // 
+        // run the user input program with given pid
+        public shellRun(pid: string) {
+            _Kernel.runProgram(pid);
+        }
+
+        // update the status on the os task bar
         public shellStatus(status: string[]) {
             let status_html: HTMLElement = document.getElementById("status");
             let status_txt = status.join(" ");
@@ -408,6 +426,10 @@ module TSOS {
         // arguments as message
         public shellBsod(error: string[]) {
             _Kernel.krnTrapError(error);
+        }
+
+        public shellKill(pid: string) {
+            _Kernel.krnKill(parseInt(pid));
         }
     }
 }

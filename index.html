@@ -16,6 +16,8 @@
    <script type="text/javascript" src="distrib/host/control.js"></script>
    <script type="text/javascript" src="distrib/host/devices.js"></script>
    <script type="text/javascript" src="distrib/host/cpu.js"></script>
+   <script type="text/javascript" src="distrib/host/memory.js"></script>
+   <script type="text/javascript" src="distrib/host/memoryAccessor.js"></script>
 
    <!-- Virtual OS Routines: Make sure Kernel code is last, since it needs those above it. -->
    <script type="text/javascript" src="distrib/os/interrupt.js"></script>
@@ -28,11 +30,13 @@
    <script type="text/javascript" src="distrib/os/shellCommand.js"></script>
    <script type="text/javascript" src="distrib/os/userCommand.js"></script>
    <script type="text/javascript" src="distrib/os/kernel.js"></script>
+   <script type="text/javascript" src="distrib/os/memoryManager.js"></script>
+   <script type="text/javascript" src="distrib/os/processControlBlock.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip1.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script>
    
 </head>
 
@@ -76,6 +80,24 @@
              value="Reset"
              tabindex="2"
              onclick="TSOS.Control.hostBtnReset_click(this);">
+      
+      <input type="button"
+             id = "btnSingleStep"
+             name="brnSingleStep"
+             class="normal_button"
+             disabled="disabled"
+             value="Single Step"
+             tabindex="3"
+             onclick="TSOS.Control.hostBtnSingleStep_click(this);">
+
+      <input type="button"
+             id = "btnNextStep"
+             name="brnNextStep"
+             class="normal_button"
+             disabled="disabled"
+             value="Next Step"
+             tabindex="4"
+             onclick="TSOS.Control.hostBtnNextStep_click(this);">
    </div>
 
    <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
@@ -92,12 +114,37 @@
          <br>
          <textarea name="taHostLog"
                    id  ="taHostLog"
-                   rows="26"
+                   rows="6"
                    cols="48"
          ></textarea>
       </label>
    </div>
-
+   <div id ="cpuDisplay" style="margin-left:520px">
+      <label>
+         CPU Display
+         <br>
+         <table id="cpuTable">
+            <thead>
+               <tr>
+                  <th>PC</th>
+                  <th>ACC</th>
+                  <th>X Reg</th>
+                  <th>Y Reg</th>
+                  <th>Zflag</th>
+               </tr>
+             </thead>
+             <tbody>
+               <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+               </tr>
+            </tbody>
+         </table>
+      </label>
+   </div>
    <div id="divUserProgramInput" style="margin-left:520px;">
       <label>
          User Program Input
@@ -109,7 +156,48 @@
          ></textarea>
       </label>
    </div>
+   <div id="memoryDisplay" style="margin-left:520px">
+      <tab id= "memorySeg1" class="tablinks" onclick="TSOS.Control.hostBtnLoadMemSegment(this, 0)">
+         Memory Segment 1
+      </tab>
+      <label class="tabcontent">
+         <br>
+         <table id="memoryTable">
+         </table>
+      </label>
+      <input type="button"
+         id = "btnMemoryView"
+         name="btnMemoryView"
+         class="normal_button"
+         value="Binary View"
+         tabindex="0"
+         onclick="TSOS.Control.hostBtnMemoryView_click(this);">
+   </div>
+   <div id="pbcDisplay" style="width:500px; float:left">
+      <label>
+         PCB Display
+         <br>
+         <table id="pcbTable">
+            <thead>
+               <tr>
+                  <th>PID</th>
+                  <th>State</th>
+                  <th>Location</th>
+                  <th>Priorities</th>
+                  <th>PC</th>
+                  <th>Accu</th>
+                  <th>X Reg</th>
+                  <th>Y Reg</th>
+                  <th>Zflag</th>
+               </tr>
+             </thead>
+             <tbody id="pcbTableBody">
+            </tbody>
+         </table>
+      </label>
+   </div>
 </div>
+
 
 <p class="footerText" style="clear:both;">
    <br>

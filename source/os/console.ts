@@ -17,6 +17,7 @@ module TSOS {
                     public buffer = "",
                     // Record cursor of end of line before proceed to next line
                     public end_of_line: number[] = [],
+                    public highlightMem = [0, 1]
                 ) {
         }
 
@@ -37,7 +38,10 @@ module TSOS {
         public handleInput(): void {
             while (_KernelInputQueue.getSize() > 0) {
                 // Get the next character from the kernel input queue.
-                var chr = _KernelInputQueue.dequeue();
+                var keyValues = _KernelInputQueue.dequeue();
+                var chr = keyValues[0];
+                var isShift = keyValues[1];
+                var isCtrl = keyValues[2];
                 
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" 
                 //(anything else that the keyboard device driver gave us).
@@ -130,10 +134,16 @@ module TSOS {
                             this.putText(suggest);
                         }
                     }
+                } else if (chr === 67 || chr === "c" && isCtrl === true) {
+                    console.log("Stoping the process")
+                    _OsShell.shellKill("-1");
+                    this.advanceLine();
+                    _OsShell.putPrompt();
                 } else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     if (chr.length < 2) {
+                        console.log(chr, isShift, isCtrl)
                         this.putText(chr);
                         // ... and add it to our buffer.
                         this.buffer += chr;
@@ -270,6 +280,55 @@ module TSOS {
 
             date_html.innerText = date;
             time_html.innerText = time;
+        }
+
+        public showMemory(memoryMatrix: String[][], counter) {
+            let memoryTable = document.getElementById("memoryTable");
+            let htmlScript: string = "";
+            let rowNum : number = 0;
+            let segNum : number = 0;
+            for (let row of memoryMatrix) {
+                htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segNum) 
+                            + rowNum.toString(16).toUpperCase() + "</td>";
+                for (let col of row) {
+                    htmlScript = htmlScript + "<td>" + col + "</td>";
+                    rowNum = rowNum + 1
+                }
+                htmlScript = htmlScript + " </tr>";
+            }
+            memoryTable.innerHTML = htmlScript;
+        }
+
+        public showMemCounter(counter) {
+            let memoryTable:any = document.getElementById("memoryTable");
+            let showCounter = parseInt(counter, 16)
+            let col = showCounter % 8 +1
+            let row = Math.floor(showCounter /8)
+            memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
+            memoryTable.rows[row].cells[col].style.backgroundColor = "red";
+            this.highlightMem = [row, col]
+        }
+
+        public showCPU(cpuInfo: any[]) {
+            let cpuTable: any = document.getElementById("cpuTable");
+            let cellNum: number = 0;
+            for (let info of cpuInfo) {
+                cpuTable.rows[1].cells[cellNum].innerHTML = info;
+                cellNum = cellNum +1;
+            }
+        }
+
+        public showPCB(pcbsInfo: any[][]) {
+            let pcbTable: any = document.getElementById("pcbTableBody");
+            let bodyScript: string = "";
+            for (let pcbInfo of pcbsInfo) {
+                bodyScript = bodyScript + "<tr>";
+                for (let info of pcbInfo) {
+                    bodyScript = bodyScript + "<td>" + info + "</td>";
+                }
+                bodyScript = bodyScript + "</tr>";
+            }
+            pcbTable.innerHTML = bodyScript;
         }
     }
  }

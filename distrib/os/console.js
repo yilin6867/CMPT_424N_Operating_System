@@ -10,19 +10,21 @@ var TSOS;
     var Console = /** @class */ (function () {
         function Console(currentFont, currentFontSize, currentXPosition, currentYPosition, buffer, 
         // Record cursor of end of line before proceed to next line
-        end_of_line) {
+        end_of_line, highlightMem) {
             if (currentFont === void 0) { currentFont = _DefaultFontFamily; }
             if (currentFontSize === void 0) { currentFontSize = _DefaultFontSize; }
             if (currentXPosition === void 0) { currentXPosition = 0; }
             if (currentYPosition === void 0) { currentYPosition = _DefaultFontSize; }
             if (buffer === void 0) { buffer = ""; }
             if (end_of_line === void 0) { end_of_line = []; }
+            if (highlightMem === void 0) { highlightMem = [0, 1]; }
             this.currentFont = currentFont;
             this.currentFontSize = currentFontSize;
             this.currentXPosition = currentXPosition;
             this.currentYPosition = currentYPosition;
             this.buffer = buffer;
             this.end_of_line = end_of_line;
+            this.highlightMem = highlightMem;
         }
         Console.prototype.init = function () {
             this.clearScreen();
@@ -38,7 +40,10 @@ var TSOS;
         Console.prototype.handleInput = function () {
             while (_KernelInputQueue.getSize() > 0) {
                 // Get the next character from the kernel input queue.
-                var chr = _KernelInputQueue.dequeue();
+                var keyValues = _KernelInputQueue.dequeue();
+                var chr = keyValues[0];
+                var isShift = keyValues[1];
+                var isCtrl = keyValues[2];
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" 
                 //(anything else that the keyboard device driver gave us).
                 // Check for event.which and event.key value to accomodate deprecated event.which
@@ -133,10 +138,17 @@ var TSOS;
                         }
                     }
                 }
+                else if (chr === 67 || chr === "c" && isCtrl === true) {
+                    console.log("Stoping the process");
+                    _OsShell.shellKill("-1");
+                    this.advanceLine();
+                    _OsShell.putPrompt();
+                }
                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     if (chr.length < 2) {
+                        console.log(chr, isShift, isCtrl);
                         this.putText(chr);
                         // ... and add it to our buffer.
                         this.buffer += chr;
@@ -255,6 +267,56 @@ var TSOS;
             var time_html = document.getElementById("time");
             date_html.innerText = date;
             time_html.innerText = time;
+        };
+        Console.prototype.showMemory = function (memoryMatrix, counter) {
+            var memoryTable = document.getElementById("memoryTable");
+            var htmlScript = "";
+            var rowNum = 0;
+            var segNum = 0;
+            for (var _i = 0, memoryMatrix_1 = memoryMatrix; _i < memoryMatrix_1.length; _i++) {
+                var row = memoryMatrix_1[_i];
+                htmlScript = htmlScript + "<tr>" + "<td bgcolor='lightblue'>" + String(segNum)
+                    + rowNum.toString(16).toUpperCase() + "</td>";
+                for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
+                    var col = row_1[_a];
+                    htmlScript = htmlScript + "<td>" + col + "</td>";
+                    rowNum = rowNum + 1;
+                }
+                htmlScript = htmlScript + " </tr>";
+            }
+            memoryTable.innerHTML = htmlScript;
+        };
+        Console.prototype.showMemCounter = function (counter) {
+            var memoryTable = document.getElementById("memoryTable");
+            var showCounter = parseInt(counter, 16);
+            var col = showCounter % 8 + 1;
+            var row = Math.floor(showCounter / 8);
+            memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
+            memoryTable.rows[row].cells[col].style.backgroundColor = "red";
+            this.highlightMem = [row, col];
+        };
+        Console.prototype.showCPU = function (cpuInfo) {
+            var cpuTable = document.getElementById("cpuTable");
+            var cellNum = 0;
+            for (var _i = 0, cpuInfo_1 = cpuInfo; _i < cpuInfo_1.length; _i++) {
+                var info = cpuInfo_1[_i];
+                cpuTable.rows[1].cells[cellNum].innerHTML = info;
+                cellNum = cellNum + 1;
+            }
+        };
+        Console.prototype.showPCB = function (pcbsInfo) {
+            var pcbTable = document.getElementById("pcbTableBody");
+            var bodyScript = "";
+            for (var _i = 0, pcbsInfo_1 = pcbsInfo; _i < pcbsInfo_1.length; _i++) {
+                var pcbInfo = pcbsInfo_1[_i];
+                bodyScript = bodyScript + "<tr>";
+                for (var _a = 0, pcbInfo_1 = pcbInfo; _a < pcbInfo_1.length; _a++) {
+                    var info = pcbInfo_1[_a];
+                    bodyScript = bodyScript + "<td>" + info + "</td>";
+                }
+                bodyScript = bodyScript + "</tr>";
+            }
+            pcbTable.innerHTML = bodyScript;
         };
         return Console;
     }());
