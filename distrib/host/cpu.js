@@ -308,6 +308,7 @@ var TSOS;
             this.isExecuting = false;
             this.runningPCB.updateStates(4);
             this.removeMemory(this.runningPCB.location, 0, this.runningPCB.limit_ct);
+            _Kernel.showMemory(this.runningPCB.location);
             _Console.putText("Process " + this.runningPCB.getPid() + " is finished");
             _Console.advanceLine();
             _OsShell.putPrompt();
