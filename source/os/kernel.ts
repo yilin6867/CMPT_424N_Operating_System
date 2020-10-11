@@ -94,12 +94,12 @@ module TSOS {
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
+                _MemoryManager.shortTermSchedule();
                 _CPU.cycle();
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
         }
-
 
         //
         // Interrupt Handling
@@ -201,26 +201,27 @@ module TSOS {
             _Console.showSysDatetime(sysDate, sysTime);
             let cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                document.getElementById("memorySeg1").click();
+                document.getElementById("memorySeg" + _CPU.getPCBs()[2]).click();
                 _Console.showMemCounter(cpuInfo[0]);
             }
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_CPU.getPCBs());
         }
 
-        public runProgram(pid: string): void {
+        public krnRunProgram(pid: string): void {
             let returnMSG = _CPU.runUserProgram(pid);
             _StdOut.putText(returnMSG);
         }
 
-        public showMemory(segment: number): void {
+        public krnShowMemory(segment: number): void {
             let cpuInfo = _CPU.getInfo();
             let isHexView = _MemoryManager.memoryHexView;
+            (<HTMLButtonElement>document.getElementById("memoryDisplay").children.item(segment)).click();
             _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         }
 
         // Tell the CPU to turn on single step and off if it is on
-        public turnSingleStep(): void {
+        public krnTurnSingleStep(): void {
             _CPU.singleStep = _CPU.singleStep ? false: true;
             if (!_CPU.singleStep) {
                 _CPU.isExecuting = true;
@@ -237,9 +238,16 @@ module TSOS {
             _CPU.kill(pid);
         }
 
-        public chgMemView() {
+        public krnChgMemView() {
             _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
-            this.showMemory(_CPU.runningPCB.location);
+            this.krnShowMemory(_CPU.runningPCB.location);
+        }
+
+        public krnClearmem() {
+            let memSegNum = _MemoryManager.memoryFill.length
+            for (let i = 0; i < memSegNum; i++) {
+                _CPU.removeMemory(i, 0, 255)
+            }
         }
     }
 }

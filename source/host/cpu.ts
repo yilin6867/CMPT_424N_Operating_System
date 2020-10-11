@@ -103,6 +103,7 @@ module TSOS {
                     this.isExecuting = false;
                 } 
             }
+            _MemoryManager.quantum =_MemoryManager.quantum - 1
         }
 
         public ldaConst() {
@@ -282,6 +283,9 @@ module TSOS {
         }
 
         public runUserProgram(pid: string) {
+            if (this.isExecuting) {
+                _MemoryManager.saveState(this.runningPCB.location);
+            }
             let returnInfo: any = this.readPCB(pid);
             if (typeof returnInfo !== "string") {
                 if (returnInfo.state === 4) {
@@ -305,7 +309,8 @@ module TSOS {
             this.isExecuting = false;
             this.runningPCB.updateStates(4);
             this.removeMemory(this.runningPCB.location, 0, this.runningPCB.limit_ct);
-            _Kernel.showMemory(this.runningPCB.location);
+            _MemoryManager.memoryFill[this.runningPCB.location] = false;
+            _Kernel.krnShowMemory(this.runningPCB.location);
             _Console.putText("Process " + this.runningPCB.getPid() + " is finished");
             _Console.advanceLine();
             _OsShell.putPrompt();
@@ -386,9 +391,15 @@ module TSOS {
         public kill(pid: number) {
             if (pid === -1) {
                 pid = this.runningPCB.getPid();
+                this.runningPCB.updateStates(4);
+                this.isExecuting = false;
+            } else {
+                let pcb = _MemoryManager.pcbs[pid];
+                pcb.updateStates(4)
+                this.removeMemory(pcb.location, 0, pcb.limit_ct);
+                _MemoryManager.memoryFill[pcb.location] = false;
+                _Kernel.krnShowMemory(pcb.location);
             }
-            this.runningPCB.updateStates(4);
-            this.isExecuting = false;
         }
     }
 }

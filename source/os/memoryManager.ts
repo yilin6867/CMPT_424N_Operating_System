@@ -8,17 +8,25 @@
 module TSOS {
     export class MemoryManager {
         constructor(
-            public pcbs = new Array()
+            public pcbs: PCB[] = new Array()
             , public memorySize = _MemoryAccessor.getMemorySize()
             , public memoryFill = new Array(_CPU.getMemorySegments()).fill(false)
             // false --> binary view
             , public memoryHexView = true 
+            , public readyQueue: PCB[] = []
+            , public residentQueue: PCB[] = []
+            , public quantum: Number = 6
         ) {
             
         }
         
         public addPCB(newpcb: PCB) {
             this.pcbs.push(newpcb);
+        }
+
+        public addPCBtoReady(pcb: PCB) {
+            pcb.updateStates(2);
+            this.readyQueue.push(pcb);
         }
 
         public getPCBbyID(pid: string) {
@@ -34,9 +42,8 @@ module TSOS {
         }
         public write(segment: number, data: string) {
             if (segment === -1) {
-                segment = 0;
-                _CPU.removeMemory(segment, 0, this.memorySize);
-                this.pcbs[this.pcbs.length -1].updateStates(4);
+                return "All memory segments are occupied by some process."+
+                    " Please kill or run a process to release the memory."
             }
             let writeReturn = _CPU.writeProgram(segment, data);
             let nextSegment = this.memoryFill.indexOf(false);
@@ -52,6 +59,26 @@ module TSOS {
                 pbcsInfo.push(pcb.getInfo());
             }
             return pbcsInfo;
+        }
+
+        public shortTermSchedule(curPCB: PCB) {
+            if(this.quantum == 0) {
+                console.log("Schedule next process")
+                this.quantum = 6;
+                this.readyQueue.push(curPCB);
+                let nextProcess = this.readyQueue.shift();
+                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            }
+        }
+
+        public saveState(runningPCB: PCB) {
+            this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg
+            this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg
+            this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg
+            this.pcbs[runningPCB.pid].state = runningPCB.state
+            this.pcbs[runningPCB.pid].accumulator =  runningPCB.accumulator
+            this.pcbs[runningPCB.pid].counter = runningPCB.counter
+            this.readyQueue.push(runningPCB);
         }
     }
 }

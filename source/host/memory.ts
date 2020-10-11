@@ -11,7 +11,7 @@ module TSOS {
             // one bytes is 8 bits
             // there is 256 bytes in total for the memory
             public memorySize = 8 * 256
-            , public memoryArr: string[][] = [[]]
+            , public memoryArr: string[][] = [[], [], []]
             , public curEle = 0
         ) {
 

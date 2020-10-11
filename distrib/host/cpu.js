@@ -107,6 +107,7 @@ var TSOS;
                     this.isExecuting = false;
                 }
             }
+            _MemoryManager.quantum = _MemoryManager.quantum - 1;
         };
         Cpu.prototype.ldaConst = function () {
             var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
@@ -285,6 +286,9 @@ var TSOS;
             return readPCB;
         };
         Cpu.prototype.runUserProgram = function (pid) {
+            if (this.isExecuting) {
+                _MemoryManager.saveState(this.runningPCB.location);
+            }
             var returnInfo = this.readPCB(pid);
             if (typeof returnInfo !== "string") {
                 if (returnInfo.state === 4) {
@@ -308,7 +312,8 @@ var TSOS;
             this.isExecuting = false;
             this.runningPCB.updateStates(4);
             this.removeMemory(this.runningPCB.location, 0, this.runningPCB.limit_ct);
-            _Kernel.showMemory(this.runningPCB.location);
+            _MemoryManager.memoryFill[this.runningPCB.location] = false;
+            _Kernel.krnShowMemory(this.runningPCB.location);
             _Console.putText("Process " + this.runningPCB.getPid() + " is finished");
             _Console.advanceLine();
             _OsShell.putPrompt();
@@ -380,9 +385,16 @@ var TSOS;
         Cpu.prototype.kill = function (pid) {
             if (pid === -1) {
                 pid = this.runningPCB.getPid();
+                this.runningPCB.updateStates(4);
+                this.isExecuting = false;
             }
-            this.runningPCB.updateStates(4);
-            this.isExecuting = false;
+            else {
+                var pcb = _MemoryManager.pcbs[pid];
+                pcb.updateStates(4);
+                this.removeMemory(pcb.location, 0, pcb.limit_ct);
+                _MemoryManager.memoryFill[pcb.location] = false;
+                _Kernel.krnShowMemory(pcb.location);
+            }
         };
         return Cpu;
     }());

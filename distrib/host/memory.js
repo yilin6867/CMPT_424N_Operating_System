@@ -13,7 +13,7 @@ var TSOS;
         // there is 256 bytes in total for the memory
         memorySize, memoryArr, curEle) {
             if (memorySize === void 0) { memorySize = 8 * 256; }
-            if (memoryArr === void 0) { memoryArr = [[]]; }
+            if (memoryArr === void 0) { memoryArr = [[], [], []]; }
             if (curEle === void 0) { curEle = 0; }
             this.memorySize = memorySize;
             this.memoryArr = memoryArr;

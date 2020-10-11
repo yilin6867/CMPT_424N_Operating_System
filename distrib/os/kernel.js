@@ -80,6 +80,7 @@ var TSOS;
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
+                _MemoryManager.shortTermSchedule();
                 _CPU.cycle();
             }
             else { // If there are no interrupts and there is nothing being executed then just be idle.
@@ -178,23 +179,24 @@ var TSOS;
             _Console.showSysDatetime(sysDate, sysTime);
             var cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                document.getElementById("memorySeg1").click();
+                document.getElementById("memorySeg" + _CPU.getPCBs()[2]).click();
                 _Console.showMemCounter(cpuInfo[0]);
             }
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_CPU.getPCBs());
         };
-        Kernel.prototype.runProgram = function (pid) {
+        Kernel.prototype.krnRunProgram = function (pid) {
             var returnMSG = _CPU.runUserProgram(pid);
             _StdOut.putText(returnMSG);
         };
-        Kernel.prototype.showMemory = function (segment) {
+        Kernel.prototype.krnShowMemory = function (segment) {
             var cpuInfo = _CPU.getInfo();
             var isHexView = _MemoryManager.memoryHexView;
+            document.getElementById("memoryDisplay").children.item(segment).click();
             _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         };
         // Tell the CPU to turn on single step and off if it is on
-        Kernel.prototype.turnSingleStep = function () {
+        Kernel.prototype.krnTurnSingleStep = function () {
             _CPU.singleStep = _CPU.singleStep ? false : true;
             if (!_CPU.singleStep) {
                 _CPU.isExecuting = true;
@@ -209,9 +211,15 @@ var TSOS;
         Kernel.prototype.krnKill = function (pid) {
             _CPU.kill(pid);
         };
-        Kernel.prototype.chgMemView = function () {
+        Kernel.prototype.krnChgMemView = function () {
             _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
-            this.showMemory(_CPU.runningPCB.location);
+            this.krnShowMemory(_CPU.runningPCB.location);
+        };
+        Kernel.prototype.krnClearmem = function () {
+            var memSegNum = _MemoryManager.memoryFill.length;
+            for (var i = 0; i < memSegNum; i++) {
+                _CPU.removeMemory(i, 0, 255);
+            }
         };
         return Kernel;
     }());

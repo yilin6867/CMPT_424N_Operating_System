@@ -36,7 +36,7 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip0.js"></script>
    
 </head>
 
@@ -157,9 +157,15 @@
       </label>
    </div>
    <div id="memoryDisplay" style="margin-left:520px">
-      <tab id= "memorySeg1" class="tablinks" onclick="TSOS.Control.hostBtnLoadMemSegment(this, 0)">
+      <button  id= "memorySeg1" type="button" class="tablinks" disabled onclick="TSOS.Control.hostBtnLoadMemSegment(this, 0)">
          Memory Segment 1
-      </tab>
+      </button>
+      <button  id= "memorySeg2" type="button" class="tablinks" disabled onclick="TSOS.Control.hostBtnLoadMemSegment(this, 1)">
+         Memory Segment 2
+      </button>
+      <button  id= "memorySeg3" type="button" class="tablinks" disabled onclick="TSOS.Control.hostBtnLoadMemSegment(this, 2)">
+         Memory Segment 3
+      </button>
       <label class="tabcontent">
          <br>
          <table id="memoryTable">

@@ -64,7 +64,9 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellStatus, "status", "<String> - Render the status option on the Graphic Taskbar with "
                 + "given string of text.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Run the process for give process id");
+            sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Run the process with given process id");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKill, "kill", "<pid> - Kill the process with the given process id");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -332,21 +334,24 @@ var TSOS;
             }
             else {
                 var writeInfo = _MemoryManager.write(segment, codes);
-                _StdOut.putText("The User Program Input is valid input");
+                _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
-                if (writeInfo.length > 1) {
+                if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
-                        + " between address " + writeInfo[2] / 8 + " and address " + writeInfo[3] / 8);
+                        + " between address " + writeInfo[2] / 8 + " and address " + writeInfo[3] / 8 + ".");
+                    _Kernel.krnShowMemory(writeInfo[4]);
                 }
-                else {
-                    _StdOut.putText("However, the user program exceed the memory space");
+                else if (Array.isArray(writeInfo) && writeInfo.length == 0) {
+                    _StdOut.putText("Write Faile. The user program exceed the memory space.");
                 }
-                _Kernel.showMemory(writeInfo[4]);
+                else if (typeof (writeInfo) === "string") {
+                    _StdOut.putText(writeInfo);
+                }
             }
         };
         // run the user input program with given pid
         Shell.prototype.shellRun = function (pid) {
-            _Kernel.runProgram(pid);
+            _Kernel.krnRunProgram(pid);
         };
         // update the status on the os task bar
         Shell.prototype.shellStatus = function (status) {
@@ -361,6 +366,8 @@ var TSOS;
         };
         Shell.prototype.shellKill = function (pid) {
             _Kernel.krnKill(parseInt(pid));
+        };
+        Shell.prototype.shellClearmem = function () {
         };
         return Shell;
     }());

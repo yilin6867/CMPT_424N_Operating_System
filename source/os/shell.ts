@@ -115,7 +115,13 @@ module TSOS {
             
             sc = new ShellCommand(this.shellRun,
                                     "run",
-                                    "<pid> - Run the process for give process id"
+                                    "<pid> - Run the process with given process id"
+                                );
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKill,
+                                    "kill",
+                                    "<pid> - Kill the process with the given process id"
                                 );
             this.commandList[this.commandList.length] = sc;
 
@@ -397,22 +403,24 @@ module TSOS {
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             } else {
-                let writeInfo: number[] = _MemoryManager.write(segment, codes);
-                _StdOut.putText("The User Program Input is valid input");
+                let writeInfo: any = _MemoryManager.write(segment, codes);
+                _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
-                if (writeInfo.length > 1) {
+                if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
-                        + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8);
-                } else {
-                    _StdOut.putText("However, the user program exceed the memory space")
+                        + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8 + ".");
+                    _Kernel.krnShowMemory(writeInfo[4]);
+                } else if (Array.isArray(writeInfo) && writeInfo.length  == 0) {
+                    _StdOut.putText("Write Faile. The user program exceed the memory space.")
+                } else if (typeof(writeInfo) === "string") {
+                    _StdOut.putText(writeInfo)
                 }
-                _Kernel.showMemory(writeInfo[4]);
             }
         }
 
         // run the user input program with given pid
         public shellRun(pid: string) {
-            _Kernel.runProgram(pid);
+            _Kernel.krnRunProgram(pid);
         }
 
         // update the status on the os task bar
@@ -430,6 +438,10 @@ module TSOS {
 
         public shellKill(pid: string) {
             _Kernel.krnKill(parseInt(pid));
+        }
+
+        public shellClearmem() {
+            
         }
     }
 }

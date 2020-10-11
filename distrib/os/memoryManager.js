@@ -10,18 +10,28 @@ var TSOS;
     var MemoryManager = /** @class */ (function () {
         function MemoryManager(pcbs, memorySize, memoryFill
         // false --> binary view
-        , memoryHexView) {
+        , memoryHexView, readyQueue, residentQueue, quantum) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             if (memoryFill === void 0) { memoryFill = new Array(_CPU.getMemorySegments()).fill(false); }
             if (memoryHexView === void 0) { memoryHexView = true; }
+            if (readyQueue === void 0) { readyQueue = []; }
+            if (residentQueue === void 0) { residentQueue = []; }
+            if (quantum === void 0) { quantum = 6; }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
             this.memoryFill = memoryFill;
             this.memoryHexView = memoryHexView;
+            this.readyQueue = readyQueue;
+            this.residentQueue = residentQueue;
+            this.quantum = quantum;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
             this.pcbs.push(newpcb);
+        };
+        MemoryManager.prototype.addPCBtoReady = function (pcb) {
+            pcb.updateStates(2);
+            this.readyQueue.push(pcb);
         };
         MemoryManager.prototype.getPCBbyID = function (pid) {
             if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
@@ -36,9 +46,8 @@ var TSOS;
         };
         MemoryManager.prototype.write = function (segment, data) {
             if (segment === -1) {
-                segment = 0;
-                _CPU.removeMemory(segment, 0, this.memorySize);
-                this.pcbs[this.pcbs.length - 1].updateStates(4);
+                return "All memory segments are occupied by some process." +
+                    " Please kill or run a process to release the memory.";
             }
             var writeReturn = _CPU.writeProgram(segment, data);
             var nextSegment = this.memoryFill.indexOf(false);
@@ -55,6 +64,24 @@ var TSOS;
                 pbcsInfo.push(pcb.getInfo());
             }
             return pbcsInfo;
+        };
+        MemoryManager.prototype.shortTermSchedule = function (curPCB) {
+            if (this.quantum == 0) {
+                console.log("Schedule next process");
+                this.quantum = 6;
+                this.readyQueue.push(curPCB);
+                var nextProcess = this.readyQueue.shift();
+                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            }
+        };
+        MemoryManager.prototype.saveState = function (runningPCB) {
+            this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg;
+            this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg;
+            this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg;
+            this.pcbs[runningPCB.pid].state = runningPCB.state;
+            this.pcbs[runningPCB.pid].accumulator = runningPCB.accumulator;
+            this.pcbs[runningPCB.pid].counter = runningPCB.counter;
+            this.readyQueue.push(runningPCB);
         };
         return MemoryManager;
     }());
