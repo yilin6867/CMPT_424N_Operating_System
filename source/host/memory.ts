@@ -10,17 +10,12 @@ module TSOS {
         constructor(
             // one bytes is 8 bits
             // there is 256 bytes in total for the memory
-            public memorySize = 8 * 256
-            , public memoryArr: string[][] = [[], [], []]
+            public memorySize = 8 * 768
+            , public memoryArr: string[] = []
             , public curEle = 0
         ) {
-
-        }
-
-        public init(): void {
-            for (let i = 0; i < this.memoryArr.length; i++) {
-                this.memoryArr[i] = new Array(this.memorySize).fill(0);
-            }
+            this.memoryArr = new Array(this.memorySize).fill("0");
+            console.log(this.memoryArr)
         }
         public getMemorySize(): number {
             return this.memorySize;
@@ -35,13 +30,13 @@ module TSOS {
             }
             for(let data of binaryData) {
                 if (addr != null) {
-                    this.memoryArr[segment][addr] = data
+                    this.memoryArr[segment + addr] = data
                     addr = addr + 1
                 } else {
                     if (this.curEle >= this.getMemorySize()) {
                         return []
                     }
-                    this.memoryArr[segment][this.curEle] = data;
+                    this.memoryArr[segment + this.curEle] = data;
                     this.curEle = this.curEle + 1;
                 }
             }
@@ -53,7 +48,7 @@ module TSOS {
             let hexCodes = ""
             let hex = ""
             for (let _ = 0; _ < 2; _++) {
-                let nibble  = parseInt(this.memoryArr[segment].slice(counter, counter+nextEle).join(""), 2);
+                let nibble  = parseInt(this.memoryArr.slice(counter, counter+nextEle).join(""), 2);
                 hex = nibble.toString(16).toUpperCase();
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
@@ -62,12 +57,12 @@ module TSOS {
         }
 
         public getLoadMemory(segment:number): string[] {
-            return this.memoryArr[segment].slice();
+            return this.memoryArr.slice(segment, segment + 256 * 8);
         }
 
-        public remove(segment: number, start: number, end: number) {
+        public remove(start: number, end: number) {
             for (let memoryIdx = start; memoryIdx < end; memoryIdx ++) {
-                this.memoryArr[segment][memoryIdx] = "0";
+                this.memoryArr[memoryIdx] = "0";
             }
         }
     }

@@ -125,6 +125,38 @@ module TSOS {
                                 );
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellClearmem,
+                                    "clearmem",
+                                    " - Clear all memory partition. If there is any program running, "+
+                                        " it will be terminate running and clear the memory."
+                                );
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellQuantum,
+                                    "quantum",
+                                    "<number> - If number is not provide, display current quantum." + 
+                                        " If number is zero, set quantum to default value." +
+                                        " If number is greater than zero, set Round Robin quantum to that number."
+                                )
+            this.commandList[this.commandList.length] =  sc;
+
+            sc = new ShellCommand(this.shellPs,
+                                    "ps",
+                                    " - Display PID and state of all process."
+                                )
+            this.commandList[this.commandList.length] = sc;
+            
+            sc = new ShellCommand(this.shellRunall,
+                                    "runall",
+                                    " - Execute all process at once."
+                                )
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKillall,
+                                    "killall",
+                                    " - Kill all proces"
+                                )
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -441,7 +473,38 @@ module TSOS {
         }
 
         public shellClearmem() {
-            
+            _Kernel.krnClearmem();
+        }
+
+        public shellQuantum(num: number) {
+            console.log(num)
+            if (typeof(num) === "undefined") {
+                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.quantum);
+            } else if (num == 0) {
+                _MemoryManager.quantum = 6
+            } else {
+                _MemoryManager.quantum = num
+            }
+        }
+
+        public shellPs() {
+            let pcbInfo: string[][] = _MemoryManager.getPBCsInfo();
+            _StdOut.putText("PID | State ")
+            _StdOut.putText("------------")
+            for (let pcb of pcbInfo) {
+                _StdOut.putText(pcb[0].padStart("PID ".length, " ") + "|" + pcb[1].padStart(" State ".length, " "))
+            }
+        }
+
+        public shellRunall() {
+
+        }
+
+        public shellKillall() {
+            let pcbInfo: string[][] = _MemoryManager.getPBCsInfo();
+            for (let pcb of pcbInfo) {
+                this.shellKill(pcb[0])
+            }
         }
     }
 }

@@ -51,7 +51,7 @@ var TSOS;
                 this.updateCounters(returnValues[1]);
                 var hexicode = returnValues[0];
                 this.runningPCB.updateStates(2);
-                console.log("running " + hexicode + " at " + this.pad(counter.toString(16).toUpperCase(), 2)
+                console.log("running " + hexicode + " at " + pad(counter.toString(16).toUpperCase(), 2)
                     + " next counter" + this.PC);
                 switch (hexicode) {
                     case "A9":
@@ -65,7 +65,7 @@ var TSOS;
                         break;
                     case "6D":
                         var addResult = this.add();
-                        this.Acc = this.pad(addResult, 2);
+                        this.Acc = pad(addResult, 2);
                         this.runningPCB.accumulator = this.Acc;
                         break;
                     case "A2":
@@ -147,12 +147,14 @@ var TSOS;
             var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
             var varData = this.readData(this.runningPCB.location, nextReturn[0]);
             this.Xreg = varData[0];
+            this.runningPCB.x_reg = this.Xreg;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.storeYReg = function () {
             var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
             var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 1);
             this.Yreg = nextReturn[0];
+            this.runningPCB.y_reg = this.Yreg;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.storeYRegVar = function () {
@@ -161,6 +163,7 @@ var TSOS;
             var varData = this.readData(this.runningPCB.location, nextReturn[0]);
             console.log("data store in y reg var " + varData[0] + " " + nextReturn[0]);
             this.Yreg = varData[0];
+            this.runningPCB.y_reg = this.Yreg;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.ifeqX = function () {
@@ -174,6 +177,7 @@ var TSOS;
             else {
                 this.Zflag = 0;
             }
+            this.runningPCB.z_reg = this.Zflag;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.branchOnZ = function () {
@@ -195,7 +199,7 @@ var TSOS;
             var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
             var byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             var incre = (parseInt(String(byteValue[0]), 16) + 1).toString(16);
-            this.writeData(this.runningPCB.location, this.pad(incre, 2), parseInt(nextReturn[0], 16));
+            this.writeData(this.runningPCB.location, pad(incre, 2), parseInt(nextReturn[0], 16));
             console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
             this.updateCounters(nextReturn[1]);
         };
@@ -207,8 +211,8 @@ var TSOS;
             var binVal = this.hexToBinary(readData[0]);
             var tmpSize = Math.max(accBin.length, binVal.length);
             console.log(accBin, binVal, nextReturn[0]);
-            accBin = this.pad(accBin, tmpSize);
-            binVal = this.pad(binVal, tmpSize);
+            accBin = pad(accBin, tmpSize);
+            binVal = pad(binVal, tmpSize);
             console.log(accBin, binVal);
             var sum = '';
             var carry = '';
@@ -262,7 +266,7 @@ var TSOS;
             for (var _i = 0, opcodes_1 = opcodes; _i < opcodes_1.length; _i++) {
                 var code = opcodes_1[_i];
                 for (var i = 0; i < code.length; i++) {
-                    var binary = this.pad(this.hexToBinary(code.charAt(i)), 4);
+                    var binary = pad(this.hexToBinary(code.charAt(i)), 4);
                     var nibble = binary.substr(binary.length - 4);
                     binaryCodes.push(nibble);
                 }
@@ -286,9 +290,6 @@ var TSOS;
             return readPCB;
         };
         Cpu.prototype.runUserProgram = function (pid) {
-            if (this.isExecuting) {
-                _MemoryManager.saveState(this.runningPCB.location);
-            }
             var returnInfo = this.readPCB(pid);
             if (typeof returnInfo !== "string") {
                 if (returnInfo.state === 4) {
@@ -354,8 +355,8 @@ var TSOS;
         Cpu.prototype.getInfo = function () {
             return [this.PC, this.Acc, this.Xreg, this.Yreg, this.Zflag];
         };
-        Cpu.prototype.getPCBs = function () {
-            return _MemoryManager.getPBCsInfo();
+        Cpu.prototype.getRunningPCB = function () {
+            return this.runningPCB.getInfo();
         };
         Cpu.prototype.hexToBinary = function (hexCode) {
             var binary = parseInt(hexCode, 16).toString(2);
@@ -376,12 +377,6 @@ var TSOS;
         Cpu.prototype.xor = function (a, b) { return (a === b ? 0 : 1); };
         Cpu.prototype.and = function (a, b) { return a == 1 && b == 1 ? 1 : 0; };
         Cpu.prototype.or = function (a, b) { return (a || b); };
-        Cpu.prototype.pad = function (num, size) {
-            var s = num + "";
-            while (s.length < size)
-                s = "0" + s;
-            return s;
-        };
         Cpu.prototype.kill = function (pid) {
             if (pid === -1) {
                 pid = this.runningPCB.getPid();
@@ -393,6 +388,7 @@ var TSOS;
                 pcb.updateStates(4);
                 this.removeMemory(pcb.location, 0, pcb.limit_ct);
                 _MemoryManager.memoryFill[pcb.location] = false;
+                _MemoryManager.removeReadyPCB(pcb);
                 _Kernel.krnShowMemory(pcb.location);
             }
         };

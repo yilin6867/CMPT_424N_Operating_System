@@ -33,6 +33,9 @@ var TSOS;
             pcb.updateStates(2);
             this.readyQueue.push(pcb);
         };
+        MemoryManager.prototype.removeReadyPCB = function (pcb) {
+            this.readyQueue.splice(this.readyQueue.indexOf(pcb), 1);
+        };
         MemoryManager.prototype.getPCBbyID = function (pid) {
             if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
                 return this.pcbs[parseInt(pid)];
@@ -45,6 +48,7 @@ var TSOS;
             return this.pcbs.length;
         };
         MemoryManager.prototype.write = function (segment, data) {
+            console.log(segment);
             if (segment === -1) {
                 return "All memory segments are occupied by some process." +
                     " Please kill or run a process to release the memory.";
@@ -69,12 +73,14 @@ var TSOS;
             if (this.quantum == 0) {
                 console.log("Schedule next process");
                 this.quantum = 6;
-                this.readyQueue.push(curPCB);
+                this.saveState(curPCB);
                 var nextProcess = this.readyQueue.shift();
+                console.log(curPCB, nextProcess);
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
             }
         };
         MemoryManager.prototype.saveState = function (runningPCB) {
+            console.log(this.pcbs, runningPCB);
             this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg;
             this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg;
             this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg;

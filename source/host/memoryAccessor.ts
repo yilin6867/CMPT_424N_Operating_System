@@ -12,6 +12,7 @@ module TSOS {
             , public memorySize: number = _Memory.getMemorySize()
             , public hexArrSize: number = 64
             , public hexArrNum: number = 32
+            , public segmentSize: number = 256 * 8
         ) {
         }
         public init() {
@@ -40,22 +41,26 @@ module TSOS {
         }
 
         public write(segment: number, data: string[], addr: number) {
-            return _Memory.writeData(segment, data, addr * 8);
+            let start = segment * this.segmentSize
+            return _Memory.writeData(start, data, addr * 8);
         }
         public getMemorySize(): number {
             return this.memorySize;
         }
 
         public getLoadMemory(segment: number) {
-            return _Memory.getLoadMemory(segment);
+            let index = segment * this.segmentSize
+            return _Memory.getLoadMemory(index);
         }
 
         public removeMemory(segment:number, start:number, end:number) {
-            _Memory.remove(segment, start, end);
+            let startIdx = segment * this.segmentSize  + start
+            end = end * 8
+            _Memory.remove(startIdx, end);
         }
 
         public getSegments() {
-            return _Memory.memoryArr.length;
+            return (_Memory.memoryArr.length / this.segmentSize);
         }
     }
 }

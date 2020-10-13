@@ -94,7 +94,6 @@ module TSOS {
 
             // .. Create and initialize the Memory. Memory is part of hardware
             _Memory = new Memory();
-            _Memory.init()
             _MemoryAccessor = new MemoryAccessor();
             
 

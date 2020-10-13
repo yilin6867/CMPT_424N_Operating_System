@@ -94,8 +94,8 @@ module TSOS {
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
-                _MemoryManager.shortTermSchedule();
                 _CPU.cycle();
+                _MemoryManager.shortTermSchedule(_CPU.runningPCB);
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
@@ -201,11 +201,12 @@ module TSOS {
             _Console.showSysDatetime(sysDate, sysTime);
             let cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                document.getElementById("memorySeg" + _CPU.getPCBs()[2]).click();
+                console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
+                document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
                 _Console.showMemCounter(cpuInfo[0]);
             }
             _Console.showCPU(cpuInfo);
-            _Console.showPCB(_CPU.getPCBs());
+            _Console.showPCB(_MemoryManager.getPBCsInfo());
         }
 
         public krnRunProgram(pid: string): void {
@@ -217,7 +218,7 @@ module TSOS {
             let cpuInfo = _CPU.getInfo();
             let isHexView = _MemoryManager.memoryHexView;
             (<HTMLButtonElement>document.getElementById("memoryDisplay").children.item(segment)).click();
-            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
+            _Console.showMemory(segment, _CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         }
 
         // Tell the CPU to turn on single step and off if it is on

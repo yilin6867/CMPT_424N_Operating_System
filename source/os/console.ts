@@ -282,14 +282,13 @@ module TSOS {
             time_html.innerText = time;
         }
 
-        public showMemory(memoryMatrix: String[][], counter) {
+        public showMemory(segment: number, memoryMatrix: String[][], counter) {
             let memoryTable = document.getElementById("memoryTable");
             let htmlScript: string = "";
             let rowNum : number = 0;
-            let segNum : number = 0;
             for (let row of memoryMatrix) {
-                htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segNum) 
-                            + rowNum.toString(16).toUpperCase() + "</td>";
+                htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segment) 
+                            + pad(rowNum.toString(16).toUpperCase(), 2) + "</td>";
                 for (let col of row) {
                     htmlScript = htmlScript + "<td>" + col + "</td>";
                     rowNum = rowNum + 1

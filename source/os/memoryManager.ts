@@ -29,6 +29,10 @@ module TSOS {
             this.readyQueue.push(pcb);
         }
 
+        public removeReadyPCB(pcb: PCB) {
+            this.readyQueue.splice(this.readyQueue.indexOf(pcb), 1)
+        }
+
         public getPCBbyID(pid: string) {
             if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
                 return this.pcbs[parseInt(pid)];
@@ -41,6 +45,7 @@ module TSOS {
             return this.pcbs.length;
         }
         public write(segment: number, data: string) {
+            console.log(segment)
             if (segment === -1) {
                 return "All memory segments are occupied by some process."+
                     " Please kill or run a process to release the memory."
@@ -65,13 +70,15 @@ module TSOS {
             if(this.quantum == 0) {
                 console.log("Schedule next process")
                 this.quantum = 6;
-                this.readyQueue.push(curPCB);
+                this.saveState(curPCB)
                 let nextProcess = this.readyQueue.shift();
+                console.log(curPCB, nextProcess)
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
             }
         }
 
         public saveState(runningPCB: PCB) {
+            console.log(this.pcbs, runningPCB)
             this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg
             this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg
             this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg

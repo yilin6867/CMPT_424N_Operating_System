@@ -368,6 +368,7 @@ var TSOS;
             _Kernel.krnKill(parseInt(pid));
         };
         Shell.prototype.shellClearmem = function () {
+            _Kernel.krnClearmem();
         };
         return Shell;
     }());

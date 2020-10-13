@@ -85,3 +85,9 @@ var _MemoryAccessor: TSOS.MemoryAccessor;
 var _MemoryManager: any = null;
 
 var memoryHexMatr: String[][];
+
+function pad(num, size) {
+   var s = num+"";
+   while (s.length < size) s = "0" + s;
+   return s;
+}

@@ -47,7 +47,7 @@ module TSOS {
                 this.updateCounters(returnValues[1]);
                 let hexicode = returnValues[0];
                 this.runningPCB.updateStates(2);
-                console.log("running " + hexicode + " at " + this.pad(counter.toString(16).toUpperCase(), 2)
+                console.log("running " + hexicode + " at " + pad(counter.toString(16).toUpperCase(), 2)
                              + " next counter" + this.PC);
                 switch(hexicode) {
                     case "A9":
@@ -61,7 +61,7 @@ module TSOS {
                         break;
                     case "6D":
                         let addResult = this.add();
-                        this.Acc = this.pad(addResult, 2);
+                        this.Acc = pad(addResult, 2);
                         this.runningPCB.accumulator = this.Acc;
                         break;
                     case "A2":
@@ -144,12 +144,14 @@ module TSOS {
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
             let varData = this.readData(this.runningPCB.location, nextReturn[0]);
             this.Xreg = varData[0];
+            this.runningPCB.x_reg = this.Xreg;
             this.updateCounters(nextReturn[1]);
         }
         public storeYReg() {
             let nextCounter = parseInt(this.runningPCB.getCounter(), 16)
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 1);
             this.Yreg = nextReturn[0];
+            this.runningPCB.y_reg = this.Yreg
             this.updateCounters(nextReturn[1]);
         }
         public storeYRegVar() {
@@ -158,6 +160,7 @@ module TSOS {
             let varData = this.readData(this.runningPCB.location, nextReturn[0]);
             console.log("data store in y reg var " + varData[0] + " " + nextReturn[0])
             this.Yreg = varData[0];
+            this.runningPCB.y_reg = this.Yreg;
             this.updateCounters(nextReturn[1]);
         }
         public ifeqX() {
@@ -170,6 +173,7 @@ module TSOS {
             } else {
                 this.Zflag = 0
             }
+            this.runningPCB.z_reg = this.Zflag
             this.updateCounters(nextReturn[1]);
         }
         public branchOnZ() {
@@ -191,7 +195,7 @@ module TSOS {
             let nextReturn: any[] = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
             let byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             let incre = (parseInt(String(byteValue[0]) ,16) + 1).toString(16);
-            this.writeData(this.runningPCB.location, this.pad(incre, 2), parseInt(nextReturn[0], 16));
+            this.writeData(this.runningPCB.location, pad(incre, 2), parseInt(nextReturn[0], 16));
             console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
             this.updateCounters(nextReturn[1]);
         }
@@ -203,8 +207,8 @@ module TSOS {
             let binVal = this.hexToBinary(readData[0]);
             let tmpSize = Math.max(accBin.length, binVal.length);
             console.log(accBin, binVal, nextReturn[0]);
-            accBin = this.pad(accBin, tmpSize);
-            binVal = this.pad(binVal, tmpSize);
+            accBin = pad(accBin, tmpSize);
+            binVal = pad(binVal, tmpSize);
             console.log(accBin, binVal);
             let sum = '';
             let carry = '';
@@ -257,7 +261,7 @@ module TSOS {
             let binaryCodes: string[] = [];
             for (let code of opcodes) {
                 for (let i = 0; i < code.length; i++) {
-                    let binary = this.pad(this.hexToBinary(code.charAt(i)), 4);
+                    let binary = pad(this.hexToBinary(code.charAt(i)), 4);
                     let nibble = binary.substr(binary.length - 4);
                     binaryCodes.push(nibble);
                 }
@@ -283,9 +287,6 @@ module TSOS {
         }
 
         public runUserProgram(pid: string) {
-            if (this.isExecuting) {
-                _MemoryManager.saveState(this.runningPCB.location);
-            }
             let returnInfo: any = this.readPCB(pid);
             if (typeof returnInfo !== "string") {
                 if (returnInfo.state === 4) {
@@ -355,8 +356,8 @@ module TSOS {
             return [this.PC, this.Acc, this.Xreg, this.Yreg, this.Zflag];
         }
 
-        public getPCBs() {
-            return _MemoryManager.getPBCsInfo();
+        public getRunningPCB() {
+            return this.runningPCB.getInfo();
             
         }
 
@@ -382,12 +383,6 @@ module TSOS {
         public and(a, b){return a == 1 && b == 1 ? 1 : 0;}
         public or(a, b){return (a || b);}
 
-        public pad(num, size) {
-            var s = num+"";
-            while (s.length < size) s = "0" + s;
-            return s;
-        }
-
         public kill(pid: number) {
             if (pid === -1) {
                 pid = this.runningPCB.getPid();
@@ -398,6 +393,7 @@ module TSOS {
                 pcb.updateStates(4)
                 this.removeMemory(pcb.location, 0, pcb.limit_ct);
                 _MemoryManager.memoryFill[pcb.location] = false;
+                _MemoryManager.removeReadyPCB(pcb);
                 _Kernel.krnShowMemory(pcb.location);
             }
         }

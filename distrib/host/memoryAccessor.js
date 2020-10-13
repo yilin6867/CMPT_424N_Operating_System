@@ -8,15 +8,17 @@
 var TSOS;
 (function (TSOS) {
     var MemoryAccessor = /** @class */ (function () {
-        function MemoryAccessor(nextChunk, memorySize, hexArrSize, hexArrNum) {
+        function MemoryAccessor(nextChunk, memorySize, hexArrSize, hexArrNum, segmentSize) {
             if (nextChunk === void 0) { nextChunk = 0; }
             if (memorySize === void 0) { memorySize = _Memory.getMemorySize(); }
             if (hexArrSize === void 0) { hexArrSize = 64; }
             if (hexArrNum === void 0) { hexArrNum = 32; }
+            if (segmentSize === void 0) { segmentSize = 256 * 8; }
             this.nextChunk = nextChunk;
             this.memorySize = memorySize;
             this.hexArrSize = hexArrSize;
             this.hexArrNum = hexArrNum;
+            this.segmentSize = segmentSize;
         }
         MemoryAccessor.prototype.init = function () {
         };
@@ -43,19 +45,23 @@ var TSOS;
             }
         };
         MemoryAccessor.prototype.write = function (segment, data, addr) {
-            return _Memory.writeData(segment, data, addr * 8);
+            var start = segment * this.segmentSize;
+            return _Memory.writeData(start, data, addr * 8);
         };
         MemoryAccessor.prototype.getMemorySize = function () {
             return this.memorySize;
         };
         MemoryAccessor.prototype.getLoadMemory = function (segment) {
-            return _Memory.getLoadMemory(segment);
+            var index = segment * this.segmentSize;
+            return _Memory.getLoadMemory(index);
         };
         MemoryAccessor.prototype.removeMemory = function (segment, start, end) {
-            _Memory.remove(segment, start, end);
+            var startIdx = segment * this.segmentSize + start;
+            end = end * 8;
+            _Memory.remove(startIdx, end);
         };
         MemoryAccessor.prototype.getSegments = function () {
-            return _Memory.memoryArr.length;
+            return (_Memory.memoryArr.length / this.segmentSize);
         };
         return MemoryAccessor;
     }());
