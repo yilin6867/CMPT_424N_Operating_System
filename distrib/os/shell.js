@@ -68,6 +68,19 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellKill, "kill", "<pid> - Kill the process with the given process id");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellClearmem, "clearmem", " - Clear all memory partition. If there is any program running, " +
+                " it will be terminate running and clear the memory.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<number> - If number is not provide, display current quantum." +
+                " If number is zero, set quantum to default value." +
+                " If number is greater than zero, set Round Robin quantum to that number.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellPs, "ps", " - Display PID and state of all process.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRunall, "runall", " - Execute all process at once.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKillall, "killall", " - Kill all proces");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -348,6 +361,7 @@ var TSOS;
                     _StdOut.putText(writeInfo);
                 }
             }
+            console.log(_MemoryManager.readyQueue);
         };
         // run the user input program with given pid
         Shell.prototype.shellRun = function (pid) {
@@ -369,6 +383,48 @@ var TSOS;
         };
         Shell.prototype.shellClearmem = function () {
             _Kernel.krnClearmem();
+        };
+        Shell.prototype.shellQuantum = function (num) {
+            console.log(num);
+            if (typeof (num) === "undefined") {
+                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.quantum);
+            }
+            else if (num == 0) {
+                _MemoryManager.quantum = 6;
+            }
+            else {
+                _MemoryManager.quantum = num;
+            }
+        };
+        Shell.prototype.shellPs = function () {
+            var pcbInfo = _MemoryManager.getPBCsInfo();
+            _StdOut.putText("PID | State ");
+            _StdOut.putText("------------");
+            for (var _i = 0, pcbInfo_1 = pcbInfo; _i < pcbInfo_1.length; _i++) {
+                var pcb = pcbInfo_1[_i];
+                _StdOut.putText(pcb[0].padStart("PID ".length, " ") + "|" + pcb[1].padStart(" State ".length, " "));
+            }
+        };
+        Shell.prototype.shellRunall = function () {
+            console.log(_MemoryManager.pcbs);
+            for (var _i = 0, _a = _MemoryManager.pcbs; _i < _a.length; _i++) {
+                var pcb = _a[_i];
+                if (pcb.state == 0) {
+                    pcb.state = 1;
+                    _MemoryManager.readyQueue.push(pcb);
+                    console.log("Push", pcb.pid, " to queue");
+                }
+            }
+            var firstProcess = _MemoryManager.readyQueue.shift();
+            console.log("Running First PCB", firstProcess);
+            _Kernel.krnRunProgram(firstProcess.pid.toString());
+        };
+        Shell.prototype.shellKillall = function () {
+            var pcbInfo = _MemoryManager.getPBCsInfo();
+            for (var _i = 0, pcbInfo_2 = pcbInfo; _i < pcbInfo_2.length; _i++) {
+                var pcb = pcbInfo_2[_i];
+                this.shellKill(pcb[0]);
+            }
         };
         return Shell;
     }());
