@@ -15,7 +15,6 @@ module TSOS {
             , public curEle = 0
         ) {
             this.memoryArr = new Array(this.memorySize).fill("0");
-            console.log(this.memoryArr)
         }
         public getMemorySize(): number {
             return this.memorySize;
@@ -40,10 +39,12 @@ module TSOS {
                     this.curEle = this.curEle + 1;
                 }
             }
+            console.log("Memory after write data")
+            console.log(this.memoryArr[2098])
             return [startIdx, addr != null ? addr : this.curEle ];
         }
 
-        public readData(segment: number, counter: number) {
+        public readData(counter: number) {
             let nextEle = 4;
             let hexCodes = ""
             let hex = ""

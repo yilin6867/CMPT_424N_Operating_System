@@ -19,7 +19,6 @@ var TSOS;
             this.memoryArr = memoryArr;
             this.curEle = curEle;
             this.memoryArr = new Array(this.memorySize).fill("0");
-            console.log(this.memoryArr);
         }
         Memory.prototype.getMemorySize = function () {
             return this.memorySize;
@@ -47,9 +46,11 @@ var TSOS;
                     this.curEle = this.curEle + 1;
                 }
             }
+            console.log("Memory after write data");
+            console.log(this.memoryArr[2098]);
             return [startIdx, addr != null ? addr : this.curEle];
         };
-        Memory.prototype.readData = function (segment, counter) {
+        Memory.prototype.readData = function (counter) {
             var nextEle = 4;
             var hexCodes = "";
             var hex = "";

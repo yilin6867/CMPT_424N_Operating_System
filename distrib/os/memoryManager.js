@@ -41,14 +41,13 @@ var TSOS;
                 return this.pcbs[parseInt(pid)];
             }
             else {
-                return "There is not user program with pid of " + pid;
+                return null;
             }
         };
         MemoryManager.prototype.getNextPID = function () {
             return this.pcbs.length;
         };
         MemoryManager.prototype.write = function (segment, data) {
-            console.log(segment);
             if (segment === -1) {
                 return "All memory segments are occupied by some process." +
                     " Please kill or run a process to release the memory.";
@@ -72,15 +71,15 @@ var TSOS;
         MemoryManager.prototype.shortTermSchedule = function (curPCB) {
             if (this.quantum == 0) {
                 console.log("Schedule next process");
+                console.log(_Memory.memoryArr);
                 this.quantum = 6;
                 this.saveState(curPCB);
                 var nextProcess = this.readyQueue.shift();
-                console.log(curPCB, nextProcess);
+                console.log(nextProcess);
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
             }
         };
         MemoryManager.prototype.saveState = function (runningPCB) {
-            console.log(this.pcbs, runningPCB);
             this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg;
             this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg;
             this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg;

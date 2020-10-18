@@ -41,6 +41,7 @@ module TSOS {
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             if (this.runningPCB.state < 4) {
+                console.log(_Memory.memoryArr[2098])
                 this.runningPCB.state = 1;
                 let counter = parseInt(this.runningPCB.getCounter(), 16);
                 let returnValues: any[] = _MemoryAccessor.read(this.runningPCB.location, counter, 1);
@@ -95,7 +96,9 @@ module TSOS {
                         this.systemCall();
                         break;
                 }
-                if (parseInt(this.runningPCB.getCounter(), 16) >= this.runningPCB.limit_ct/8) {
+                if (parseInt(this.runningPCB.getCounter(), 16) % 256 >= this.runningPCB.limit_ct/8) {
+                    console.log("Terminating PCB by counter limit")
+                    console.log(parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct/8)
                     this.isExecuting = false;
                     this.runningPCB.updateStates(4);
                 }
@@ -104,6 +107,8 @@ module TSOS {
                 } 
             }
             _MemoryManager.quantum =_MemoryManager.quantum - 1
+            console.log(_MemoryManager.quantum)
+            console.log(_Memory.memoryArr[2098])
         }
 
         public ldaConst() {
@@ -282,13 +287,13 @@ module TSOS {
         }
 
         public readPCB(pid:string): PCB {
-            let readPCB: PCB = _MemoryManager.getPCBbyID(pid);
-            return readPCB
+            return _MemoryManager.getPCBbyID(pid);
         }
 
         public runUserProgram(pid: string) {
             let returnInfo: any = this.readPCB(pid);
-            if (typeof returnInfo !== "string") {
+            console.log("return info", returnInfo)
+            if (typeof returnInfo !== null) {
                 if (returnInfo.state === 4) {
                     return "The user program have been terminated"
                 } else {
@@ -299,6 +304,8 @@ module TSOS {
                     this.Yreg = this.runningPCB.y_reg;
                     this.Zflag = this.runningPCB.z_reg;
                     this.isExecuting = true;
+                    console.log(_Memory.memoryArr[2098])
+                    return ""
                 }
             }
             else {
@@ -358,7 +365,6 @@ module TSOS {
 
         public getRunningPCB() {
             return this.runningPCB.getInfo();
-            
         }
 
         public hexToBinary(hexCode: string) {

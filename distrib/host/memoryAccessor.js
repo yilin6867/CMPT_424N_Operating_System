@@ -28,7 +28,7 @@ var TSOS;
             if (numCounter == null) {
                 var i = 0;
                 do {
-                    var nextReturn = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    var nextReturn = _Memory.readData((segment * this.segmentSize) + ((counter + i) * opCodeSize));
                     param[0] = param[0] + " " + nextReturn[0];
                     param[1] = nextReturn[1];
                     i = i + 1;
@@ -37,7 +37,7 @@ var TSOS;
             }
             else {
                 for (var i = 0; i < numCounter; i++) {
-                    var nextReturn = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    var nextReturn = _Memory.readData((segment * this.segmentSize) + ((counter + i) * opCodeSize));
                     param[0] = nextReturn[0] + param[0];
                     param[1] = nextReturn[1];
                 }

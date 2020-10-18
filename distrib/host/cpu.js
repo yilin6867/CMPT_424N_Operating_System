@@ -45,6 +45,7 @@ var TSOS;
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             if (this.runningPCB.state < 4) {
+                console.log(_Memory.memoryArr[2098]);
                 this.runningPCB.state = 1;
                 var counter = parseInt(this.runningPCB.getCounter(), 16);
                 var returnValues = _MemoryAccessor.read(this.runningPCB.location, counter, 1);
@@ -99,7 +100,9 @@ var TSOS;
                         this.systemCall();
                         break;
                 }
-                if (parseInt(this.runningPCB.getCounter(), 16) >= this.runningPCB.limit_ct / 8) {
+                if (parseInt(this.runningPCB.getCounter(), 16) % 256 >= this.runningPCB.limit_ct / 8) {
+                    console.log("Terminating PCB by counter limit");
+                    console.log(parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct / 8);
                     this.isExecuting = false;
                     this.runningPCB.updateStates(4);
                 }
@@ -108,6 +111,8 @@ var TSOS;
                 }
             }
             _MemoryManager.quantum = _MemoryManager.quantum - 1;
+            console.log(_MemoryManager.quantum);
+            console.log(_Memory.memoryArr[2098]);
         };
         Cpu.prototype.ldaConst = function () {
             var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
@@ -286,12 +291,12 @@ var TSOS;
             return [newPCB.getPid(), newPCB.getCounter(), writeInfo[0], writeInfo[1]];
         };
         Cpu.prototype.readPCB = function (pid) {
-            var readPCB = _MemoryManager.getPCBbyID(pid);
-            return readPCB;
+            return _MemoryManager.getPCBbyID(pid);
         };
         Cpu.prototype.runUserProgram = function (pid) {
             var returnInfo = this.readPCB(pid);
-            if (typeof returnInfo !== "string") {
+            console.log("return info", returnInfo);
+            if (typeof returnInfo !== null) {
                 if (returnInfo.state === 4) {
                     return "The user program have been terminated";
                 }
@@ -303,6 +308,8 @@ var TSOS;
                     this.Yreg = this.runningPCB.y_reg;
                     this.Zflag = this.runningPCB.z_reg;
                     this.isExecuting = true;
+                    console.log(_Memory.memoryArr[2098]);
+                    return "";
                 }
             }
             else {

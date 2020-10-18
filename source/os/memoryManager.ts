@@ -15,7 +15,7 @@ module TSOS {
             , public memoryHexView = true 
             , public readyQueue: PCB[] = []
             , public residentQueue: PCB[] = []
-            , public quantum: Number = 6
+            , public quantum: number = 6
         ) {
             
         }
@@ -38,14 +38,13 @@ module TSOS {
                 return this.pcbs[parseInt(pid)];
             }
             else {
-                return "There is not user program with pid of " + pid
+                return null
             }
         }
         public getNextPID() {
             return this.pcbs.length;
         }
         public write(segment: number, data: string) {
-            console.log(segment)
             if (segment === -1) {
                 return "All memory segments are occupied by some process."+
                     " Please kill or run a process to release the memory."
@@ -69,16 +68,16 @@ module TSOS {
         public shortTermSchedule(curPCB: PCB) {
             if(this.quantum == 0) {
                 console.log("Schedule next process")
+                console.log(_Memory.memoryArr)
                 this.quantum = 6;
                 this.saveState(curPCB)
                 let nextProcess = this.readyQueue.shift();
-                console.log(curPCB, nextProcess)
+                console.log(nextProcess)
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
             }
         }
 
         public saveState(runningPCB: PCB) {
-            console.log(this.pcbs, runningPCB)
             this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg
             this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg
             this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg

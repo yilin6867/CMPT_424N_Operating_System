@@ -83,7 +83,7 @@ module TSOS {
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.                          
             */
-            
+
             // Render OS values dynamically in the console
             this.krnUpdateDisplayValue();
 
@@ -203,6 +203,7 @@ module TSOS {
             if (_CPU.isExecuting) {
                 console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
                 document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
+                console.log(_Memory.memoryArr[2098])
                 _Console.showMemCounter(cpuInfo[0]);
             }
             _Console.showCPU(cpuInfo);
@@ -211,7 +212,12 @@ module TSOS {
 
         public krnRunProgram(pid: string): void {
             let returnMSG = _CPU.runUserProgram(pid);
-            _StdOut.putText(returnMSG);
+            if (typeof returnMSG !== null) {
+                _StdOut.putText(returnMSG);
+            } else {
+                _StdOut.putText("There is no user program with pid of " + pid)
+            }
+            
         }
 
         public krnShowMemory(segment: number): void {

@@ -156,6 +156,7 @@ module TSOS {
                                     "killall",
                                     " - Kill all proces"
                                 )
+            this.commandList[this.commandList.length] = sc
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -448,6 +449,7 @@ module TSOS {
                     _StdOut.putText(writeInfo)
                 }
             }
+            console.log(_MemoryManager.readyQueue)
         }
 
         // run the user input program with given pid
@@ -497,7 +499,17 @@ module TSOS {
         }
 
         public shellRunall() {
-
+            console.log(_MemoryManager.pcbs)
+            for (let pcb of _MemoryManager.pcbs) {
+                if (pcb.state == 0) {
+                    pcb.state = 1
+                    _MemoryManager.readyQueue.push(pcb)
+                    console.log("Push", pcb.pid, " to queue")
+                }
+            }
+            let firstProcess: PCB = _MemoryManager.readyQueue.shift()
+            console.log("Running First PCB", firstProcess)
+            _Kernel.krnRunProgram(firstProcess.pid.toString())
         }
 
         public shellKillall() {

@@ -24,7 +24,7 @@ module TSOS {
             if (numCounter == null) {
                 let i = 0
                 do {
-                    let nextReturn: any[] = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    let nextReturn: any[] = _Memory.readData((segment * this.segmentSize) + ((counter + i) * opCodeSize));
                     param[0] = param[0] + " " + nextReturn[0]
                     param[1] = nextReturn[1]
                     i = i + 1
@@ -32,7 +32,7 @@ module TSOS {
                 return param;
             } else {
                 for (let i = 0; i < numCounter; i++) {
-                    let nextReturn: any[] = _Memory.readData(segment, (counter + i) * opCodeSize);
+                    let nextReturn: any[] = _Memory.readData((segment * this.segmentSize) + ((counter + i) * opCodeSize));
                     param[0] = nextReturn[0] + param[0]
                     param[1] = nextReturn[1]
                 }

@@ -82,7 +82,7 @@ var sysDate : string = null;
 var _Memory: TSOS.Memory;
 var _MemoryAccessor: TSOS.MemoryAccessor;	
 //	Software	(OS)
-var _MemoryManager: any = null;
+var _MemoryManager: TSOS.MemoryManager = null;
 
 var memoryHexMatr: String[][];
 
