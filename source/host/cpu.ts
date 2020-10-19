@@ -96,9 +96,9 @@ module TSOS {
                         this.systemCall();
                         break;
                 }
-                if (parseInt(this.runningPCB.getCounter(), 16) % 256 >= this.runningPCB.limit_ct/8) {
+                if (parseInt(this.runningPCB.getCounter(), 16) % 256 >= this.runningPCB.limit_ct) {
                     console.log("Terminating PCB by counter limit")
-                    console.log(parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct/8)
+                    console.log(parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct)
                     this.isExecuting = false;
                     this.runningPCB.updateStates(4);
                 }
@@ -304,7 +304,7 @@ module TSOS {
                     this.Yreg = this.runningPCB.y_reg;
                     this.Zflag = this.runningPCB.z_reg;
                     this.isExecuting = true;
-                    console.log(_Memory.memoryArr[2098])
+                    console.log("Load new program",returnInfo)
                     return ""
                 }
             }
@@ -316,6 +316,7 @@ module TSOS {
         public terminates() {
             this.isExecuting = false;
             this.runningPCB.updateStates(4);
+            console.log("Remove memory from segment ", this.runningPCB.location, " and end in ", this.runningPCB.limit_ct)
             this.removeMemory(this.runningPCB.location, 0, this.runningPCB.limit_ct);
             _MemoryManager.memoryFill[this.runningPCB.location] = false;
             _Kernel.krnShowMemory(this.runningPCB.location);

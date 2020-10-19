@@ -201,10 +201,12 @@ module TSOS {
             _Console.showSysDatetime(sysDate, sysTime);
             let cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
-                document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
-                console.log(_Memory.memoryArr[2098])
-                _Console.showMemCounter(cpuInfo[0]);
+                if(typeof _CPU.runUserProgram !== "undefined") {
+                    console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
+                    document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
+                    console.log(_Memory.memoryArr[2098])
+                    _Console.showMemCounter(cpuInfo[0]);
+                }
             }
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_MemoryManager.getPBCsInfo());

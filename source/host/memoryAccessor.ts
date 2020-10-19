@@ -12,7 +12,9 @@ module TSOS {
             , public memorySize: number = _Memory.getMemorySize()
             , public hexArrSize: number = 64
             , public hexArrNum: number = 32
-            , public segmentSize: number = 256 * 8
+            , public bitSiz: number = 8
+            , public segmentBitSize: number = 256 * bitSiz
+            
         ) {
         }
         public init() {
@@ -24,7 +26,7 @@ module TSOS {
             if (numCounter == null) {
                 let i = 0
                 do {
-                    let nextReturn: any[] = _Memory.readData((segment * this.segmentSize) + ((counter + i) * opCodeSize));
+                    let nextReturn: any[] = _Memory.readData((segment * this.segmentBitSize) + ((counter + i) * opCodeSize));
                     param[0] = param[0] + " " + nextReturn[0]
                     param[1] = nextReturn[1]
                     i = i + 1
@@ -32,7 +34,10 @@ module TSOS {
                 return param;
             } else {
                 for (let i = 0; i < numCounter; i++) {
-                    let nextReturn: any[] = _Memory.readData((segment * this.segmentSize) + ((counter + i) * opCodeSize));
+                    console.log("Segment Num ", (segment), "counter", counter, "i", i)
+                    console.log("Segment", (segment * this.segmentBitSize), "counter", ((counter + i) * opCodeSize))
+                    console.log("Memory read", (segment * this.segmentBitSize) + ((counter + i) * opCodeSize))
+                    let nextReturn: any[] = _Memory.readData((segment * this.segmentBitSize) + ((counter + i) * opCodeSize));
                     param[0] = nextReturn[0] + param[0]
                     param[1] = nextReturn[1]
                 }
@@ -41,26 +46,27 @@ module TSOS {
         }
 
         public write(segment: number, data: string[], addr: number) {
-            let start = segment * this.segmentSize
-            return _Memory.writeData(start, data, addr * 8);
+            let start = segment * this.segmentBitSize
+            return _Memory.writeData(start, data, addr * this.bitSiz);
         }
         public getMemorySize(): number {
             return this.memorySize;
         }
 
         public getLoadMemory(segment: number) {
-            let index = segment * this.segmentSize
+            let index = segment * this.segmentBitSize
             return _Memory.getLoadMemory(index);
         }
 
         public removeMemory(segment:number, start:number, end:number) {
-            let startIdx = segment * this.segmentSize  + start
-            end = end * 8
+            let startIdx = segment * this.segmentBitSize  + start
+            end = startIdx + end * this.bitSiz
+            console.log(startIdx, end)
             _Memory.remove(startIdx, end);
         }
 
         public getSegments() {
-            return (_Memory.memoryArr.length / this.segmentSize);
+            return (_Memory.memoryArr.length / this.segmentBitSize);
         }
     }
 }

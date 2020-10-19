@@ -351,7 +351,7 @@ var TSOS;
                 _StdOut.advanceLine();
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
-                        + " between address " + writeInfo[2] / 8 + " and address " + writeInfo[3] / 8 + ".");
+                        + " between address " + writeInfo[2] + " and address " + writeInfo[3] + ".");
                     _Kernel.krnShowMemory(writeInfo[4]);
                 }
                 else if (Array.isArray(writeInfo) && writeInfo.length == 0) {
@@ -387,22 +387,28 @@ var TSOS;
         Shell.prototype.shellQuantum = function (num) {
             console.log(num);
             if (typeof (num) === "undefined") {
-                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.quantum);
+                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.defaultQuantum);
             }
             else if (num == 0) {
-                _MemoryManager.quantum = 6;
+                _MemoryManager.defaultQuantum = 6;
+                _StdOut.putText("Set Round Robit Quantum to " + _MemoryManager.defaultQuantum);
             }
             else {
-                _MemoryManager.quantum = num;
+                _MemoryManager.defaultQuantum = num;
+                _StdOut.putText("Set Round Robit Quantum to " + _MemoryManager.defaultQuantum);
             }
+            _MemoryManager.quantum = _MemoryManager.defaultQuantum;
         };
         Shell.prototype.shellPs = function () {
             var pcbInfo = _MemoryManager.getPBCsInfo();
-            _StdOut.putText("PID | State ");
+            _StdOut.putText("PID | State");
+            _StdOut.advanceLine();
             _StdOut.putText("------------");
             for (var _i = 0, pcbInfo_1 = pcbInfo; _i < pcbInfo_1.length; _i++) {
                 var pcb = pcbInfo_1[_i];
-                _StdOut.putText(pcb[0].padStart("PID ".length, " ") + "|" + pcb[1].padStart(" State ".length, " "));
+                _StdOut.advanceLine();
+                _StdOut.putText(pcb[0].toString().padStart("PID ".length, " ") + "|"
+                    + pcb[1].toString().padStart(" State ".length, " "));
             }
         };
         Shell.prototype.shellRunall = function () {
@@ -423,7 +429,8 @@ var TSOS;
             var pcbInfo = _MemoryManager.getPBCsInfo();
             for (var _i = 0, pcbInfo_2 = pcbInfo; _i < pcbInfo_2.length; _i++) {
                 var pcb = pcbInfo_2[_i];
-                this.shellKill(pcb[0]);
+                console.log(pcb[0].toString());
+                _OsShell.shellKill(pcb[0].toString());
             }
         };
         return Shell;

@@ -441,7 +441,7 @@ module TSOS {
                 _StdOut.advanceLine();
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
-                        + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8 + ".");
+                        + " between address "+ writeInfo[2] + " and address " + writeInfo[3] + ".");
                     _Kernel.krnShowMemory(writeInfo[4]);
                 } else if (Array.isArray(writeInfo) && writeInfo.length  == 0) {
                     _StdOut.putText("Write Faile. The user program exceed the memory space.")
@@ -481,20 +481,26 @@ module TSOS {
         public shellQuantum(num: number) {
             console.log(num)
             if (typeof(num) === "undefined") {
-                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.quantum);
+                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.defaultQuantum);
             } else if (num == 0) {
-                _MemoryManager.quantum = 6
+                _MemoryManager.defaultQuantum = 6
+                _StdOut.putText("Set Round Robit Quantum to " + _MemoryManager.defaultQuantum);
             } else {
-                _MemoryManager.quantum = num
+                _MemoryManager.defaultQuantum = num
+                _StdOut.putText("Set Round Robit Quantum to " + _MemoryManager.defaultQuantum);
             }
+            _MemoryManager.quantum = _MemoryManager.defaultQuantum
         }
 
         public shellPs() {
             let pcbInfo: string[][] = _MemoryManager.getPBCsInfo();
-            _StdOut.putText("PID | State ")
+            _StdOut.putText("PID | State")
+            _StdOut.advanceLine()
             _StdOut.putText("------------")
             for (let pcb of pcbInfo) {
-                _StdOut.putText(pcb[0].padStart("PID ".length, " ") + "|" + pcb[1].padStart(" State ".length, " "))
+                _StdOut.advanceLine()
+                _StdOut.putText(pcb[0].toString().padStart("PID ".length, " ") + "|" 
+                + pcb[1].toString().padStart(" State ".length, " "))
             }
         }
 
@@ -515,7 +521,8 @@ module TSOS {
         public shellKillall() {
             let pcbInfo: string[][] = _MemoryManager.getPBCsInfo();
             for (let pcb of pcbInfo) {
-                this.shellKill(pcb[0])
+                console.log(pcb[0].toString())
+                _OsShell.shellKill(pcb[0].toString())
             }
         }
     }

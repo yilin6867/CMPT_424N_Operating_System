@@ -15,6 +15,7 @@ module TSOS {
             , public memoryHexView = true 
             , public readyQueue: PCB[] = []
             , public residentQueue: PCB[] = []
+            , public defaultQuantum: number = 6
             , public quantum: number = 6
         ) {
             
@@ -66,25 +67,30 @@ module TSOS {
         }
 
         public shortTermSchedule(curPCB: PCB) {
-            if(this.quantum == 0) {
-                console.log("Schedule next process")
-                console.log(_Memory.memoryArr)
-                this.quantum = 6;
-                this.saveState(curPCB)
+            if (curPCB.state == 4 || this.quantum == 0) {
+                this.quantum = this.defaultQuantum;
                 let nextProcess = this.readyQueue.shift();
-                console.log(nextProcess)
-                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                if (typeof nextProcess !== "undefined") {
+                    console.log("Schedule next process")
+                    console.log(nextProcess)
+                    this.saveState(curPCB)
+                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                }
             }
         }
 
         public saveState(runningPCB: PCB) {
-            this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg
-            this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg
-            this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg
-            this.pcbs[runningPCB.pid].state = runningPCB.state
-            this.pcbs[runningPCB.pid].accumulator =  runningPCB.accumulator
-            this.pcbs[runningPCB.pid].counter = runningPCB.counter
-            this.readyQueue.push(runningPCB);
+            if (runningPCB.state < 4) {
+                this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg
+                this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg
+                this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg
+                this.pcbs[runningPCB.pid].state = runningPCB.state
+                this.pcbs[runningPCB.pid].accumulator =  runningPCB.accumulator
+                this.pcbs[runningPCB.pid].counter = runningPCB.counter
+                this.pcbs[runningPCB.pid].state = 1
+                this.readyQueue.push(runningPCB);
+                console.log("save process ", _MemoryManager.readyQueue)
+            }
         }
     }
 }

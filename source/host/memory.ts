@@ -12,6 +12,7 @@ module TSOS {
             // there is 256 bytes in total for the memory
             public memorySize = 8 * 768
             , public memoryArr: string[] = []
+            , public segmentSize = 256
             , public curEle = 0
         ) {
             this.memoryArr = new Array(this.memorySize).fill("0");
@@ -39,9 +40,7 @@ module TSOS {
                     this.curEle = this.curEle + 1;
                 }
             }
-            console.log("Memory after write data")
-            console.log(this.memoryArr[2098])
-            return [startIdx, addr != null ? addr : this.curEle ];
+            return [startIdx, (addr != null ? addr : this.curEle) /8];
         }
 
         public readData(counter: number) {
@@ -54,7 +53,7 @@ module TSOS {
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
-            return [hexCodes.trim(), counter/8];
+            return [hexCodes.trim(), (counter/8) % this.segmentSize];
         }
 
         public getLoadMemory(segment:number): string[] {

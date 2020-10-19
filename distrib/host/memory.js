@@ -11,12 +11,14 @@ var TSOS;
         function Memory(
         // one bytes is 8 bits
         // there is 256 bytes in total for the memory
-        memorySize, memoryArr, curEle) {
+        memorySize, memoryArr, segmentSize, curEle) {
             if (memorySize === void 0) { memorySize = 8 * 768; }
             if (memoryArr === void 0) { memoryArr = []; }
+            if (segmentSize === void 0) { segmentSize = 256; }
             if (curEle === void 0) { curEle = 0; }
             this.memorySize = memorySize;
             this.memoryArr = memoryArr;
+            this.segmentSize = segmentSize;
             this.curEle = curEle;
             this.memoryArr = new Array(this.memorySize).fill("0");
         }
@@ -46,9 +48,7 @@ var TSOS;
                     this.curEle = this.curEle + 1;
                 }
             }
-            console.log("Memory after write data");
-            console.log(this.memoryArr[2098]);
-            return [startIdx, addr != null ? addr : this.curEle];
+            return [startIdx, (addr != null ? addr : this.curEle) / 8];
         };
         Memory.prototype.readData = function (counter) {
             var nextEle = 4;
@@ -60,7 +60,7 @@ var TSOS;
                 hexCodes = hexCodes + hex;
                 counter = counter + nextEle;
             }
-            return [hexCodes.trim(), counter / 8];
+            return [hexCodes.trim(), (counter / 8) % this.segmentSize];
         };
         Memory.prototype.getLoadMemory = function (segment) {
             return this.memoryArr.slice(segment, segment + 256 * 8);

@@ -10,13 +10,14 @@ var TSOS;
     var MemoryManager = /** @class */ (function () {
         function MemoryManager(pcbs, memorySize, memoryFill
         // false --> binary view
-        , memoryHexView, readyQueue, residentQueue, quantum) {
+        , memoryHexView, readyQueue, residentQueue, defaultQuantum, quantum) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             if (memoryFill === void 0) { memoryFill = new Array(_CPU.getMemorySegments()).fill(false); }
             if (memoryHexView === void 0) { memoryHexView = true; }
             if (readyQueue === void 0) { readyQueue = []; }
             if (residentQueue === void 0) { residentQueue = []; }
+            if (defaultQuantum === void 0) { defaultQuantum = 6; }
             if (quantum === void 0) { quantum = 6; }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
@@ -24,6 +25,7 @@ var TSOS;
             this.memoryHexView = memoryHexView;
             this.readyQueue = readyQueue;
             this.residentQueue = residentQueue;
+            this.defaultQuantum = defaultQuantum;
             this.quantum = quantum;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
@@ -69,24 +71,29 @@ var TSOS;
             return pbcsInfo;
         };
         MemoryManager.prototype.shortTermSchedule = function (curPCB) {
-            if (this.quantum == 0) {
-                console.log("Schedule next process");
-                console.log(_Memory.memoryArr);
-                this.quantum = 6;
-                this.saveState(curPCB);
+            if (curPCB.state == 4 || this.quantum == 0) {
+                this.quantum = this.defaultQuantum;
                 var nextProcess = this.readyQueue.shift();
-                console.log(nextProcess);
-                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                if (typeof nextProcess !== "undefined") {
+                    console.log("Schedule next process");
+                    console.log(nextProcess);
+                    this.saveState(curPCB);
+                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                }
             }
         };
         MemoryManager.prototype.saveState = function (runningPCB) {
-            this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg;
-            this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg;
-            this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg;
-            this.pcbs[runningPCB.pid].state = runningPCB.state;
-            this.pcbs[runningPCB.pid].accumulator = runningPCB.accumulator;
-            this.pcbs[runningPCB.pid].counter = runningPCB.counter;
-            this.readyQueue.push(runningPCB);
+            if (runningPCB.state < 4) {
+                this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg;
+                this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg;
+                this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg;
+                this.pcbs[runningPCB.pid].state = runningPCB.state;
+                this.pcbs[runningPCB.pid].accumulator = runningPCB.accumulator;
+                this.pcbs[runningPCB.pid].counter = runningPCB.counter;
+                this.pcbs[runningPCB.pid].state = 1;
+                this.readyQueue.push(runningPCB);
+                console.log("save process ", _MemoryManager.readyQueue);
+            }
         };
         return MemoryManager;
     }());
