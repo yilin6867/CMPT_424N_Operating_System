@@ -441,8 +441,8 @@ module TSOS {
                 _StdOut.advanceLine();
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
-                        + " between address "+ writeInfo[2] + " and address " + writeInfo[3] + ".");
-                    _Kernel.krnShowMemory(writeInfo[4]);
+                        +  writeInfo[1] + " between address "+ writeInfo[3] + " and address " + writeInfo[4] + ".");
+                    _Kernel.krnShowMemory(writeInfo[5]);
                 } else if (Array.isArray(writeInfo) && writeInfo.length  == 0) {
                     _StdOut.putText("Write Faile. The user program exceed the memory space.")
                 } else if (typeof(writeInfo) === "string") {

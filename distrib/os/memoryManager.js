@@ -71,6 +71,7 @@ var TSOS;
             return pbcsInfo;
         };
         MemoryManager.prototype.shortTermSchedule = function (curPCB) {
+            this.addWaitBurst();
             if (curPCB.state == 4 || this.quantum == 0) {
                 this.quantum = this.defaultQuantum;
                 var nextProcess = this.readyQueue.shift();
@@ -84,16 +85,26 @@ var TSOS;
         };
         MemoryManager.prototype.saveState = function (runningPCB) {
             if (runningPCB.state < 4) {
-                this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg;
-                this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg;
-                this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg;
+                this.pcbs[runningPCB.pid].xReg = runningPCB.xReg;
+                this.pcbs[runningPCB.pid].yReg = runningPCB.yReg;
+                this.pcbs[runningPCB.pid].zReg = runningPCB.zReg;
                 this.pcbs[runningPCB.pid].state = runningPCB.state;
                 this.pcbs[runningPCB.pid].accumulator = runningPCB.accumulator;
                 this.pcbs[runningPCB.pid].counter = runningPCB.counter;
+                this.pcbs[runningPCB.pid].waitBurst = runningPCB.waitBurst;
+                this.pcbs[runningPCB.pid].cpuBurst = runningPCB.cpuBurst;
                 this.pcbs[runningPCB.pid].state = 1;
                 this.readyQueue.push(runningPCB);
                 console.log("save process ", _MemoryManager.readyQueue);
             }
+        };
+        MemoryManager.prototype.addWaitBurst = function () {
+            console.log(this.readyQueue);
+            for (var _i = 0, _a = this.readyQueue; _i < _a.length; _i++) {
+                var pcb = _a[_i];
+                pcb.waitBurst = pcb.waitBurst + 1;
+            }
+            console.log(this.readyQueue);
         };
         return MemoryManager;
     }());

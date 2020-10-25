@@ -17,9 +17,11 @@ module TSOS {
             , public counter: string
             , public limit_ct: number
             , public accumulator: any = 0
-            , public x_reg: any = 0
-            , public y_reg: any = 0
-            , public z_reg: any = 0
+            , public xReg: any = 0
+            , public yReg: any = 0
+            , public zReg: any = 0
+            , public cpuBurst: number = 0
+            , public waitBurst: number = 0
         ){
         }
         public updateCounter(newCounter: number) {
@@ -37,7 +39,7 @@ module TSOS {
 
         public getInfo(): any[] {
             return [this.pid, this.state, this.location, this.priority
-                , this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg]
+                , this.counter, this.accumulator, this.xReg, this.yReg, this.zReg]
         }
     }
 }

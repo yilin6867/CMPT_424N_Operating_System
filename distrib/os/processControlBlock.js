@@ -10,11 +10,13 @@ var TSOS;
     var PCB = /** @class */ (function () {
         function PCB(
         // process states: new <0>, ready<1>, running<2>, waiting<3>, terminate<4>
-        state, pid, priority, location, counter, limit_ct, accumulator, x_reg, y_reg, z_reg) {
+        state, pid, priority, location, counter, limit_ct, accumulator, xReg, yReg, zReg, cpuBurst, waitBurst) {
             if (accumulator === void 0) { accumulator = 0; }
-            if (x_reg === void 0) { x_reg = 0; }
-            if (y_reg === void 0) { y_reg = 0; }
-            if (z_reg === void 0) { z_reg = 0; }
+            if (xReg === void 0) { xReg = 0; }
+            if (yReg === void 0) { yReg = 0; }
+            if (zReg === void 0) { zReg = 0; }
+            if (cpuBurst === void 0) { cpuBurst = 0; }
+            if (waitBurst === void 0) { waitBurst = 0; }
             this.state = state;
             this.pid = pid;
             this.priority = priority;
@@ -22,9 +24,11 @@ var TSOS;
             this.counter = counter;
             this.limit_ct = limit_ct;
             this.accumulator = accumulator;
-            this.x_reg = x_reg;
-            this.y_reg = y_reg;
-            this.z_reg = z_reg;
+            this.xReg = xReg;
+            this.yReg = yReg;
+            this.zReg = zReg;
+            this.cpuBurst = cpuBurst;
+            this.waitBurst = waitBurst;
         }
         PCB.prototype.updateCounter = function (newCounter) {
             this.counter = pad(newCounter.toString(16).toUpperCase(), 2);
@@ -40,7 +44,7 @@ var TSOS;
         };
         PCB.prototype.getInfo = function () {
             return [this.pid, this.state, this.location, this.priority,
-                this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg];
+                this.counter, this.accumulator, this.xReg, this.yReg, this.zReg];
         };
         return PCB;
     }());

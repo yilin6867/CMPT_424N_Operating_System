@@ -67,6 +67,7 @@ module TSOS {
         }
 
         public shortTermSchedule(curPCB: PCB) {
+            this.addWaitBurst()
             if (curPCB.state == 4 || this.quantum == 0) {
                 this.quantum = this.defaultQuantum;
                 let nextProcess = this.readyQueue.shift();
@@ -81,16 +82,26 @@ module TSOS {
 
         public saveState(runningPCB: PCB) {
             if (runningPCB.state < 4) {
-                this.pcbs[runningPCB.pid].x_reg = runningPCB.x_reg
-                this.pcbs[runningPCB.pid].y_reg = runningPCB.y_reg
-                this.pcbs[runningPCB.pid].z_reg = runningPCB.z_reg
+                this.pcbs[runningPCB.pid].xReg = runningPCB.xReg
+                this.pcbs[runningPCB.pid].yReg = runningPCB.yReg
+                this.pcbs[runningPCB.pid].zReg = runningPCB.zReg
                 this.pcbs[runningPCB.pid].state = runningPCB.state
                 this.pcbs[runningPCB.pid].accumulator =  runningPCB.accumulator
                 this.pcbs[runningPCB.pid].counter = runningPCB.counter
+                this.pcbs[runningPCB.pid].waitBurst = runningPCB.waitBurst
+                this.pcbs[runningPCB.pid].cpuBurst = runningPCB.cpuBurst
                 this.pcbs[runningPCB.pid].state = 1
                 this.readyQueue.push(runningPCB);
                 console.log("save process ", _MemoryManager.readyQueue)
             }
+        }
+
+        public addWaitBurst() {
+            console.log(this.readyQueue)
+            for (let pcb of this.readyQueue) {
+                pcb.waitBurst = pcb.waitBurst + 1
+            }
+            console.log(this.readyQueue)
         }
     }
 }

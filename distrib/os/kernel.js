@@ -218,7 +218,13 @@ var TSOS;
             }
         };
         Kernel.prototype.krnKill = function (pid) {
-            _CPU.kill(pid);
+            var killReturn = _CPU.kill(pid);
+            if (killReturn == 4) {
+                _Console.putText("The process is already terminated");
+            }
+            else if (killReturn == null) {
+                _Console.putText("The process " + pid + " is killed");
+            }
         };
         Kernel.prototype.krnChgMemView = function () {
             _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;

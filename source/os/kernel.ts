@@ -244,7 +244,12 @@ module TSOS {
         }
 
         public krnKill(pid: number) {
-            _CPU.kill(pid);
+            let killReturn = _CPU.kill(pid);
+            if (killReturn == 4) {
+                _Console.putText("The process is already terminated")
+            } else if (killReturn == null) {
+                _Console.putText("The process "+ pid + " is killed")
+            }
         }
 
         public krnChgMemView() {
