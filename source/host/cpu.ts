@@ -111,10 +111,7 @@ module TSOS {
                 }
             }
             this.quantum =this.quantum - 1
-            Control.hostLog("Updating CPU burst time for running process" + this.runningPCB.getPid(), "OS")
-            this.runningPCB.cpuBurst = this.runningPCB.cpuBurst + 1
             console.log(this.quantum)
-            console.log(_Memory.memoryArr[2098])
         }
 
         public ldaConst() {
@@ -428,21 +425,6 @@ module TSOS {
                     _MemoryManager.removeReadyPCB(pcb);
                     _Kernel.krnShowMemory(pcb.location);
                     return null
-                }
-            }
-        }
-
-        public shortTermSchedule() {
-            Control.hostLog("Update waiting time for process in the ready queue.", "OS")
-            _MemoryManager.addWaitBurst()
-            if (this.runningPCB.state == 4 || this.quantum == 0) {
-                this.quantum = this.defaultQuantum;
-                let nextProcess = _MemoryManager.readyQueue.shift();
-                if (typeof nextProcess !== "undefined") {
-                    Control.hostLog( "Switching process from process " + this.runningPCB.getPid() + " to process " 
-                                    + nextProcess.getPid(), "OS")
-                    _MemoryManager.saveState(this.runningPCB)
-                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
                 }
             }
         }
