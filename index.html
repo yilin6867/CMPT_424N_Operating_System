@@ -36,7 +36,7 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip3.js"></script>
    
 </head>
 
@@ -103,7 +103,7 @@
    <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
       <canvas id="display"
               width="500px"
-              height="500px"
+              height="540px"
               tabindex="3">
       </canvas>
    </div>
@@ -157,9 +157,15 @@
       </label>
    </div>
    <div id="memoryDisplay" style="margin-left:520px">
-      <tab id= "memorySeg1" class="tablinks" onclick="TSOS.Control.hostBtnLoadMemSegment(this, 0)">
+      <button  id= "memorySeg1" type="button" class="tablinks" disabled onclick="TSOS.Control.hostBtnLoadMemSegment(this, 0)">
          Memory Segment 1
-      </tab>
+      </button>
+      <button  id= "memorySeg2" type="button" class="tablinks" disabled onclick="TSOS.Control.hostBtnLoadMemSegment(this, 1)">
+         Memory Segment 2
+      </button>
+      <button  id= "memorySeg3" type="button" class="tablinks" disabled onclick="TSOS.Control.hostBtnLoadMemSegment(this, 2)">
+         Memory Segment 3
+      </button>
       <label class="tabcontent">
          <br>
          <table id="memoryTable">
@@ -176,6 +182,7 @@
    <div id="pbcDisplay" style="width:500px; float:left">
       <label>
          PCB Display
+         <p name="legend" style="display: inline-block;">* State: 0 = Resident | 1 = Ready | 2 = Running | 3 = Waiting | 4 = Terminated</p>
          <br>
          <table id="pcbTable">
             <thead>
@@ -186,9 +193,9 @@
                   <th>Priorities</th>
                   <th>PC</th>
                   <th>Accu</th>
-                  <th>X Reg</th>
-                  <th>Y Reg</th>
-                  <th>Zflag</th>
+                  <th>X</th>
+                  <th>Y</th>
+                  <th>Z</th>
                </tr>
              </thead>
              <tbody id="pcbTableBody">

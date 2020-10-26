@@ -63,3 +63,9 @@ var _MemoryAccessor;
 //	Software	(OS)
 var _MemoryManager = null;
 var memoryHexMatr;
+function pad(num, size) {
+    var s = num + "";
+    while (s.length < size)
+        s = "0" + s;
+    return s;
+}

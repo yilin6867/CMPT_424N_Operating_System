@@ -68,6 +68,9 @@ var TSOS;
             document.getElementById("btnHaltOS").disabled = false;
             document.getElementById("btnReset").disabled = false;
             document.getElementById("btnSingleStep").disabled = false;
+            document.getElementById("memorySeg1").disabled = false;
+            document.getElementById("memorySeg2").disabled = false;
+            document.getElementById("memorySeg3").disabled = false;
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
@@ -75,7 +78,6 @@ var TSOS;
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
             // .. Create and initialize the Memory. Memory is part of hardware
             _Memory = new TSOS.Memory();
-            _Memory.init();
             _MemoryAccessor = new TSOS.MemoryAccessor();
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
@@ -107,7 +109,7 @@ var TSOS;
             else {
                 document.getElementById("btnNextStep").disabled = true;
             }
-            _Kernel.turnSingleStep();
+            _Kernel.krnTurnSingleStep();
         };
         // Tell the kernal to have CPU execute next step
         Control.hostBtnNextStep_click = function (btn) {
@@ -115,11 +117,16 @@ var TSOS;
         };
         //
         Control.hostBtnLoadMemSegment = function (btn, segment) {
+            var memDisplays = document.getElementById("memoryDisplay").children;
+            for (var i = 0; i < 3; i++) {
+                memDisplays.item(i).style.backgroundColor = "white";
+            }
             btn.style.backgroundColor = "darkgray";
-            _Kernel.showMemory(segment);
+            btn.disabled = false;
+            _Kernel.krnShowMemory(segment);
         };
         Control.hostBtnMemoryView_click = function (btn) {
-            _Kernel.chgMemView();
+            _Kernel.krnChgMemView();
             btn.value = btn.value === "Binary View" ? "Hexidecimal" : "Binary View";
         };
         return Control;

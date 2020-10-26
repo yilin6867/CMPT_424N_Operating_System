@@ -81,6 +81,7 @@ var TSOS;
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
+                _CPU.shortTermSchedule();
             }
             else { // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
@@ -178,23 +179,33 @@ var TSOS;
             _Console.showSysDatetime(sysDate, sysTime);
             var cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                document.getElementById("memorySeg1").click();
-                _Console.showMemCounter(cpuInfo[0]);
+                if (typeof _CPU.runUserProgram !== "undefined") {
+                    console.log("memorySeg" + (1 + _CPU.getRunningPCB()[2]));
+                    document.getElementById("memorySeg" + (1 + _CPU.getRunningPCB()[2])).click();
+                    console.log(_Memory.memoryArr[2098]);
+                    _Console.showMemCounter(cpuInfo[0]);
+                }
             }
             _Console.showCPU(cpuInfo);
-            _Console.showPCB(_CPU.getPCBs());
+            _Console.showPCB(_MemoryManager.getPBCsInfo());
         };
-        Kernel.prototype.runProgram = function (pid) {
+        Kernel.prototype.krnRunProgram = function (pid) {
             var returnMSG = _CPU.runUserProgram(pid);
-            _StdOut.putText(returnMSG);
+            if (typeof returnMSG !== null) {
+                _StdOut.putText(returnMSG);
+            }
+            else {
+                _StdOut.putText("There is no user program with pid of " + pid);
+            }
         };
-        Kernel.prototype.showMemory = function (segment) {
+        Kernel.prototype.krnShowMemory = function (segment) {
             var cpuInfo = _CPU.getInfo();
             var isHexView = _MemoryManager.memoryHexView;
-            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
+            document.getElementById("memoryDisplay").children.item(segment).click();
+            _Console.showMemory(segment, _CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         };
         // Tell the CPU to turn on single step and off if it is on
-        Kernel.prototype.turnSingleStep = function () {
+        Kernel.prototype.krnTurnSingleStep = function () {
             _CPU.singleStep = _CPU.singleStep ? false : true;
             if (!_CPU.singleStep) {
                 _CPU.isExecuting = true;
@@ -207,11 +218,33 @@ var TSOS;
             }
         };
         Kernel.prototype.krnKill = function (pid) {
-            _CPU.kill(pid);
+            var killReturn = _CPU.kill(pid);
+            if (killReturn == 4) {
+                _Console.putText("The process is already terminated");
+            }
+            else if (killReturn == null) {
+                _Console.putText("The process " + pid + " is killed");
+            }
+            else if (typeof killReturn === "string") {
+                _Console.putText(killReturn);
+            }
         };
-        Kernel.prototype.chgMemView = function () {
+        Kernel.prototype.krnChgMemView = function () {
             _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
-            this.showMemory(_CPU.runningPCB.location);
+            this.krnShowMemory(_CPU.runningPCB.location);
+        };
+        Kernel.prototype.krnClearmem = function () {
+            var memSegNum = _MemoryManager.memoryFill.length;
+            for (var i = 0; i < memSegNum; i++) {
+                _CPU.removeMemory(i, 0, 255);
+            }
+        };
+        Kernel.prototype.krnSetDefQuantum = function (quantum) {
+            _CPU.defaultQuantum = quantum;
+            _CPU.quantum = quantum;
+        };
+        Kernel.prototype.krnGetDefQuantum = function () {
+            return _CPU.defaultQuantum;
         };
         return Kernel;
     }());

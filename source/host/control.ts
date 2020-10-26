@@ -81,6 +81,9 @@ module TSOS {
             (<HTMLButtonElement>document.getElementById("btnHaltOS")).disabled = false;
             (<HTMLButtonElement>document.getElementById("btnReset")).disabled = false;
             (<HTMLButtonElement>document.getElementById("btnSingleStep")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("memorySeg1")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("memorySeg2")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("memorySeg3")).disabled = false;
 
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
@@ -91,7 +94,6 @@ module TSOS {
 
             // .. Create and initialize the Memory. Memory is part of hardware
             _Memory = new Memory();
-            _Memory.init()
             _MemoryAccessor = new MemoryAccessor();
             
 
@@ -127,7 +129,7 @@ module TSOS {
             } else {
                 (<HTMLButtonElement>document.getElementById("btnNextStep")).disabled = true;
             }
-            _Kernel.turnSingleStep();
+            _Kernel.krnTurnSingleStep();
         }
 
         // Tell the kernal to have CPU execute next step
@@ -137,12 +139,17 @@ module TSOS {
 
         //
         public static hostBtnLoadMemSegment(btn, segment:number): void {
+            let memDisplays = document.getElementById("memoryDisplay").children
+            for (let i = 0; i < 3;i ++) {
+                (<HTMLButtonElement>memDisplays.item(i)).style.backgroundColor = "white"
+            }
             btn.style.backgroundColor = "darkgray";
-            _Kernel.showMemory(segment);
+            btn.disabled = false;
+            _Kernel.krnShowMemory(segment);
         }
 
         public static hostBtnMemoryView_click(btn): void {
-            _Kernel.chgMemView();
+            _Kernel.krnChgMemView();
             btn.value = btn.value === "Binary View" ? "Hexidecimal" : "Binary View";
         }
     }

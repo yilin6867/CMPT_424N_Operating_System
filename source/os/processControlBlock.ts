@@ -17,13 +17,15 @@ module TSOS {
             , public counter: string
             , public limit_ct: number
             , public accumulator: any = 0
-            , public x_reg: any = 0
-            , public y_reg: any = 0
-            , public z_reg: any = 0
+            , public xReg: any = 0
+            , public yReg: any = 0
+            , public zReg: any = 0
+            , public cpuBurst: number = 0
+            , public waitBurst: number = 0
         ){
         }
         public updateCounter(newCounter: number) {
-            this.counter = this.pad(newCounter.toString(16).toUpperCase(), 2);
+            this.counter = pad(newCounter.toString(16).toUpperCase(), 2);
         }
         public updateStates(state: number) {
             this.state = state;
@@ -37,12 +39,7 @@ module TSOS {
 
         public getInfo(): any[] {
             return [this.pid, this.state, this.location, this.priority
-                , this.counter, this.accumulator, this.x_reg, this.y_reg, this.z_reg]
-        }
-        public pad(num, size) {
-            var s = num+"";
-            while (s.length < size) s = "0" + s;
-            return s;
+                , this.counter, this.accumulator, this.xReg, this.yReg, this.zReg]
         }
     }
 }

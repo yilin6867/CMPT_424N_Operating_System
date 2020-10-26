@@ -83,7 +83,7 @@ module TSOS {
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.                          
             */
-            
+
             // Render OS values dynamically in the console
             this.krnUpdateDisplayValue();
 
@@ -95,11 +95,11 @@ module TSOS {
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
+                _CPU.shortTermSchedule();
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
         }
-
 
         //
         // Interrupt Handling
@@ -201,26 +201,36 @@ module TSOS {
             _Console.showSysDatetime(sysDate, sysTime);
             let cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                document.getElementById("memorySeg1").click();
-                _Console.showMemCounter(cpuInfo[0]);
+                if(typeof _CPU.runUserProgram !== "undefined") {
+                    console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
+                    document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
+                    console.log(_Memory.memoryArr[2098])
+                    _Console.showMemCounter(cpuInfo[0]);
+                }
             }
             _Console.showCPU(cpuInfo);
-            _Console.showPCB(_CPU.getPCBs());
+            _Console.showPCB(_MemoryManager.getPBCsInfo());
         }
 
-        public runProgram(pid: string): void {
+        public krnRunProgram(pid: string): void {
             let returnMSG = _CPU.runUserProgram(pid);
-            _StdOut.putText(returnMSG);
+            if (typeof returnMSG !== null) {
+                _StdOut.putText(returnMSG);
+            } else {
+                _StdOut.putText("There is no user program with pid of " + pid)
+            }
+            
         }
 
-        public showMemory(segment: number): void {
+        public krnShowMemory(segment: number): void {
             let cpuInfo = _CPU.getInfo();
             let isHexView = _MemoryManager.memoryHexView;
-            _Console.showMemory(_CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
+            (<HTMLButtonElement>document.getElementById("memoryDisplay").children.item(segment)).click();
+            _Console.showMemory(segment, _CPU.getLoadMemory(segment, isHexView), cpuInfo[0]);
         }
 
         // Tell the CPU to turn on single step and off if it is on
-        public turnSingleStep(): void {
+        public krnTurnSingleStep(): void {
             _CPU.singleStep = _CPU.singleStep ? false: true;
             if (!_CPU.singleStep) {
                 _CPU.isExecuting = true;
@@ -234,12 +244,35 @@ module TSOS {
         }
 
         public krnKill(pid: number) {
-            _CPU.kill(pid);
+            let killReturn = _CPU.kill(pid);
+            if (killReturn == 4) {
+                _Console.putText("The process is already terminated")
+            } else if (killReturn == null) {
+                _Console.putText("The process "+ pid + " is killed")
+            } else if (typeof killReturn === "string") {
+                _Console.putText(killReturn)
+            }
         }
 
-        public chgMemView() {
+        public krnChgMemView() {
             _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;
-            this.showMemory(_CPU.runningPCB.location);
+            this.krnShowMemory(_CPU.runningPCB.location);
+        }
+
+        public krnClearmem() {
+            let memSegNum = _MemoryManager.memoryFill.length
+            for (let i = 0; i < memSegNum; i++) {
+                _CPU.removeMemory(i, 0, 255)
+            }
+        }
+
+        public krnSetDefQuantum(quantum: number) {
+            _CPU.defaultQuantum = quantum
+            _CPU.quantum = quantum
+        }
+
+        public krnGetDefQuantum() {
+            return _CPU.defaultQuantum
         }
     }
 }

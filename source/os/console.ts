@@ -282,14 +282,13 @@ module TSOS {
             time_html.innerText = time;
         }
 
-        public showMemory(memoryMatrix: String[][], counter) {
+        public showMemory(segment: number, memoryMatrix: String[][], counter) {
             let memoryTable = document.getElementById("memoryTable");
             let htmlScript: string = "";
             let rowNum : number = 0;
-            let segNum : number = 0;
             for (let row of memoryMatrix) {
-                htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segNum) 
-                            + rowNum.toString(16).toUpperCase() + "</td>";
+                htmlScript = htmlScript + "<tr>"+ "<td bgcolor='lightblue'>" + String(segment) 
+                            + pad(rowNum.toString(16).toUpperCase(), 2) + "</td>";
                 for (let col of row) {
                     htmlScript = htmlScript + "<td>" + col + "</td>";
                     rowNum = rowNum + 1
@@ -303,7 +302,10 @@ module TSOS {
             let memoryTable:any = document.getElementById("memoryTable");
             let showCounter = parseInt(counter, 16)
             let col = showCounter % 8 +1
-            let row = Math.floor(showCounter /8)
+            let row = Math.floor(showCounter /8) % 32
+            console.log(row, col)
+            console.log(memoryTable.rows)
+            console.log(memoryTable.rows[row])
             memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
             memoryTable.rows[row].cells[col].style.backgroundColor = "red";
             this.highlightMem = [row, col]

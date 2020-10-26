@@ -115,9 +115,48 @@ module TSOS {
             
             sc = new ShellCommand(this.shellRun,
                                     "run",
-                                    "<pid> - Run the process for give process id"
+                                    "<pid> - Run the process with given process id"
                                 );
             this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKill,
+                                    "kill",
+                                    "<pid> - Kill the process with the given process id"
+                                );
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellClearmem,
+                                    "clearmem",
+                                    " - Clear all memory partition. If there is any program running, "+
+                                        " it will be terminate running and clear the memory."
+                                );
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellQuantum,
+                                    "quantum",
+                                    "<number> - If number is not provide, display current quantum." + 
+                                        " If number is zero, set quantum to default value." +
+                                        " If number is greater than zero, set Round Robin quantum to that number."
+                                )
+            this.commandList[this.commandList.length] =  sc;
+
+            sc = new ShellCommand(this.shellPs,
+                                    "ps",
+                                    " - Display PID and state of all process."
+                                )
+            this.commandList[this.commandList.length] = sc;
+            
+            sc = new ShellCommand(this.shellRunall,
+                                    "runall",
+                                    " - Execute all process at once."
+                                )
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKillall,
+                                    "killall",
+                                    " - Kill all proces"
+                                )
+            this.commandList[this.commandList.length] = sc
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -397,22 +436,29 @@ module TSOS {
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             } else {
-                let writeInfo: number[] = _MemoryManager.write(segment, codes);
-                _StdOut.putText("The User Program Input is valid input");
+                let writeInfo: any = _MemoryManager.write(segment, codes);
+                _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
-                if (writeInfo.length > 1) {
+                if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
-                        + " between address "+ writeInfo[2] /8 + " and address " + writeInfo[3]/8);
-                } else {
-                    _StdOut.putText("However, the user program exceed the memory space")
+                        +  writeInfo[1] + " between address "+ writeInfo[3] + " and address " + writeInfo[4] + ".");
+                    _Kernel.krnShowMemory(writeInfo[5]);
+                } else if (Array.isArray(writeInfo) && writeInfo.length  == 0) {
+                    _StdOut.putText("Write Faile. The user program exceed the memory space.")
+                } else if (typeof(writeInfo) === "string") {
+                    _StdOut.putText(writeInfo)
                 }
-                _Kernel.showMemory(writeInfo[4]);
             }
+            console.log(_MemoryManager.readyQueue)
         }
 
         // run the user input program with given pid
         public shellRun(pid: string) {
-            _Kernel.runProgram(pid);
+            if (!isNaN(parseInt(pid))) {
+                _Kernel.krnRunProgram(pid);
+            } else {
+                _StdOut.putText(pid + " is not a number.")
+            }
         }
 
         // update the status on the os task bar
@@ -430,6 +476,61 @@ module TSOS {
 
         public shellKill(pid: string) {
             _Kernel.krnKill(parseInt(pid));
+        }
+
+        public shellClearmem() {
+            _Kernel.krnClearmem();
+        }
+
+        public shellQuantum(num: number) {
+            let quantum = num[0]
+            if (typeof(quantum) === "undefined") {
+                _StdOut.putText("Current Round Robit Quantum is " + _Kernel.krnGetDefQuantum());
+            } else if (quantum == 0) {
+                _Kernel.krnSetDefQuantum(6)
+                _StdOut.putText("Set Round Robit Quantum to default " + _Kernel.krnGetDefQuantum());
+            } else {
+                _Kernel.krnSetDefQuantum(quantum)
+                _StdOut.putText("Set Round Robit Quantum to " + _Kernel.krnGetDefQuantum());
+            }
+        }
+
+        public shellPs() {
+            let pcbInfo: string[][] = _MemoryManager.getPBCsInfo();
+            _StdOut.putText("PID | State")
+            _StdOut.advanceLine()
+            _StdOut.putText("------------")
+            for (let pcb of pcbInfo) {
+                _StdOut.advanceLine()
+                _StdOut.putText(pcb[0].toString().padStart("PID ".length, " ") + "|" 
+                + pcb[1].toString().padStart(" State ".length, " "))
+            }
+        }
+
+        public shellRunall() {
+            console.log(_MemoryManager.resident_queue)
+            for (let pcb of _MemoryManager.resident_queue) {
+                if (pcb.state == 0) {
+                    pcb.state = 1
+                    _MemoryManager.readyQueue.push(pcb)
+                    console.log("Push", pcb.pid, " to queue")
+                }
+            }
+            let firstProcess: PCB = _MemoryManager.readyQueue.shift()
+            if (firstProcess !== null) {
+                console.log("Running First PCB", firstProcess)
+                _Kernel.krnRunProgram(firstProcess.pid.toString())
+            } else {
+                this.putPrompt()
+            }
+        }
+
+        public shellKillall() {
+            let pcbInfo: string[][] = _MemoryManager.getPBCsInfo();
+            for (let pcb of pcbInfo) {
+                console.log(pcb[0].toString())
+                _OsShell.shellKill(pcb[0].toString())
+            }
         }
     }
 }

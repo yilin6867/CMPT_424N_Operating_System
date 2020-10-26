@@ -268,15 +268,14 @@ var TSOS;
             date_html.innerText = date;
             time_html.innerText = time;
         };
-        Console.prototype.showMemory = function (memoryMatrix, counter) {
+        Console.prototype.showMemory = function (segment, memoryMatrix, counter) {
             var memoryTable = document.getElementById("memoryTable");
             var htmlScript = "";
             var rowNum = 0;
-            var segNum = 0;
             for (var _i = 0, memoryMatrix_1 = memoryMatrix; _i < memoryMatrix_1.length; _i++) {
                 var row = memoryMatrix_1[_i];
-                htmlScript = htmlScript + "<tr>" + "<td bgcolor='lightblue'>" + String(segNum)
-                    + rowNum.toString(16).toUpperCase() + "</td>";
+                htmlScript = htmlScript + "<tr>" + "<td bgcolor='lightblue'>" + String(segment)
+                    + pad(rowNum.toString(16).toUpperCase(), 2) + "</td>";
                 for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
                     var col = row_1[_a];
                     htmlScript = htmlScript + "<td>" + col + "</td>";
@@ -290,7 +289,10 @@ var TSOS;
             var memoryTable = document.getElementById("memoryTable");
             var showCounter = parseInt(counter, 16);
             var col = showCounter % 8 + 1;
-            var row = Math.floor(showCounter / 8);
+            var row = Math.floor(showCounter / 8) % 32;
+            console.log(row, col);
+            console.log(memoryTable.rows);
+            console.log(memoryTable.rows[row]);
             memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
             memoryTable.rows[row].cells[col].style.backgroundColor = "red";
             this.highlightMem = [row, col];
