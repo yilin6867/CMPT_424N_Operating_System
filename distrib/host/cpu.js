@@ -13,7 +13,7 @@
 var TSOS;
 (function (TSOS) {
     var Cpu = /** @class */ (function () {
-        function Cpu(PC, Acc, Xreg, Yreg, Zflag, isExecuting, runningPCB, singleStep) {
+        function Cpu(PC, Acc, Xreg, Yreg, Zflag, isExecuting, runningPCB, singleStep, defaultQuantum, quantum) {
             if (PC === void 0) { PC = "00"; }
             if (Acc === void 0) { Acc = 0; }
             if (Xreg === void 0) { Xreg = 0; }
@@ -22,6 +22,8 @@ var TSOS;
             if (isExecuting === void 0) { isExecuting = false; }
             if (runningPCB === void 0) { runningPCB = null; }
             if (singleStep === void 0) { singleStep = false; }
+            if (defaultQuantum === void 0) { defaultQuantum = 6; }
+            if (quantum === void 0) { quantum = 6; }
             this.PC = PC;
             this.Acc = Acc;
             this.Xreg = Xreg;
@@ -30,6 +32,8 @@ var TSOS;
             this.isExecuting = isExecuting;
             this.runningPCB = runningPCB;
             this.singleStep = singleStep;
+            this.defaultQuantum = defaultQuantum;
+            this.quantum = quantum;
         }
         Cpu.prototype.init = function () {
             this.PC = "00";
@@ -39,6 +43,8 @@ var TSOS;
             this.Zflag = 0;
             this.isExecuting = false;
             this.singleStep = false;
+            this.defaultQuantum = 6;
+            this.quantum = 6;
         };
         Cpu.prototype.cycle = function () {
             _Kernel.krnTrace('CPU cycle');
@@ -101,7 +107,7 @@ var TSOS;
                         break;
                 }
                 if (parseInt(this.runningPCB.getCounter(), 16) % 256 >= this.runningPCB.limit_ct) {
-                    console.log("Terminating PCB by counter limit");
+                    TSOS.Control.hostLog("Terminating PCB by counter limit", "OS");
                     console.log(parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct);
                     this.isExecuting = false;
                     this.runningPCB.updateStates(4);
@@ -110,22 +116,21 @@ var TSOS;
                     this.isExecuting = false;
                 }
             }
-            _MemoryManager.quantum = _MemoryManager.quantum - 1;
+            this.quantum = this.quantum - 1;
+            TSOS.Control.hostLog("Updating CPU burst time for running process" + this.runningPCB.getPid(), "OS");
             this.runningPCB.cpuBurst = this.runningPCB.cpuBurst + 1;
-            console.log(_MemoryManager.quantum);
+            console.log(this.quantum);
             console.log(_Memory.memoryArr[2098]);
         };
         Cpu.prototype.ldaConst = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 1);
+            var nextReturn = this.readParams(1);
             this.Acc = nextReturn[0];
             console.log("set const acc " + this.Acc);
             this.runningPCB.accumulator = this.Acc;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.ldaVar = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var varData = this.readData(this.runningPCB.location, nextReturn[0]);
             this.Acc = varData[0];
             console.log("set vat  acc " + this.Acc);
@@ -133,39 +138,34 @@ var TSOS;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.store = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var cnter = parseInt(nextReturn[0], 16);
             console.log("Store " + this.Acc + " in " + nextReturn[0] + " " + cnter);
             var writeReturn = this.writeData(this.runningPCB.location, this.Acc, cnter);
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.storeXReg = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 1);
+            var nextReturn = this.readParams(1);
             this.Xreg = nextReturn[0];
             this.runningPCB.xReg = nextReturn[0];
             console.log("Load x register const " + nextReturn[0]);
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.storeXRegVar = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var varData = this.readData(this.runningPCB.location, nextReturn[0]);
             this.Xreg = varData[0];
             this.runningPCB.xReg = this.Xreg;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.storeYReg = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 1);
+            var nextReturn = this.readParams(1);
             this.Yreg = nextReturn[0];
             this.runningPCB.yReg = this.Yreg;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.storeYRegVar = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var varData = this.readData(this.runningPCB.location, nextReturn[0]);
             console.log("data store in y reg var " + varData[0] + " " + nextReturn[0]);
             this.Yreg = varData[0];
@@ -173,8 +173,7 @@ var TSOS;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.ifeqX = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             console.log("Comparing " + this.Xreg + " " + byteValue[0]);
             if (this.Xreg == byteValue[0]) {
@@ -187,8 +186,7 @@ var TSOS;
             this.updateCounters(nextReturn[1]);
         };
         Cpu.prototype.branchOnZ = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 1);
+            var nextReturn = this.readParams(1);
             this.updateCounters(nextReturn[1]);
             if (this.Zflag == 0) {
                 this.runningPCB.updateCounter(parseInt(this.PC, 16) + parseInt(nextReturn[0], 16));
@@ -202,8 +200,7 @@ var TSOS;
             }
         };
         Cpu.prototype.incrAcc = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             var incre = (parseInt(String(byteValue[0]), 16) + 1).toString(16);
             console.log(incre.length, incre, " length increment");
@@ -214,14 +211,13 @@ var TSOS;
             }
             else {
                 console.log("Memeory out of bound error");
-                _Console.putText("Memory out of bound error. Terminate process" + this.runningPCB.pid);
+                _Console.putText("Memory out of bound error. Terminate process " + this.runningPCB.pid);
                 _Console.advanceLine();
                 this.terminates();
             }
         };
         Cpu.prototype.add = function () {
-            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
-            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, 2);
+            var nextReturn = this.readParams(2);
             var readData = this.readData(this.runningPCB.location, nextReturn[0]);
             var accBin = this.hexToBinary(this.Acc.toString(16));
             var binVal = this.hexToBinary(readData[0]);
@@ -303,6 +299,17 @@ var TSOS;
         };
         Cpu.prototype.readPCB = function (pid) {
             return _MemoryManager.getPCBbyID(pid);
+        };
+        Cpu.prototype.readParams = function (paramNum) {
+            var nextCounter = parseInt(this.runningPCB.getCounter(), 16);
+            var nextReturn = _MemoryAccessor.read(this.runningPCB.location, nextCounter, paramNum);
+            if (nextReturn.length < 2) {
+                _Console.putText("Memory out of bound error. Terminating the process");
+                this.kill(this.runningPCB.getPid());
+            }
+            else {
+                return nextReturn;
+            }
         };
         Cpu.prototype.runUserProgram = function (pid) {
             var returnInfo = this.readPCB(pid);
@@ -419,6 +426,20 @@ var TSOS;
                     _MemoryManager.removeReadyPCB(pcb);
                     _Kernel.krnShowMemory(pcb.location);
                     return null;
+                }
+            }
+        };
+        Cpu.prototype.shortTermSchedule = function () {
+            TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
+            _MemoryManager.addWaitBurst();
+            if (this.runningPCB.state == 4 || this.quantum == 0) {
+                this.quantum = this.defaultQuantum;
+                var nextProcess = _MemoryManager.readyQueue.shift();
+                if (typeof nextProcess !== "undefined") {
+                    TSOS.Control.hostLog("Switching process from process " + this.runningPCB.getPid() + " to process "
+                        + nextProcess.getPid(), "OS");
+                    _MemoryManager.saveState(this.runningPCB);
+                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
                 }
             }
         };

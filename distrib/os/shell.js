@@ -385,19 +385,18 @@ var TSOS;
             _Kernel.krnClearmem();
         };
         Shell.prototype.shellQuantum = function (num) {
-            console.log(num);
-            if (typeof (num) === "undefined") {
-                _StdOut.putText("Current Round Robit Quantum is " + _MemoryManager.defaultQuantum);
+            var quantum = num[0];
+            if (typeof (quantum) === "undefined") {
+                _StdOut.putText("Current Round Robit Quantum is " + _Kernel.krnGetDefQuantum());
             }
-            else if (num == 0) {
-                _MemoryManager.defaultQuantum = 6;
-                _StdOut.putText("Set Round Robit Quantum to " + _MemoryManager.defaultQuantum);
+            else if (quantum == 0) {
+                _Kernel.krnSetDefQuantum(6);
+                _StdOut.putText("Set Round Robit Quantum to " + _Kernel.krnGetDefQuantum());
             }
             else {
-                _MemoryManager.defaultQuantum = num;
-                _StdOut.putText("Set Round Robit Quantum to " + _MemoryManager.defaultQuantum);
+                _Kernel.krnSetDefQuantum(quantum);
+                _StdOut.putText("Set Round Robit Quantum to " + _Kernel.krnGetDefQuantum());
             }
-            _MemoryManager.quantum = _MemoryManager.defaultQuantum;
         };
         Shell.prototype.shellPs = function () {
             var pcbInfo = _MemoryManager.getPBCsInfo();

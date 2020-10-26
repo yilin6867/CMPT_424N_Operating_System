@@ -8,18 +8,20 @@
 var TSOS;
 (function (TSOS) {
     var MemoryAccessor = /** @class */ (function () {
-        function MemoryAccessor(nextChunk, memorySize, hexArrSize, hexArrNum, bitSiz, segmentBitSize) {
+        function MemoryAccessor(nextChunk, memorySize, hexArrSize, hexArrNum, bitSiz, segmentSize, segmentBitSize) {
             if (nextChunk === void 0) { nextChunk = 0; }
             if (memorySize === void 0) { memorySize = _Memory.getMemorySize(); }
             if (hexArrSize === void 0) { hexArrSize = 64; }
             if (hexArrNum === void 0) { hexArrNum = 32; }
             if (bitSiz === void 0) { bitSiz = 8; }
-            if (segmentBitSize === void 0) { segmentBitSize = 256 * bitSiz; }
+            if (segmentSize === void 0) { segmentSize = _Memory.segmentSize; }
+            if (segmentBitSize === void 0) { segmentBitSize = _Memory.segmentSize * bitSiz; }
             this.nextChunk = nextChunk;
             this.memorySize = memorySize;
             this.hexArrSize = hexArrSize;
             this.hexArrNum = hexArrNum;
             this.bitSiz = bitSiz;
+            this.segmentSize = segmentSize;
             this.segmentBitSize = segmentBitSize;
         }
         MemoryAccessor.prototype.init = function () {
@@ -35,7 +37,6 @@ var TSOS;
                     param[1] = nextReturn[1];
                     i = i + 1;
                 } while (param[0].slice(param[0].length - 2, param[0].length) !== "00");
-                return param;
             }
             else {
                 for (var i = 0; i < numCounter; i++) {
@@ -46,7 +47,12 @@ var TSOS;
                     param[0] = nextReturn[0] + param[0];
                     param[1] = nextReturn[1];
                 }
+            }
+            if (parseInt(param[0], 16) < this.memorySize) {
                 return param;
+            }
+            else {
+                return [];
             }
         };
         MemoryAccessor.prototype.write = function (segment, data, addr) {

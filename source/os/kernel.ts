@@ -95,7 +95,7 @@ module TSOS {
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
-                _MemoryManager.shortTermSchedule(_CPU.runningPCB);
+                _CPU.shortTermSchedule();
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
@@ -262,6 +262,15 @@ module TSOS {
             for (let i = 0; i < memSegNum; i++) {
                 _CPU.removeMemory(i, 0, 255)
             }
+        }
+
+        public krnSetDefQuantum(quantum: number) {
+            _CPU.defaultQuantum = quantum
+            _CPU.quantum = quantum
+        }
+
+        public krnGetDefQuantum() {
+            return _CPU.defaultQuantum
         }
     }
 }

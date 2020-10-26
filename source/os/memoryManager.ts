@@ -15,8 +15,6 @@ module TSOS {
             , public memoryHexView = true 
             , public readyQueue: PCB[] = []
             , public residentQueue: PCB[] = []
-            , public defaultQuantum: number = 6
-            , public quantum: number = 6
         ) {
             
         }
@@ -64,20 +62,6 @@ module TSOS {
                 pbcsInfo.push(pcb.getInfo());
             }
             return pbcsInfo;
-        }
-
-        public shortTermSchedule(curPCB: PCB) {
-            this.addWaitBurst()
-            if (curPCB.state == 4 || this.quantum == 0) {
-                this.quantum = this.defaultQuantum;
-                let nextProcess = this.readyQueue.shift();
-                if (typeof nextProcess !== "undefined") {
-                    console.log("Schedule next process")
-                    console.log(nextProcess)
-                    this.saveState(curPCB)
-                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
-                }
-            }
         }
 
         public saveState(runningPCB: PCB) {

@@ -10,23 +10,19 @@ var TSOS;
     var MemoryManager = /** @class */ (function () {
         function MemoryManager(pcbs, memorySize, memoryFill
         // false --> binary view
-        , memoryHexView, readyQueue, residentQueue, defaultQuantum, quantum) {
+        , memoryHexView, readyQueue, residentQueue) {
             if (pcbs === void 0) { pcbs = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             if (memoryFill === void 0) { memoryFill = new Array(_CPU.getMemorySegments()).fill(false); }
             if (memoryHexView === void 0) { memoryHexView = true; }
             if (readyQueue === void 0) { readyQueue = []; }
             if (residentQueue === void 0) { residentQueue = []; }
-            if (defaultQuantum === void 0) { defaultQuantum = 6; }
-            if (quantum === void 0) { quantum = 6; }
             this.pcbs = pcbs;
             this.memorySize = memorySize;
             this.memoryFill = memoryFill;
             this.memoryHexView = memoryHexView;
             this.readyQueue = readyQueue;
             this.residentQueue = residentQueue;
-            this.defaultQuantum = defaultQuantum;
-            this.quantum = quantum;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
             this.pcbs.push(newpcb);
@@ -69,19 +65,6 @@ var TSOS;
                 pbcsInfo.push(pcb.getInfo());
             }
             return pbcsInfo;
-        };
-        MemoryManager.prototype.shortTermSchedule = function (curPCB) {
-            this.addWaitBurst();
-            if (curPCB.state == 4 || this.quantum == 0) {
-                this.quantum = this.defaultQuantum;
-                var nextProcess = this.readyQueue.shift();
-                if (typeof nextProcess !== "undefined") {
-                    console.log("Schedule next process");
-                    console.log(nextProcess);
-                    this.saveState(curPCB);
-                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
-                }
-            }
         };
         MemoryManager.prototype.saveState = function (runningPCB) {
             if (runningPCB.state < 4) {

@@ -13,7 +13,8 @@ module TSOS {
             , public hexArrSize: number = 64
             , public hexArrNum: number = 32
             , public bitSiz: number = 8
-            , public segmentBitSize: number = 256 * bitSiz
+            , public segmentSize: number = _Memory.segmentSize
+            , public segmentBitSize: number = _Memory.segmentSize * bitSiz
             
         ) {
         }
@@ -31,7 +32,6 @@ module TSOS {
                     param[1] = nextReturn[1]
                     i = i + 1
                 } while (param[0].slice(param[0].length -2 , param[0].length) !== "00")
-                return param;
             } else {
                 for (let i = 0; i < numCounter; i++) {
                     console.log("Segment Num ", (segment), "counter", counter, "i", i)
@@ -41,7 +41,11 @@ module TSOS {
                     param[0] = nextReturn[0] + param[0]
                     param[1] = nextReturn[1]
                 }
+            }
+            if (parseInt(param[0], 16) < this.memorySize) {
                 return param
+            } else {
+                return []
             }
         }
 
