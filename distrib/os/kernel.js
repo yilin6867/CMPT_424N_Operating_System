@@ -225,6 +225,9 @@ var TSOS;
             else if (killReturn == null) {
                 _Console.putText("The process " + pid + " is killed");
             }
+            else if (typeof killReturn === "string") {
+                _Console.putText(killReturn);
+            }
         };
         Kernel.prototype.krnChgMemView = function () {
             _MemoryManager.memoryHexView = _MemoryManager.memoryHexView ? false : true;

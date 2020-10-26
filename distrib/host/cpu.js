@@ -314,7 +314,7 @@ var TSOS;
         Cpu.prototype.runUserProgram = function (pid) {
             var returnInfo = this.readPCB(pid);
             console.log("return info", returnInfo);
-            if (typeof returnInfo !== null) {
+            if (returnInfo !== null) {
                 if (returnInfo.state === 4) {
                     return "The user program have been terminated";
                 }
@@ -415,13 +415,16 @@ var TSOS;
                 this.isExecuting = false;
             }
             else {
-                var pcb = _MemoryManager.pcbs[pid];
-                if (pcb.state === 4) {
+                var pcb = _MemoryManager.resident_queue[pid];
+                if (typeof pcb === "undefined") {
+                    return "Process " + pid + " does not exist";
+                }
+                else if (pcb.state === 4) {
                     return 4;
                 }
                 else {
                     pcb.updateStates(4);
-                    this.removeMemory(pcb.location, 0, pcb.limit_ct);
+                    this.removeMemory(pcb.location, 0, _MemoryAccessor.memorySize);
                     _MemoryManager.memoryFill[pcb.location] = false;
                     _MemoryManager.removeReadyPCB(pcb);
                     _Kernel.krnShowMemory(pcb.location);

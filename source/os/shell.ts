@@ -454,7 +454,11 @@ module TSOS {
 
         // run the user input program with given pid
         public shellRun(pid: string) {
-            _Kernel.krnRunProgram(pid);
+            if (!isNaN(parseInt(pid))) {
+                _Kernel.krnRunProgram(pid);
+            } else {
+                _StdOut.putText(pid + " is not a number.")
+            }
         }
 
         // update the status on the os task bar
@@ -504,8 +508,8 @@ module TSOS {
         }
 
         public shellRunall() {
-            console.log(_MemoryManager.pcbs)
-            for (let pcb of _MemoryManager.pcbs) {
+            console.log(_MemoryManager.resident_queue)
+            for (let pcb of _MemoryManager.resident_queue) {
                 if (pcb.state == 0) {
                     pcb.state = 1
                     _MemoryManager.readyQueue.push(pcb)
@@ -513,8 +517,12 @@ module TSOS {
                 }
             }
             let firstProcess: PCB = _MemoryManager.readyQueue.shift()
-            console.log("Running First PCB", firstProcess)
-            _Kernel.krnRunProgram(firstProcess.pid.toString())
+            if (firstProcess !== null) {
+                console.log("Running First PCB", firstProcess)
+                _Kernel.krnRunProgram(firstProcess.pid.toString())
+            } else {
+                this.putPrompt()
+            }
         }
 
         public shellKillall() {

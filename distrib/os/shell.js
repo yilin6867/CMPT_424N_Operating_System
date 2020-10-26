@@ -365,7 +365,12 @@ var TSOS;
         };
         // run the user input program with given pid
         Shell.prototype.shellRun = function (pid) {
-            _Kernel.krnRunProgram(pid);
+            if (!isNaN(parseInt(pid))) {
+                _Kernel.krnRunProgram(pid);
+            }
+            else {
+                _StdOut.putText(pid + " is not a number.");
+            }
         };
         // update the status on the os task bar
         Shell.prototype.shellStatus = function (status) {
@@ -391,7 +396,7 @@ var TSOS;
             }
             else if (quantum == 0) {
                 _Kernel.krnSetDefQuantum(6);
-                _StdOut.putText("Set Round Robit Quantum to " + _Kernel.krnGetDefQuantum());
+                _StdOut.putText("Set Round Robit Quantum to default " + _Kernel.krnGetDefQuantum());
             }
             else {
                 _Kernel.krnSetDefQuantum(quantum);
@@ -411,8 +416,8 @@ var TSOS;
             }
         };
         Shell.prototype.shellRunall = function () {
-            console.log(_MemoryManager.pcbs);
-            for (var _i = 0, _a = _MemoryManager.pcbs; _i < _a.length; _i++) {
+            console.log(_MemoryManager.resident_queue);
+            for (var _i = 0, _a = _MemoryManager.resident_queue; _i < _a.length; _i++) {
                 var pcb = _a[_i];
                 if (pcb.state == 0) {
                     pcb.state = 1;
@@ -421,8 +426,13 @@ var TSOS;
                 }
             }
             var firstProcess = _MemoryManager.readyQueue.shift();
-            console.log("Running First PCB", firstProcess);
-            _Kernel.krnRunProgram(firstProcess.pid.toString());
+            if (firstProcess !== null) {
+                console.log("Running First PCB", firstProcess);
+                _Kernel.krnRunProgram(firstProcess.pid.toString());
+            }
+            else {
+                this.putPrompt();
+            }
         };
         Shell.prototype.shellKillall = function () {
             var pcbInfo = _MemoryManager.getPBCsInfo();

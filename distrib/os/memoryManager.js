@@ -8,16 +8,16 @@
 var TSOS;
 (function (TSOS) {
     var MemoryManager = /** @class */ (function () {
-        function MemoryManager(pcbs, memorySize, memoryFill
+        function MemoryManager(resident_queue, memorySize, memoryFill
         // false --> binary view
         , memoryHexView, readyQueue, residentQueue) {
-            if (pcbs === void 0) { pcbs = new Array(); }
+            if (resident_queue === void 0) { resident_queue = new Array(); }
             if (memorySize === void 0) { memorySize = _MemoryAccessor.getMemorySize(); }
             if (memoryFill === void 0) { memoryFill = new Array(_CPU.getMemorySegments()).fill(false); }
             if (memoryHexView === void 0) { memoryHexView = true; }
             if (readyQueue === void 0) { readyQueue = []; }
             if (residentQueue === void 0) { residentQueue = []; }
-            this.pcbs = pcbs;
+            this.resident_queue = resident_queue;
             this.memorySize = memorySize;
             this.memoryFill = memoryFill;
             this.memoryHexView = memoryHexView;
@@ -25,7 +25,7 @@ var TSOS;
             this.residentQueue = residentQueue;
         }
         MemoryManager.prototype.addPCB = function (newpcb) {
-            this.pcbs.push(newpcb);
+            this.resident_queue.push(newpcb);
         };
         MemoryManager.prototype.addPCBtoReady = function (pcb) {
             pcb.updateStates(2);
@@ -35,15 +35,15 @@ var TSOS;
             this.readyQueue.splice(this.readyQueue.indexOf(pcb), 1);
         };
         MemoryManager.prototype.getPCBbyID = function (pid) {
-            if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
-                return this.pcbs[parseInt(pid)];
+            if (typeof this.resident_queue[parseInt(pid)] !== 'undefined') {
+                return this.resident_queue[parseInt(pid)];
             }
             else {
                 return null;
             }
         };
         MemoryManager.prototype.getNextPID = function () {
-            return this.pcbs.length;
+            return this.resident_queue.length;
         };
         MemoryManager.prototype.write = function (segment, data) {
             if (segment === -1) {
@@ -60,7 +60,7 @@ var TSOS;
         };
         MemoryManager.prototype.getPBCsInfo = function () {
             var pbcsInfo = [];
-            for (var _i = 0, _a = this.pcbs; _i < _a.length; _i++) {
+            for (var _i = 0, _a = this.resident_queue; _i < _a.length; _i++) {
                 var pcb = _a[_i];
                 pbcsInfo.push(pcb.getInfo());
             }
@@ -68,15 +68,15 @@ var TSOS;
         };
         MemoryManager.prototype.saveState = function (runningPCB) {
             if (runningPCB.state < 4) {
-                this.pcbs[runningPCB.pid].xReg = runningPCB.xReg;
-                this.pcbs[runningPCB.pid].yReg = runningPCB.yReg;
-                this.pcbs[runningPCB.pid].zReg = runningPCB.zReg;
-                this.pcbs[runningPCB.pid].state = runningPCB.state;
-                this.pcbs[runningPCB.pid].accumulator = runningPCB.accumulator;
-                this.pcbs[runningPCB.pid].counter = runningPCB.counter;
-                this.pcbs[runningPCB.pid].waitBurst = runningPCB.waitBurst;
-                this.pcbs[runningPCB.pid].cpuBurst = runningPCB.cpuBurst;
-                this.pcbs[runningPCB.pid].state = 1;
+                this.resident_queue[runningPCB.pid].xReg = runningPCB.xReg;
+                this.resident_queue[runningPCB.pid].yReg = runningPCB.yReg;
+                this.resident_queue[runningPCB.pid].zReg = runningPCB.zReg;
+                this.resident_queue[runningPCB.pid].state = runningPCB.state;
+                this.resident_queue[runningPCB.pid].accumulator = runningPCB.accumulator;
+                this.resident_queue[runningPCB.pid].counter = runningPCB.counter;
+                this.resident_queue[runningPCB.pid].waitBurst = runningPCB.waitBurst;
+                this.resident_queue[runningPCB.pid].cpuBurst = runningPCB.cpuBurst;
+                this.resident_queue[runningPCB.pid].state = 1;
                 this.readyQueue.push(runningPCB);
                 console.log("save process ", _MemoryManager.readyQueue);
             }

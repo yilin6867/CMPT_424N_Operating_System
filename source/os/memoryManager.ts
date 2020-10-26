@@ -8,7 +8,7 @@
 module TSOS {
     export class MemoryManager {
         constructor(
-            public pcbs: PCB[] = new Array()
+            public resident_queue: PCB[] = new Array()
             , public memorySize = _MemoryAccessor.getMemorySize()
             , public memoryFill = new Array(_CPU.getMemorySegments()).fill(false)
             // false --> binary view
@@ -20,7 +20,7 @@ module TSOS {
         }
         
         public addPCB(newpcb: PCB) {
-            this.pcbs.push(newpcb);
+            this.resident_queue.push(newpcb);
         }
 
         public addPCBtoReady(pcb: PCB) {
@@ -33,15 +33,15 @@ module TSOS {
         }
 
         public getPCBbyID(pid: string) {
-            if (typeof this.pcbs[parseInt(pid)] !== 'undefined') {
-                return this.pcbs[parseInt(pid)];
+            if (typeof this.resident_queue[parseInt(pid)] !== 'undefined') {
+                return this.resident_queue[parseInt(pid)];
             }
             else {
                 return null
             }
         }
         public getNextPID() {
-            return this.pcbs.length;
+            return this.resident_queue.length;
         }
         public write(segment: number, data: string) {
             if (segment === -1) {
@@ -58,7 +58,7 @@ module TSOS {
         }
         public getPBCsInfo() {
             let pbcsInfo: string[][] = [];
-            for (let pcb of this.pcbs) {
+            for (let pcb of this.resident_queue) {
                 pbcsInfo.push(pcb.getInfo());
             }
             return pbcsInfo;
@@ -66,15 +66,15 @@ module TSOS {
 
         public saveState(runningPCB: PCB) {
             if (runningPCB.state < 4) {
-                this.pcbs[runningPCB.pid].xReg = runningPCB.xReg
-                this.pcbs[runningPCB.pid].yReg = runningPCB.yReg
-                this.pcbs[runningPCB.pid].zReg = runningPCB.zReg
-                this.pcbs[runningPCB.pid].state = runningPCB.state
-                this.pcbs[runningPCB.pid].accumulator =  runningPCB.accumulator
-                this.pcbs[runningPCB.pid].counter = runningPCB.counter
-                this.pcbs[runningPCB.pid].waitBurst = runningPCB.waitBurst
-                this.pcbs[runningPCB.pid].cpuBurst = runningPCB.cpuBurst
-                this.pcbs[runningPCB.pid].state = 1
+                this.resident_queue[runningPCB.pid].xReg = runningPCB.xReg
+                this.resident_queue[runningPCB.pid].yReg = runningPCB.yReg
+                this.resident_queue[runningPCB.pid].zReg = runningPCB.zReg
+                this.resident_queue[runningPCB.pid].state = runningPCB.state
+                this.resident_queue[runningPCB.pid].accumulator =  runningPCB.accumulator
+                this.resident_queue[runningPCB.pid].counter = runningPCB.counter
+                this.resident_queue[runningPCB.pid].waitBurst = runningPCB.waitBurst
+                this.resident_queue[runningPCB.pid].cpuBurst = runningPCB.cpuBurst
+                this.resident_queue[runningPCB.pid].state = 1
                 this.readyQueue.push(runningPCB);
                 console.log("save process ", _MemoryManager.readyQueue)
             }

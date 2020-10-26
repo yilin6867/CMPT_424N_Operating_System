@@ -249,6 +249,8 @@ module TSOS {
                 _Console.putText("The process is already terminated")
             } else if (killReturn == null) {
                 _Console.putText("The process "+ pid + " is killed")
+            } else if (typeof killReturn === "string") {
+                _Console.putText(killReturn)
             }
         }
 
