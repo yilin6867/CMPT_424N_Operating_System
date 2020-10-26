@@ -303,9 +303,6 @@ module TSOS {
             let showCounter = parseInt(counter, 16)
             let col = showCounter % 8 +1
             let row = Math.floor(showCounter /8) % 32
-            console.log(row, col)
-            console.log(memoryTable.rows)
-            console.log(memoryTable.rows[row])
             memoryTable.rows[this.highlightMem[0]].cells[this.highlightMem[1]].style.backgroundColor = "white";
             memoryTable.rows[row].cells[col].style.backgroundColor = "red";
             this.highlightMem = [row, col]

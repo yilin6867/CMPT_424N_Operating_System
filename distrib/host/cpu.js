@@ -117,10 +117,7 @@ var TSOS;
                 }
             }
             this.quantum = this.quantum - 1;
-            TSOS.Control.hostLog("Updating CPU burst time for running process" + this.runningPCB.getPid(), "OS");
-            this.runningPCB.cpuBurst = this.runningPCB.cpuBurst + 1;
             console.log(this.quantum);
-            console.log(_Memory.memoryArr[2098]);
         };
         Cpu.prototype.ldaConst = function () {
             var nextReturn = this.readParams(1);
@@ -429,20 +426,6 @@ var TSOS;
                     _MemoryManager.removeReadyPCB(pcb);
                     _Kernel.krnShowMemory(pcb.location);
                     return null;
-                }
-            }
-        };
-        Cpu.prototype.shortTermSchedule = function () {
-            TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
-            _MemoryManager.addWaitBurst();
-            if (this.runningPCB.state == 4 || this.quantum == 0) {
-                this.quantum = this.defaultQuantum;
-                var nextProcess = _MemoryManager.readyQueue.shift();
-                if (typeof nextProcess !== "undefined") {
-                    TSOS.Control.hostLog("Switching process from process " + this.runningPCB.getPid() + " to process "
-                        + nextProcess.getPid(), "OS");
-                    _MemoryManager.saveState(this.runningPCB);
-                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
                 }
             }
         };

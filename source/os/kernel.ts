@@ -93,9 +93,18 @@ module TSOS {
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
+                _MemoryManager.addWaitBurst()
+            } else if (_CPU.quantum == 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4) {
+                this.krnShortTermSchedule()
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
+                _MemoryManager.addWaitBurst()
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
-                _CPU.shortTermSchedule();
+                Control.hostLog("Updating CPU burst time for running process" + _CPU.runningPCB.getPid(), "OS")
+                _CPU.runningPCB.cpuBurst = _CPU.runningPCB.cpuBurst + 1
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
+                _MemoryManager.addWaitBurst()
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
@@ -273,6 +282,17 @@ module TSOS {
 
         public krnGetDefQuantum() {
             return _CPU.defaultQuantum
+        }
+
+        public krnShortTermSchedule() {
+            _CPU.quantum = _CPU.defaultQuantum;
+            let nextProcess = _MemoryManager.readyQueue.shift();
+            if (typeof nextProcess !== "undefined") {
+                Control.hostLog( "Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
+                                + nextProcess.getPid(), "OS")
+                _MemoryManager.saveState(_CPU.runningPCB)
+                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            }
         }
     }
 }
