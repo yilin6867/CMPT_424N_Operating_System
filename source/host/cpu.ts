@@ -110,8 +110,6 @@ module TSOS {
                     this.isExecuting = false;
                 }
             }
-            this.quantum =this.quantum - 1
-            console.log(this.quantum)
         }
 
         public ldaConst() {

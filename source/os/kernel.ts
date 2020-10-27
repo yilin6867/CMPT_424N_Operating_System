@@ -101,7 +101,9 @@ module TSOS {
                 _MemoryManager.addWaitBurst()
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
-                Control.hostLog("Updating CPU burst time for running process" + _CPU.runningPCB.getPid(), "OS")
+                _CPU.quantum =_CPU.quantum - 1
+                Control.hostLog("Current Round Robin Quantum value is " + _CPU.quantum, "OS")
+                Control.hostLog("Updating CPU burst time for running process " + _CPU.runningPCB.getPid(), "OS")
                 _CPU.runningPCB.cpuBurst = _CPU.runningPCB.cpuBurst + 1
                 Control.hostLog("Update waiting time for process in the ready queue.", "OS")
                 _MemoryManager.addWaitBurst()
@@ -285,12 +287,14 @@ module TSOS {
         }
 
         public krnShortTermSchedule() {
+            Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS")
             _CPU.quantum = _CPU.defaultQuantum;
             let nextProcess = _MemoryManager.readyQueue.shift();
             if (typeof nextProcess !== "undefined") {
-                Control.hostLog( "Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
-                                + nextProcess.getPid(), "OS")
                 _MemoryManager.saveState(_CPU.runningPCB)
+                Control.hostLog("Save state of current running process", "OS")
+                Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
+                                + nextProcess.getPid(), "OS")
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
             }
         }
