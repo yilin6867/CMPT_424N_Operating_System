@@ -29,8 +29,11 @@ var TSOS;
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
             _krnKeyboardDriver = new TSOS.DeviceDriverKeyboard(); // Construct it.
-            _krnKeyboardDriver.driverEntry(); // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
+            // Load the Harddrive Device Driver
+            this.krnTrace("Loading the Harddrive device driver");
+            _krnHarddriveDriver = new TSOS.DeviceDriverFS();
+            this.krnTrace(_krnHarddriveDriver.status);
             // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
             this.krnTrace("Enabling the interrupts.");
             this.krnEnableInterrupts();
@@ -72,29 +75,33 @@ var TSOS;
             */
             // Render OS values dynamically in the console
             this.krnUpdateDisplayValue();
-            // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
+                // Check for an interrupt, if there are any. Page 560
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
-                TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
-                _MemoryManager.addWaitBurst();
             }
-            else if (_CPU.quantum == 0 || (_CPU.runningPCB ? _CPU.runningPCB.state : 0) == 4) {
-                this.krnShortTermSchedule();
-                TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
-                _MemoryManager.addWaitBurst();
-            }
-            else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
+            else if (_CPU.isExecuting) {
+                // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
-                TSOS.Control.hostLog("Updating CPU burst time for running process" + _CPU.runningPCB.getPid(), "OS");
+                _CPU.quantum = _CPU.quantum - 1;
+                TSOS.Control.hostLog("Current Round Robin Quantum value is " + _CPU.quantum, "OS");
+                TSOS.Control.hostLog("Updating CPU burst time for running process " + _CPU.runningPCB.getPid(), "OS");
                 _CPU.runningPCB.cpuBurst = _CPU.runningPCB.cpuBurst + 1;
+                console.log("Process " + _CPU.runningPCB.getPid(), _CPU.runningPCB.cpuBurst);
                 TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
                 _MemoryManager.addWaitBurst();
             }
-            else { // If there are no interrupts and there is nothing being executed then just be idle.
+            else {
+                // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
+            }
+            if (_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state : 0) == 4) {
+                var params = [];
+                TSOS.Control.hostLog("Invoking interrupt for context switching", "OS");
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SCHEDULE_IRQ, params));
+                TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
             }
         };
         //
@@ -125,6 +132,9 @@ var TSOS;
                 case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params); // Kernel mode device driver
                     _StdIn.handleInput();
+                    break;
+                case SCHEDULE_IRQ:
+                    this.krnShortTermSchedule();
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -192,12 +202,15 @@ var TSOS;
                 if (typeof _CPU.runUserProgram !== "undefined") {
                     console.log("memorySeg" + (1 + _CPU.getRunningPCB()[2]));
                     document.getElementById("memorySeg" + (1 + _CPU.getRunningPCB()[2])).click();
-                    console.log(_Memory.memoryArr[2098]);
                     _Console.showMemCounter(cpuInfo[0]);
                 }
             }
+            _krnHarddriveDriver.loadHDDFromLocal();
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_MemoryManager.getPBCsInfo());
+            if (_krnHarddriveDriver.status === "loaded") {
+                _Console.showHDD(_krnHarddriveDriver.hardDirveData);
+            }
         };
         Kernel.prototype.krnRunProgram = function (pid) {
             var returnMSG = _CPU.runUserProgram(pid);
@@ -257,13 +270,108 @@ var TSOS;
             return _CPU.defaultQuantum;
         };
         Kernel.prototype.krnShortTermSchedule = function () {
+            TSOS.Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS");
             _CPU.quantum = _CPU.defaultQuantum;
             var nextProcess = _MemoryManager.readyQueue.shift();
             if (typeof nextProcess !== "undefined") {
+                _MemoryManager.saveState(_CPU.runningPCB);
+                TSOS.Control.hostLog("Save state of current running process", "OS");
                 TSOS.Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process "
                     + nextProcess.getPid(), "OS");
-                _MemoryManager.saveState(_CPU.runningPCB);
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            }
+        };
+        Kernel.prototype.krnFormat = function () {
+            var returnMSG = _krnHarddriveDriver.driverEntry();
+            if (returnMSG[0]) {
+                _Console.putText("Fail to nitialize all blocks in all sectors in all tracks in the harddrive. ");
+            }
+            else {
+                _Console.putText("Initialize all blocks in all sectors in all tracks in the harddrive. ");
+            }
+        };
+        Kernel.prototype.krnGetHDDEntryByIdx = function (idx, inHex) {
+            return _krnHarddriveDriver.readFile("", idx, inHex);
+        };
+        Kernel.prototype.krnCreateFile = function (filename) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                var returnMSG = _krnHarddriveDriver.createfile(filename);
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to create file, " + filename);
+                }
+                else {
+                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1]);
+                }
+                return returnMSG;
+            }
+            else {
+                _Console.putText("The harddrive need to be formate with a file system. ");
+                return [1];
+            }
+        };
+        Kernel.prototype.krnReadFile = function (filename) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                var returnMSG = _krnHarddriveDriver.readFile(filename);
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ");
+                }
+                else {
+                    _Console.putText(returnMSG[1]);
+                }
+                return returnMSG;
+            }
+            else {
+                _Console.putText("The harddrive need to be formate with a file system. ");
+                return [1];
+            }
+        };
+        Kernel.prototype.krnWriteFile = function (filename, data) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                var returnMSG = void 0;
+                if (typeof filename === "string") {
+                    returnMSG = _krnHarddriveDriver.writeFile(filename, data);
+                }
+                else {
+                    returnMSG = _krnHarddriveDriver.writeFile("", data, filename);
+                }
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1]);
+                }
+                else {
+                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ");
+                }
+                return returnMSG;
+            }
+            else {
+                _Console.putText("The harddrive need to be formate with a file system. ");
+                return [1];
+            }
+        };
+        Kernel.prototype.krnDeleteFile = function (filename) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                var returnMSG = _krnHarddriveDriver.deleteFile(filename);
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]);
+                }
+                else {
+                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1]);
+                }
+            }
+            else {
+                _Console.putText("The harddrive need to be formate with a file system. ");
+            }
+        };
+        Kernel.prototype.krnLs = function () {
+            if (_krnHarddriveDriver.status === "loaded") {
+                var return_file = _krnHarddriveDriver.get_files();
+                for (var _i = 0, return_file_1 = return_file; _i < return_file_1.length; _i++) {
+                    var file = return_file_1[_i];
+                    _Console.putText(file);
+                    _Console.advanceLine();
+                }
+            }
+            else {
+                _Console.putText("The harddrive need to be formate with a file system. ");
             }
         };
         return Kernel;

@@ -32,11 +32,12 @@
    <script type="text/javascript" src="distrib/os/kernel.js"></script>
    <script type="text/javascript" src="distrib/os/memoryManager.js"></script>
    <script type="text/javascript" src="distrib/os/processControlBlock.js"></script>
+   <script type="text/javascript" src="distrib/os/deviceDriverFSDD.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip3.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip0.js"></script>
    
 </head>
 
@@ -179,29 +180,45 @@
          tabindex="0"
          onclick="TSOS.Control.hostBtnMemoryView_click(this);">
    </div>
-   <div id="pbcDisplay" style="width:500px; float:left">
-      <label>
-         PCB Display
-         <p name="legend" style="display: inline-block;">* State: 0 = Resident | 1 = Ready | 2 = Running | 3 = Waiting | 4 = Terminated</p>
-         <br>
-         <table id="pcbTable">
+   <div class="tableDisplay" style="display: inline-flex;">
+      <div id="pbcDisplay" style="width:500px; float:left">
+         <label>
+            PCB Display
+            <p name="legend" style="display: inline-block;">* State: 0 = Resident | 1 = Ready | 2 = Running | 3 = Waiting | 4 = Terminated</p>
+            <br>
+            <table id="pcbTable">
+               <thead>
+                  <tr>
+                     <th>PID</th>
+                     <th>State</th>
+                     <th>Location</th>
+                     <th>Priorities</th>
+                     <th>PC</th>
+                     <th>Accu</th>
+                     <th>X</th>
+                     <th>Y</th>
+                     <th>Z</th>
+                  </tr>
+                </thead>
+                <tbody id="pcbTableBody">
+               </tbody>
+            </table>
+         </label>
+      </div>
+      <div id="fsDD" style="width:500px; float: left;">
+         <label>Hard Drive Display</label><br>
+         <table id="hdTable" style="height: 180px; overflow-y:auto;">
             <thead>
                <tr>
-                  <th>PID</th>
-                  <th>State</th>
-                  <th>Location</th>
-                  <th>Priorities</th>
-                  <th>PC</th>
-                  <th>Accu</th>
-                  <th>X</th>
-                  <th>Y</th>
-                  <th>Z</th>
+                  <th>T:S:B</th>
+                  <th>Used</th>
+                  <th>Next</th>
+                  <th>Data</th>
                </tr>
-             </thead>
-             <tbody id="pcbTableBody">
-            </tbody>
+            </thead>
+            <tbody id="hdTableBody"></tbody>
          </table>
-      </label>
+      </div>
    </div>
 </div>
 

@@ -317,6 +317,23 @@ var TSOS;
             }
             pcbTable.innerHTML = bodyScript;
         };
+        Console.prototype.showHDD = function (hddInfo) {
+            var hddTable = document.getElementById("hdTableBody");
+            var bodyScript = "";
+            for (var _i = 0, hddInfo_1 = hddInfo; _i < hddInfo_1.length; _i++) {
+                var info = hddInfo_1[_i];
+                bodyScript = bodyScript + "<tr>";
+                var tsbInt = parseInt(info["tsb"]);
+                var t = Math.floor(tsbInt / 64);
+                var s = Math.floor((tsbInt - (t * 64)) / 8);
+                var b = (tsbInt - (t * 64)) % 8;
+                bodyScript = bodyScript + "<td>" + t + ":" + s + ":" + b + "</td>";
+                bodyScript = bodyScript + "<td>" + info["used"] + "</td>";
+                bodyScript = bodyScript + "<td>" + info["next"] + "</td>";
+                bodyScript = bodyScript + "<td>" + info["data"] + "</td>";
+            }
+            hddTable.innerHTML = bodyScript;
+        };
         return Console;
     }());
     TSOS.Console = Console;

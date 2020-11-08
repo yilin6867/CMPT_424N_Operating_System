@@ -33,8 +33,12 @@ module TSOS {
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
             _krnKeyboardDriver = new DeviceDriverKeyboard();     // Construct it.
-            _krnKeyboardDriver.driverEntry();                    // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
+
+            // Load the Harddrive Device Driver
+            this.krnTrace("Loading the Harddrive device driver");
+            _krnHarddriveDriver = new DeviceDriverFS();
+            this.krnTrace(_krnHarddriveDriver.status);
 
             // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
             this.krnTrace("Enabling the interrupts.");
@@ -87,28 +91,32 @@ module TSOS {
             // Render OS values dynamically in the console
             this.krnUpdateDisplayValue();
 
-            // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
+                // Check for an interrupt, if there are any. Page 560
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
-                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
-                _MemoryManager.addWaitBurst()
-            } else if (_CPU.quantum == 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4) {
-                this.krnShortTermSchedule()
-                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
-                _MemoryManager.addWaitBurst()
-            } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
+            } else if (_CPU.isExecuting) { 
+                // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
                 _CPU.quantum =_CPU.quantum - 1
                 Control.hostLog("Current Round Robin Quantum value is " + _CPU.quantum, "OS")
                 Control.hostLog("Updating CPU burst time for running process " + _CPU.runningPCB.getPid(), "OS")
                 _CPU.runningPCB.cpuBurst = _CPU.runningPCB.cpuBurst + 1
+                console.log("Process " + _CPU.runningPCB.getPid(), _CPU.runningPCB.cpuBurst)
                 Control.hostLog("Update waiting time for process in the ready queue.", "OS")
                 _MemoryManager.addWaitBurst()
-            } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
+            } else {                       
+                // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
+            }
+
+            if (_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4) {
+                let params = []
+                Control.hostLog("Invoking interrupt for context switching", "OS")
+                _KernelInterruptQueue.enqueue(new Interrupt(SCHEDULE_IRQ, params))
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
             }
         }
 
@@ -143,6 +151,9 @@ module TSOS {
                 case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
+                    break;
+                case SCHEDULE_IRQ:
+                    this.krnShortTermSchedule()
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -215,12 +226,15 @@ module TSOS {
                 if(typeof _CPU.runUserProgram !== "undefined") {
                     console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
                     document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
-                    console.log(_Memory.memoryArr[2098])
                     _Console.showMemCounter(cpuInfo[0]);
                 }
             }
+            _krnHarddriveDriver.loadHDDFromLocal()
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_MemoryManager.getPBCsInfo());
+            if (_krnHarddriveDriver.status === "loaded") {
+                _Console.showHDD(_krnHarddriveDriver.hardDirveData)
+            }
         }
 
         public krnRunProgram(pid: string): void {
@@ -296,6 +310,94 @@ module TSOS {
                 Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
                                 + nextProcess.getPid(), "OS")
                 _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            }
+        }
+
+        public krnFormat() {
+            let returnMSG = _krnHarddriveDriver.driverEntry();
+            if (returnMSG[0]) {
+                _Console.putText("Fail to nitialize all blocks in all sectors in all tracks in the harddrive. ")    
+            } else {
+                _Console.putText("Initialize all blocks in all sectors in all tracks in the harddrive. ")
+            }
+        }
+
+        public krnGetHDDEntryByIdx(idx: number, inHex: boolean) {
+            return _krnHarddriveDriver.readFile("", idx, inHex)
+        }
+
+        public krnCreateFile(filename: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG = _krnHarddriveDriver.createfile(filename)
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to create file, " + filename)    
+                } else {
+                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1])
+                }
+                return returnMSG
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+                return [1]
+            }
+        }
+
+        public krnReadFile(filename: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG = _krnHarddriveDriver.readFile(filename)
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ")
+                } else {
+                    _Console.putText(returnMSG[1])
+                }
+                return returnMSG
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+                return [1]
+            }
+        }
+
+        public krnWriteFile(filename: (string | number), data: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG
+                if (typeof filename === "string") {
+                    returnMSG = _krnHarddriveDriver.writeFile(filename, data)
+                } else {
+                    returnMSG = _krnHarddriveDriver.writeFile("", data, filename)
+                }
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1])    
+                } else {
+                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ")
+                }
+                return returnMSG
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+                return [1]
+            }
+        }
+
+        public krnDeleteFile(filename: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG = _krnHarddriveDriver.deleteFile(filename)
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]) 
+                } else {
+                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1])
+                }
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+            }
+        }
+        
+        public krnLs() {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let return_file = _krnHarddriveDriver.get_files()
+                for (let file of return_file) {
+                    _Console.putText(file)
+                    _Console.advanceLine()
+                }
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
             }
         }
     }

@@ -158,9 +158,49 @@ module TSOS {
                                 )
             this.commandList[this.commandList.length] = sc
 
-            // ps  - list the running processes and their IDs
-            // kill <id> - kills the specified process id.
+            sc = new ShellCommand(this.shellCreate,
+                                    "create",
+                                    "<file name> - Create a file in the hard disk drive with give file name."
+                                )
+            this.commandList[this.commandList.length] = sc
 
+            sc = new ShellCommand(this.shellWrite,
+                                    "write",
+                                    "<file name> <data> - Write data to the file specify by file name display a " +
+                                    "message denoting success or failure. Data must be enclose in double quotes.")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellRead,
+                                    "read",
+                                    "<file name> - Read data from the file specify by file name and display in the console." +
+                                    " Error will display if the read fails")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellDelete,
+                                    "delete",
+                                    "<file name> - Delete data from the file specify by file name and display success of failure" +
+                                    " in the console.")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellFormat,
+                                    "format",
+                                    " - Initialize all blocks in all sectors in all tracks in the harddrive")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellLs,
+                "ls",
+                " - list the files that are currently stored on the disk")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellSetschedule,
+                "setschedule",
+                "[rr, fcfs, priority] - Set the CPU scheduling algorithm")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellGetschedule,
+                "getschedule",
+                " - Display currently selected CPU scheduling algorithm")
+            this.commandList[this.commandList.length] = sc
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -508,8 +548,8 @@ module TSOS {
         }
 
         public shellRunall() {
-            console.log(_MemoryManager.resident_queue)
-            for (let pcb of _MemoryManager.resident_queue) {
+            console.log(_MemoryManager.residentQueue)
+            for (let pcb of _MemoryManager.residentQueue) {
                 if (pcb.state == 0) {
                     pcb.state = 1
                     _MemoryManager.readyQueue.push(pcb)
@@ -531,6 +571,43 @@ module TSOS {
                 console.log(pcb[0].toString())
                 _OsShell.shellKill(pcb[0].toString())
             }
+        }
+
+        public shellCreate(params) {
+            let filename = params[0]
+            _Kernel.krnCreateFile(filename)
+        }
+
+        public shellRead(params) {
+            let filename = params[0]
+            _Kernel.krnReadFile(filename)
+        }
+
+        public shellWrite(params) {
+            let filename = params[0]
+            let data = params.slice(1).join(" ")
+            _Kernel.krnWriteFile(filename, data)
+        }
+
+        public shellDelete(params) {
+            let filename = params[0]
+            _Kernel.krnDeleteFile(filename)
+        }
+
+        public shellFormat() {
+            _Kernel.krnFormat()
+        }
+
+        public shellLs() {
+            _Kernel.krnLs()
+        }
+
+        public shellSetschedule() {
+
+        }
+
+        public shellGetschedule() {
+
         }
     }
 }

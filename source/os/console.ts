@@ -329,5 +329,22 @@ module TSOS {
             }
             pcbTable.innerHTML = bodyScript;
         }
+
+        public showHDD(hddInfo: any[]) {
+            let hddTable: any = document.getElementById("hdTableBody");
+            let bodyScript: string = "";
+            for (let info of hddInfo) {
+                bodyScript = bodyScript + "<tr>"
+                let tsbInt = parseInt(info["tsb"])
+                let t = Math.floor(tsbInt / 64)
+                let s = Math.floor((tsbInt - (t * 64)) / 8)
+                let b = (tsbInt - (t * 64)) % 8
+                bodyScript = bodyScript + "<td>" + t + ":" + s + ":" + b + "</td>"
+                bodyScript = bodyScript + "<td>" + info["used"] + "</td>"
+                bodyScript = bodyScript + "<td>" + info["next"] + "</td>"
+                bodyScript = bodyScript + "<td>" + info["data"] + "</td>"
+            }
+            hddTable.innerHTML = bodyScript;
+        }
     }
  }

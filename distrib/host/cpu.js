@@ -51,7 +51,6 @@ var TSOS;
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             if (this.runningPCB.state < 4) {
-                console.log(_Memory.memoryArr[2098]);
                 this.runningPCB.state = 1;
                 var counter = parseInt(this.runningPCB.getCounter(), 16);
                 var returnValues = _MemoryAccessor.read(this.runningPCB.location, counter, 1);
@@ -116,8 +115,6 @@ var TSOS;
                     this.isExecuting = false;
                 }
             }
-            this.quantum = this.quantum - 1;
-            console.log(this.quantum);
         };
         Cpu.prototype.ldaConst = function () {
             var nextReturn = this.readParams(1);
@@ -201,7 +198,7 @@ var TSOS;
             var byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             var incre = (parseInt(String(byteValue[0]), 16) + 1).toString(16);
             console.log(incre.length, incre, " length increment");
-            if (incre.length < 2) {
+            if (incre.length <= 2) {
                 this.writeData(this.runningPCB.location, pad(incre, 2), parseInt(nextReturn[0], 16));
                 console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
                 this.updateCounters(nextReturn[1]);
@@ -312,6 +309,15 @@ var TSOS;
             var returnInfo = this.readPCB(pid);
             console.log("return info", returnInfo);
             if (returnInfo !== null) {
+                if (returnInfo.location < 0) {
+                    var fileIdx = returnInfo.location - -1;
+                    var inHex = false;
+                    var returnMSG = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex);
+                    var data = returnMSG[1].match(/.{1,2}/g);
+                    var dataInMem = _CPU.getLoadMemory(2, true).join().split(",").join(" ");
+                    _Kernel.krnWriteFile(fileIdx, dataInMem);
+                    this.writeProgram(2, data);
+                }
                 if (returnInfo.state === 4) {
                     return "The user program have been terminated";
                 }
@@ -412,7 +418,7 @@ var TSOS;
                 this.isExecuting = false;
             }
             else {
-                var pcb = _MemoryManager.resident_queue[pid];
+                var pcb = _MemoryManager.residentQueue[pid];
                 if (typeof pcb === "undefined") {
                     return "Process " + pid + " does not exist";
                 }

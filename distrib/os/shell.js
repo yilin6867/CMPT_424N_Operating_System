@@ -81,8 +81,25 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellKillall, "killall", " - Kill all proces");
             this.commandList[this.commandList.length] = sc;
-            // ps  - list the running processes and their IDs
-            // kill <id> - kills the specified process id.
+            sc = new TSOS.ShellCommand(this.shellCreate, "create", "<file name> - Create a file in the hard disk drive with give file name.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellWrite, "write", "<file name> <data> - Write data to the file specify by file name display a " +
+                "message denoting success or failure. Data must be enclose in double quotes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRead, "read", "<file name> - Read data from the file specify by file name and display in the console." +
+                " Error will display if the read fails");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellDelete, "delete", "<file name> - Delete data from the file specify by file name and display success of failure" +
+                " in the console.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", " - Initialize all blocks in all sectors in all tracks in the harddrive");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellLs, "ls", " - list the files that are currently stored on the disk");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellSetschedule, "setschedule", "[rr, fcfs, priority] - Set the CPU scheduling algorithm");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellGetschedule, "getschedule", " - Display currently selected CPU scheduling algorithm");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         };
@@ -416,8 +433,8 @@ var TSOS;
             }
         };
         Shell.prototype.shellRunall = function () {
-            console.log(_MemoryManager.resident_queue);
-            for (var _i = 0, _a = _MemoryManager.resident_queue; _i < _a.length; _i++) {
+            console.log(_MemoryManager.residentQueue);
+            for (var _i = 0, _a = _MemoryManager.residentQueue; _i < _a.length; _i++) {
                 var pcb = _a[_i];
                 if (pcb.state == 0) {
                     pcb.state = 1;
@@ -441,6 +458,33 @@ var TSOS;
                 console.log(pcb[0].toString());
                 _OsShell.shellKill(pcb[0].toString());
             }
+        };
+        Shell.prototype.shellCreate = function (params) {
+            var filename = params[0];
+            _Kernel.krnCreateFile(filename);
+        };
+        Shell.prototype.shellRead = function (params) {
+            var filename = params[0];
+            _Kernel.krnReadFile(filename);
+        };
+        Shell.prototype.shellWrite = function (params) {
+            var filename = params[0];
+            var data = params.slice(1).join(" ");
+            _Kernel.krnWriteFile(filename, data);
+        };
+        Shell.prototype.shellDelete = function (params) {
+            var filename = params[0];
+            _Kernel.krnDeleteFile(filename);
+        };
+        Shell.prototype.shellFormat = function () {
+            _Kernel.krnFormat();
+        };
+        Shell.prototype.shellLs = function () {
+            _Kernel.krnLs();
+        };
+        Shell.prototype.shellSetschedule = function () {
+        };
+        Shell.prototype.shellGetschedule = function () {
         };
         return Shell;
     }());

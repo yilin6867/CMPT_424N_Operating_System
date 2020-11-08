@@ -45,7 +45,6 @@ module TSOS {
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             if (this.runningPCB.state < 4) {
-                console.log(_Memory.memoryArr[2098])
                 this.runningPCB.state = 1;
                 let counter = parseInt(this.runningPCB.getCounter(), 16);
                 let returnValues: any[] = _MemoryAccessor.read(this.runningPCB.location, counter, 1);
@@ -193,7 +192,7 @@ module TSOS {
             let byteValue = this.readData(this.runningPCB.location, nextReturn[0]);
             let incre = (parseInt(String(byteValue[0]) ,16) + 1).toString(16);
             console.log(incre.length, incre, " length increment")
-            if (incre.length < 2) {
+            if (incre.length <= 2) {
                 this.writeData(this.runningPCB.location, pad(incre, 2), parseInt(nextReturn[0], 16));
                 console.log("increment " + byteValue[0] + " at " + nextReturn[0] + " to " + incre + " at " + nextReturn[0]);
                 this.updateCounters(nextReturn[1]);
@@ -304,6 +303,15 @@ module TSOS {
             let returnInfo: any = this.readPCB(pid);
             console.log("return info", returnInfo)
             if (returnInfo !== null) {
+                if (returnInfo.location < 0) {
+                    let fileIdx = returnInfo.location - -1
+                    let inHex = false
+                    let returnMSG = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex)
+                    let data = returnMSG[1].match(/.{1,2}/g);
+                    let dataInMem = _CPU.getLoadMemory(2, true).join().split(",").join(" ")
+                    _Kernel.krnWriteFile(fileIdx, dataInMem)
+                    this.writeProgram(2, data)
+                }
                 if (returnInfo.state === 4) {
                     return "The user program have been terminated"
                 } else {
@@ -411,7 +419,7 @@ module TSOS {
                 this.runningPCB.updateStates(4);
                 this.isExecuting = false;
             } else {
-                let pcb = _MemoryManager.resident_queue[pid];
+                let pcb = _MemoryManager.residentQueue[pid];
                 if (typeof pcb === "undefined") {
                     return "Process " + pid + " does not exist"
                 } else if (pcb.state === 4) {
