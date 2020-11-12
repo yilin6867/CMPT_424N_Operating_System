@@ -116,7 +116,6 @@ var TSOS;
             var return_text;
             if (idx === null) {
                 entryIdx = window.localStorage.getItem(filename);
-                console.log(entryIdx);
             }
             else {
                 entryIdx = idx;
@@ -129,7 +128,7 @@ var TSOS;
                 var rendet_text = [];
                 while (nextTSB[0] !== "-") {
                     var next = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2]);
-                    console.log(next, nextTSB);
+                    console.log(nextTSB[0], next);
                     var data = this.hardDirveData[next]["data"];
                     var readHex = data[0];
                     var readIdx = 0;
@@ -150,13 +149,14 @@ var TSOS;
                         }
                     }
                     nextTSB = this.hardDirveData[next]["next"].split(":");
+                    console.log("next tsb ", this.hardDirveData[next]["next"], nextTSB);
                 }
                 return_text = rendet_text.join("");
                 is_success = 0;
             }
             return [is_success, return_text];
         };
-        DeviceDriverFS.prototype.writeFile = function (filename, data, idx) {
+        DeviceDriverFS.prototype.writeFile = function (filename, data, inHex, idx) {
             if (idx === void 0) { idx = null; }
             var is_success = 1;
             var charIdx = 0;
@@ -178,17 +178,27 @@ var TSOS;
                 var nextTSB = this.hardDirveData[entryIdx]["next"].split(":");
                 var next = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2]);
                 var innerNext = next;
+                console.log("Next entry to write, ", innerNext);
                 while (nextTSB[0] !== "-") {
+                    this.hardDirveData[innerNext]["used"] = 0;
                     this.hardDirveData[innerNext]["data"] = new Array(60).fill("-");
                     nextTSB = this.hardDirveData[innerNext]["next"].split(":");
+                    console.log("next tsb to delete, ", nextTSB);
                     innerNext = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2]);
-                    this.hardDirveData[innerNext]["used"] = 0;
                 }
-                this.hardDirveData[next]["data"] = new Array(60).fill("-");
                 entryDataLength = this.hardDirveData[next]["data"].length;
                 var historical_next = [];
-                while (charIdx < data.length) {
-                    var hexCode = data.charCodeAt(charIdx).toString(16);
+                this.hardDirveData[next]["used"] = "1";
+                var loopData = void 0;
+                if (inHex) {
+                    loopData = data;
+                }
+                else {
+                    loopData = data.split(" ");
+                }
+                console.log("data to write to harddrive", loopData);
+                while (charIdx < loopData.length) {
+                    var hexCode = inHex ? loopData.charCodeAt(charIdx).toString(16) : loopData[charIdx];
                     this.hardDirveData[next]["data"][entryDataIdx] = hexCode.toUpperCase();
                     charIdx = (chainIdx * entryDataLength) + entryDataIdx + 1;
                     entryDataIdx = entryDataIdx + 1;

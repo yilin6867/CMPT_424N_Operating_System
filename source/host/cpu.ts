@@ -104,6 +104,7 @@ module TSOS {
                     console.log(parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct)
                     this.isExecuting = false;
                     this.runningPCB.updateStates(4);
+                    console.log("Current process is terminate with counter limit", parseInt(this.runningPCB.getCounter(), 16) % 256, this.runningPCB.limit_ct)
                 }
                 if (this.singleStep) {
                     this.isExecuting = false;
@@ -278,10 +279,7 @@ module TSOS {
             if (writeInfo.length == 0) {
                 return []
             }
-            let newPCB: PCB = new PCB(0, _MemoryManager.getNextPID(), 32, segment
-                                        , writeInfo[0].toString(16), writeInfo[1]);
-            _MemoryManager.addPCB(newPCB);
-            return [newPCB.getPid(), newPCB.location, newPCB.getCounter(), writeInfo[0], writeInfo[1]];
+            return [0, _MemoryManager.getNextPID(), 32, segment, writeInfo[0], writeInfo[1]]
         }
 
         public readPCB(pid:string): PCB {
@@ -301,17 +299,8 @@ module TSOS {
 
         public runUserProgram(pid: string) {
             let returnInfo: any = this.readPCB(pid);
-            console.log("return info", returnInfo)
+            console.log("PCB to run ", returnInfo)
             if (returnInfo !== null) {
-                if (returnInfo.location < 0) {
-                    let fileIdx = returnInfo.location - -1
-                    let inHex = false
-                    let returnMSG = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex)
-                    let data = returnMSG[1].match(/.{1,2}/g);
-                    let dataInMem = _CPU.getLoadMemory(2, true).join().split(",").join(" ")
-                    _Kernel.krnWriteFile(fileIdx, dataInMem)
-                    this.writeProgram(2, data)
-                }
                 if (returnInfo.state === 4) {
                     return "The user program have been terminated"
                 } else {
@@ -417,6 +406,7 @@ module TSOS {
             if (pid === -1) {
                 pid = this.runningPCB.getPid();
                 this.runningPCB.updateStates(4);
+                console.log("Current process is kill")
                 this.isExecuting = false;
             } else {
                 let pcb = _MemoryManager.residentQueue[pid];
@@ -426,6 +416,7 @@ module TSOS {
                     return 4
                 } else {
                     pcb.updateStates(4)
+                    console.log("process is kill")
                     this.removeMemory(pcb.location, 0, _MemoryAccessor.memorySize);
                     _MemoryManager.memoryFill[pcb.location] = false;
                     _MemoryManager.removeReadyPCB(pcb);

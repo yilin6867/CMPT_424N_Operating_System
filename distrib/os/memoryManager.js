@@ -45,29 +45,28 @@ var TSOS;
         MemoryManager.prototype.getNextPID = function () {
             return this.residentQueue.length;
         };
-        MemoryManager.prototype.write = function (segment, data) {
+        MemoryManager.prototype.write = function (segment, data, priority) {
             if (segment === -1) {
-                var dataInNum = [];
-                for (var _i = 0, _a = data.split(" "); _i < _a.length; _i++) {
-                    var hex = _a[_i];
-                    dataInNum.push(String.fromCharCode(parseInt(hex, 16)));
-                }
-                console.log("Date at memory manager", dataInNum);
-                var filename = "tempFile" + this.tempFileIdx;
+                console.log("Date at memory manager", data);
+                var filename = "temp_file" + this.tempFileIdx;
                 var return_msg = _Kernel.krnCreateFile(filename);
-                return_msg = _Kernel.krnWriteFile(filename, dataInNum.join(" "));
+                return_msg = _Kernel.krnWriteFile(filename, data, false);
                 console.log(return_msg);
                 if (return_msg[0] !== 0) {
-                    return "Please format the harddrive with a file system.";
+                    return "Memory is full. Please format the harddrive with a file system to store the code or" +
+                        " kill an existing process.";
                 }
                 else {
-                    var newPCB = new TSOS.PCB(0, _MemoryManager.getNextPID(), 32, -1 * this.tempFileIdx, "0", 60);
+                    var newPCB = new TSOS.PCB(0, _MemoryManager.getNextPID(), priority, -1 * this.tempFileIdx, "0", 255);
                     _MemoryManager.addPCB(newPCB);
-                    return [newPCB.getPid(), newPCB.location, newPCB.getCounter(), 0, 60];
+                    return [newPCB.getPid(), newPCB.location, newPCB.getCounter(), 0, 255];
                 }
             }
             else {
-                var writeReturn = _CPU.writeProgram(segment, data);
+                var newPCBInfo = _CPU.writeProgram(segment, data);
+                var newPCB = new TSOS.PCB(newPCBInfo[0], newPCBInfo[1], newPCBInfo[2], newPCBInfo[3], newPCBInfo[4].toString(16), newPCBInfo[5]);
+                _MemoryManager.addPCB(newPCB);
+                var writeReturn = [newPCB.getPid(), newPCB.location, newPCB.getCounter(), newPCBInfo[0], newPCBInfo[1]];
                 var nextSegment = this.memoryFill.indexOf(false);
                 if (nextSegment >= 0) {
                     this.memoryFill[this.memoryFill.indexOf(false)] = true;

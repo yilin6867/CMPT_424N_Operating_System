@@ -9,7 +9,9 @@
 var TSOS;
 (function (TSOS) {
     var Kernel = /** @class */ (function () {
-        function Kernel() {
+        function Kernel(cpu_scheduler) {
+            if (cpu_scheduler === void 0) { cpu_scheduler = "RR"; }
+            this.cpu_scheduler = cpu_scheduler;
         }
         //
         // OS Startup and Shutdown Routines
@@ -97,7 +99,14 @@ var TSOS;
                 // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
-            if (_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state : 0) == 4) {
+            if ((_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state : 0) == 4)
+                && _MemoryManager.readyQueue.length > 0) {
+                var params = [];
+                TSOS.Control.hostLog("Invoking interrupt for context switching", "OS");
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SCHEDULE_IRQ, params));
+                TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
+            }
+            else if (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0) {
                 var params = [];
                 TSOS.Control.hostLog("Invoking interrupt for context switching", "OS");
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SCHEDULE_IRQ, params));
@@ -270,15 +279,51 @@ var TSOS;
             return _CPU.defaultQuantum;
         };
         Kernel.prototype.krnShortTermSchedule = function () {
-            TSOS.Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS");
-            _CPU.quantum = _CPU.defaultQuantum;
-            var nextProcess = _MemoryManager.readyQueue.shift();
-            if (typeof nextProcess !== "undefined") {
-                _MemoryManager.saveState(_CPU.runningPCB);
-                TSOS.Control.hostLog("Save state of current running process", "OS");
-                TSOS.Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process "
-                    + nextProcess.getPid(), "OS");
-                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            if (this.cpu_scheduler === "RR") {
+                TSOS.Control.hostLog("Context switch using Round Robin", "OS");
+                TSOS.Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS");
+                _CPU.quantum = _CPU.defaultQuantum;
+                var nextProcess = _MemoryManager.readyQueue.shift();
+                if (typeof nextProcess !== "undefined") {
+                    if (nextProcess.location < 0) {
+                        var inMemorySegment = _CPU.runningPCB.location;
+                        var fileIdx = nextProcess.location * -1;
+                        var inHex = false;
+                        var readData = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex);
+                        // Change string to separate every hex with space
+                        var dataInHDD = readData[1].match(/.{1,2}/g).join(" ");
+                        var dataInMem = _CPU.getLoadMemory(inMemorySegment, true).join().split(",").join(" ");
+                        console.log("Swapping code");
+                        console.log("Code from memory", dataInMem);
+                        console.log("Code from harddrive", dataInHDD);
+                        _Kernel.krnWriteFile(fileIdx, dataInMem, inHex);
+                        _CPU.writeProgram(inMemorySegment, dataInHDD);
+                        nextProcess.location = inMemorySegment;
+                        _CPU.runningPCB.location = fileIdx * -1;
+                        console.log("swap data harddrive entry " + fileIdx + " memory segment " + inMemorySegment);
+                    }
+                    _MemoryManager.saveState(_CPU.runningPCB);
+                    TSOS.Control.hostLog("Save state of current running process", "OS");
+                    TSOS.Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process "
+                        + nextProcess.getPid(), "OS");
+                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                }
+            }
+            else if (this.cpu_scheduler === "NPP") {
+                TSOS.Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
+                var nextPriorPCB = _MemoryManager.readyQueue[0];
+                for (var _i = 0, _a = _MemoryManager.readyQueue; _i < _a.length; _i++) {
+                    var pcb = _a[_i];
+                    if (pcb.priority < nextPriorPCB.priority) {
+                        nextPriorPCB = pcb;
+                    }
+                }
+                _Kernel.krnRunProgram(nextPriorPCB.getPid().toString());
+            }
+            else {
+                TSOS.Control.hostLog("Context switch using First Come First Serve", "OS");
+                var nextPCB = _MemoryManager.readyQueue.shift();
+                _Kernel.krnRunProgram(nextPCB.getPid().toString());
             }
         };
         Kernel.prototype.krnFormat = function () {
@@ -296,69 +341,43 @@ var TSOS;
         Kernel.prototype.krnCreateFile = function (filename) {
             if (_krnHarddriveDriver.status === "loaded") {
                 var returnMSG = _krnHarddriveDriver.createfile(filename);
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to create file, " + filename);
-                }
-                else {
-                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1]);
-                }
                 return returnMSG;
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
-                return [1];
+                return [];
             }
         };
         Kernel.prototype.krnReadFile = function (filename) {
             if (_krnHarddriveDriver.status === "loaded") {
                 var returnMSG = _krnHarddriveDriver.readFile(filename);
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ");
-                }
-                else {
-                    _Console.putText(returnMSG[1]);
-                }
                 return returnMSG;
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
-                return [1];
+                return [];
             }
         };
-        Kernel.prototype.krnWriteFile = function (filename, data) {
+        Kernel.prototype.krnWriteFile = function (filename, data, inHex) {
             if (_krnHarddriveDriver.status === "loaded") {
                 var returnMSG = void 0;
                 if (typeof filename === "string") {
-                    returnMSG = _krnHarddriveDriver.writeFile(filename, data);
+                    returnMSG = _krnHarddriveDriver.writeFile(filename, data, inHex);
                 }
                 else {
-                    returnMSG = _krnHarddriveDriver.writeFile("", data, filename);
-                }
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1]);
-                }
-                else {
-                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ");
+                    returnMSG = _krnHarddriveDriver.writeFile("", data, inHex, filename);
                 }
                 return returnMSG;
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
-                return [1];
+                return [];
             }
         };
         Kernel.prototype.krnDeleteFile = function (filename) {
             if (_krnHarddriveDriver.status === "loaded") {
                 var returnMSG = _krnHarddriveDriver.deleteFile(filename);
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]);
-                }
-                else {
-                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1]);
-                }
+                return returnMSG;
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
+                return [];
             }
         };
         Kernel.prototype.krnLs = function () {
@@ -373,6 +392,18 @@ var TSOS;
             else {
                 _Console.putText("The harddrive need to be formate with a file system. ");
             }
+        };
+        Kernel.prototype.krnSetSchedule = function (schedule) {
+            if (schedule === "RR" || schedule === "NPP" || schedule === "FCFS") {
+                this.cpu_scheduler = schedule;
+                return true;
+            }
+            else {
+                return false;
+            }
+        };
+        Kernel.prototype.krnGetSchedule = function () {
+            return this.cpu_scheduler;
         };
         return Kernel;
     }());

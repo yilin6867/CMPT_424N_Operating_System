@@ -11,6 +11,10 @@
 module TSOS {
 
     export class Kernel {
+        constructor(
+            public cpu_scheduler="RR"
+        ) {
+        }
         //
         // OS Startup and Shutdown Routines
         //
@@ -111,13 +115,20 @@ module TSOS {
                 // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
-
-            if (_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4) {
+            if ((_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4) 
+                    && _MemoryManager.readyQueue.length > 0) {
                 let params = []
                 Control.hostLog("Invoking interrupt for context switching", "OS")
                 _KernelInterruptQueue.enqueue(new Interrupt(SCHEDULE_IRQ, params))
                 Control.hostLog("Update waiting time for process in the ready queue.", "OS")
             }
+            else if (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0) {
+                let params = []
+                Control.hostLog("Invoking interrupt for context switching", "OS")
+                _KernelInterruptQueue.enqueue(new Interrupt(SCHEDULE_IRQ, params))
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
+            }
+            
         }
 
         //
@@ -301,15 +312,48 @@ module TSOS {
         }
 
         public krnShortTermSchedule() {
-            Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS")
-            _CPU.quantum = _CPU.defaultQuantum;
-            let nextProcess = _MemoryManager.readyQueue.shift();
-            if (typeof nextProcess !== "undefined") {
-                _MemoryManager.saveState(_CPU.runningPCB)
-                Control.hostLog("Save state of current running process", "OS")
-                Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
-                                + nextProcess.getPid(), "OS")
-                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            if (this.cpu_scheduler === "RR") {
+                Control.hostLog("Context switch using Round Robin", "OS");
+                Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS");
+                _CPU.quantum = _CPU.defaultQuantum;
+                let nextProcess: PCB = _MemoryManager.readyQueue.shift();
+                if (typeof nextProcess !== "undefined") {
+                    if (nextProcess.location < 0) {
+                        let inMemorySegment = _CPU.runningPCB.location;
+                        let fileIdx = nextProcess.location * -1;
+                        let inHex = false;
+                        let readData = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex);
+                        // Change string to separate every hex with space
+                        let dataInHDD = readData[1].match(/.{1,2}/g).join(" ");
+                        let dataInMem = _CPU.getLoadMemory(inMemorySegment, true).join().split(",").join(" ");
+                        console.log("Swapping code");
+                        console.log("Code from memory", dataInMem);
+                        console.log("Code from harddrive", dataInHDD);
+                        _Kernel.krnWriteFile(fileIdx, dataInMem, inHex);
+                        _CPU.writeProgram(inMemorySegment, dataInHDD);
+                        nextProcess.location = inMemorySegment;
+                        _CPU.runningPCB.location = fileIdx * -1;
+                        console.log("swap data harddrive entry " + fileIdx + " memory segment " + inMemorySegment);
+                    }
+                    _MemoryManager.saveState(_CPU.runningPCB);
+                    Control.hostLog("Save state of current running process", "OS");
+                    Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
+                                    + nextProcess.getPid(), "OS");
+                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                }    
+            } else if (this.cpu_scheduler === "NPP") {
+                Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
+                let nextPriorPCB = _MemoryManager.readyQueue[0];
+                for (let pcb of _MemoryManager.readyQueue) {
+                    if (pcb.priority < nextPriorPCB.priority) {
+                        nextPriorPCB = pcb
+                    }
+                }
+                _Kernel.krnRunProgram(nextPriorPCB.getPid().toString());
+            } else {
+                Control.hostLog("Context switch using First Come First Serve", "OS");
+                let nextPCB = _MemoryManager.readyQueue.shift()
+                _Kernel.krnRunProgram(nextPCB.getPid().toString())
             }
         }
 
@@ -329,63 +373,41 @@ module TSOS {
         public krnCreateFile(filename: string) {
             if (_krnHarddriveDriver.status === "loaded") {
                 let returnMSG = _krnHarddriveDriver.createfile(filename)
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to create file, " + filename)    
-                } else {
-                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1])
-                }
                 return returnMSG
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
-                return [1]
+                return []
             }
         }
 
         public krnReadFile(filename: string) {
             if (_krnHarddriveDriver.status === "loaded") {
                 let returnMSG = _krnHarddriveDriver.readFile(filename)
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ")
-                } else {
-                    _Console.putText(returnMSG[1])
-                }
                 return returnMSG
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
-                return [1]
+                return []
             }
         }
 
-        public krnWriteFile(filename: (string | number), data: string) {
+        public krnWriteFile(filename: (string | number), data: string, inHex: boolean) {
             if (_krnHarddriveDriver.status === "loaded") {
                 let returnMSG
                 if (typeof filename === "string") {
-                    returnMSG = _krnHarddriveDriver.writeFile(filename, data)
+                    returnMSG = _krnHarddriveDriver.writeFile(filename, data, inHex)
                 } else {
-                    returnMSG = _krnHarddriveDriver.writeFile("", data, filename)
-                }
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1])    
-                } else {
-                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ")
+                    returnMSG = _krnHarddriveDriver.writeFile("", data, inHex, filename)
                 }
                 return returnMSG
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
-                return [1]
+                return []
             }
         }
 
         public krnDeleteFile(filename: string) {
             if (_krnHarddriveDriver.status === "loaded") {
                 let returnMSG = _krnHarddriveDriver.deleteFile(filename)
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]) 
-                } else {
-                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1])
-                }
+                return returnMSG
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
+                return []
             }
         }
         
@@ -399,6 +421,19 @@ module TSOS {
             } else {
                 _Console.putText("The harddrive need to be formate with a file system. ")
             }
+        }
+
+        public krnSetSchedule(schedule: string) {
+            if (schedule === "RR" || schedule === "NPP" || schedule === "FCFS") {
+                this.cpu_scheduler = schedule
+                return true
+            } else {
+                return false
+            }
+        }
+
+        public krnGetSchedule() {
+            return this.cpu_scheduler
         }
     }
 }

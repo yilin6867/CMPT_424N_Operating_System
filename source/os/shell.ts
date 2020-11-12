@@ -357,49 +357,16 @@ module TSOS {
         public shellMan(args: string[]) {
             if (args.length > 0) {
                 var topic = args[0];
-                switch (topic) {
-                    case "help":
-                        _StdOut.putText("Help displays a list of (hopefully) valid commands.");
-                        break;
-                    // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
-                    case "prompt":
-                        _StdOut.putText("prompt <string> -- Use string being passed as arguement as prompt icon");
-                        break;
-                    case "trace":
-                        _StdOut.putText("trace <on, off> -- Set the trace mode to be either on or off");
-                        break;
-                    case "rot13":
-                        _StdOut.putText("rot13 <string> -- Letter substitution cipher that replaces each letter in the "
-                         + "argument string with the 13th letter after it");
-                         break;
-                    case "cls":
-                        _StdOut.putText("cls -- Clears the screen and reset clear");
-                        break;
-                    case "shutdown":
-                        _StdOut.putText("shutdown -- Shutdown the virtual OS l");
-                        break;
-                    case "date":
-                        _StdOut.putText("date -- return the current date and time");
-                        break;
-                    case "whereami":
-                        _StdOut.putText("whereami -- return the current directory and file the os is located");
-                        break;
-                    case "history":
-                        _StdOut.putText("history -- Show all previous commands");
-                        break;
-                    case "load":
-                        _StdOut.putText("load -- validates if user program input is hexidemcimals")
-                        break;;
-                    case "bsod":
-                        _StdOut.putText("bsod <Error Message> -- invoke kernal error to test display " +
-                                        "of BSOD for given string of Error Message");
-                        break;
-                    case "status":
-                        _StdOut.putText("<String> - Render the status option on the Graphic Taskbar with "
-                                        + "given string of text.");
-                        break;
-                    default:
-                        _StdOut.putText("No manual entry for " + args[0] + ".");
+                let found = false
+                for (var i in _OsShell.commandList) {
+                    if (topic === _OsShell.commandList[i].command) {
+                        found = true
+                        _StdOut.advanceLine();
+                        _StdOut.putText("  " + _OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
+                    }
+                }
+                if (!found) {
+                    _StdOut.putText("No manual entry for " + topic + ".");
                 }
             } else {
                 _StdOut.putText("Usage: man <topic>  Please supply a topic.");
@@ -468,21 +435,30 @@ module TSOS {
         }
 
         // Use to load user program input. Currently validating user input
-        public shellLoad() {
+        public shellLoad(params) {
             let prg_in: any = document.getElementById("taProgramInput");
             let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             let codes: string = prg_in.value.split("\n").join(" ")
             let segment = _MemoryManager.memoryFill.indexOf(false)
+            let priority = 32
+            if (params[0] === "-p") {
+                priority = params[1]
+            }
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             } else {
-                let writeInfo: any = _MemoryManager.write(segment, codes);
                 _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
+                let writeInfo: any = _MemoryManager.write(segment, codes, priority);
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
-                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory " 
-                        +  writeInfo[1] + " between address "+ writeInfo[3] + " and address " + writeInfo[4] + ".");
-                    _Kernel.krnShowMemory(writeInfo[5]);
+                    let location = writeInfo[1] < 0 ? "hardrive entry " + (writeInfo[1] * -1 + 64)
+                                                    : "segment " + writeInfo[1] 
+                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into " 
+                        +  location + " between address "+ writeInfo[3] + " and address " + writeInfo[4] + ".");
+                    
+                    if (writeInfo[5]) {
+                        _Kernel.krnShowMemory(writeInfo[5]) 
+                    }
                 } else if (Array.isArray(writeInfo) && writeInfo.length  == 0) {
                     _StdOut.putText("Write Faile. The user program exceed the memory space.")
                 } else if (typeof(writeInfo) === "string") {
@@ -575,23 +551,61 @@ module TSOS {
 
         public shellCreate(params) {
             let filename = params[0]
-            _Kernel.krnCreateFile(filename)
+            let returnMSG = _Kernel.krnCreateFile(filename)
+            if (returnMSG.length > 0) {
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to create file, " + filename)    
+                } else {
+                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1])
+                }
+                _Console.advanceLine()
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+            }
         }
 
         public shellRead(params) {
             let filename = params[0]
-            _Kernel.krnReadFile(filename)
+            let returnMSG = _Kernel.krnReadFile(filename)
+            if (returnMSG.length > 0) {
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ")
+                } else {
+                    _Console.putText(returnMSG[1])
+                }
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+            }
         }
 
         public shellWrite(params) {
             let filename = params[0]
             let data = params.slice(1).join(" ")
-            _Kernel.krnWriteFile(filename, data)
+            let returnMSG = _Kernel.krnWriteFile(filename, data, true)
+            if (returnMSG.length > 0) {
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1])    
+                } else {
+                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ")
+                }
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+            }
+
         }
 
         public shellDelete(params) {
             let filename = params[0]
-            _Kernel.krnDeleteFile(filename)
+            let returnMSG = _Kernel.krnDeleteFile(filename)
+            if (returnMSG.length > 0) {
+                if (returnMSG[0]) {
+                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]) 
+                } else {
+                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1])
+                }
+            } else {
+                _Console.putText("The harddrive need to be formate with a file system. ")
+            }
         }
 
         public shellFormat() {
@@ -602,12 +616,18 @@ module TSOS {
             _Kernel.krnLs()
         }
 
-        public shellSetschedule() {
-
+        public shellSetschedule(params) {
+            let returnCode = _Kernel.krnSetSchedule(params[0])
+            if (returnCode) {
+                _Console.putText("Current CPU scheduling algorithm is " + params[0])
+            } else {
+                _Console.putText("Please enter a valid CPU scheduling algorithm." + 
+                    " Please refer to ")
+            }
         }
 
         public shellGetschedule() {
-
+            _Console.putText("Current CPU scheduling algorithm is " + _Kernel.krnGetSchedule())
         }
     }
 }

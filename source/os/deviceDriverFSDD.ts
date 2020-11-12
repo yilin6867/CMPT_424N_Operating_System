@@ -110,7 +110,6 @@
             let return_text;
             if (idx === null) {
                 entryIdx = window.localStorage.getItem(filename)
-                console.log(entryIdx)
             } else {
                 entryIdx = idx
             }
@@ -121,7 +120,7 @@
                 let rendet_text = []
                 while(nextTSB[0] !== "-") {
                     let next = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2])
-                    console.log(next, nextTSB)
+                    console.log(nextTSB[0], next)
                     let data = this.hardDirveData[next]["data"]
                     let readHex = data[0]
                     let readIdx = 0
@@ -141,6 +140,7 @@
                         }
                     }
                     nextTSB = this.hardDirveData[next]["next"].split(":")
+                    console.log("next tsb ", this.hardDirveData[next]["next"], nextTSB)
                 }
                 return_text = rendet_text.join("")
                 is_success = 0
@@ -148,7 +148,7 @@
             return [is_success, return_text]
         }
 
-        public writeFile(filename: string, data: string, idx:number=null) {
+        public writeFile(filename: string, data: string, inHex: boolean, idx:number=null) {
             let is_success = 1
             let charIdx = 0
             let chainIdx = 0
@@ -167,17 +167,26 @@
                 let nextTSB = this.hardDirveData[entryIdx]["next"].split(":")
                 let next = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2])
                 let innerNext = next;
+                console.log("Next entry to write, ", innerNext)
                 while(nextTSB[0] !== "-") {
+                    this.hardDirveData[innerNext]["used"] = 0
                     this.hardDirveData[innerNext]["data"] = new Array(60).fill("-")
                     nextTSB = this.hardDirveData[innerNext]["next"].split(":")
+                    console.log("next tsb to delete, ", nextTSB)
                     innerNext = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2])
-                    this.hardDirveData[innerNext]["used"] = 0
                 }
-                this.hardDirveData[next]["data"] = new Array(60).fill("-")            
                 entryDataLength = this.hardDirveData[next]["data"].length
                 let historical_next = []
-                while(charIdx < data.length) {
-                    let hexCode = data.charCodeAt(charIdx).toString(16)
+                this.hardDirveData[next]["used"] = "1"
+                let loopData
+                if (inHex) {
+                    loopData = data
+                } else {
+                    loopData = data.split(" ")
+                }
+                console.log("data to write to harddrive", loopData)
+                while(charIdx < loopData.length) {
+                    let hexCode = inHex ? loopData.charCodeAt(charIdx).toString(16) : loopData[charIdx]
                     this.hardDirveData[next]["data"][entryDataIdx] = hexCode.toUpperCase()
                     charIdx = (chainIdx * entryDataLength) + entryDataIdx + 1
                     entryDataIdx = entryDataIdx + 1
