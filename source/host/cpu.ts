@@ -274,12 +274,12 @@ module TSOS {
             let writeInfo :number[] = _MemoryAccessor.write(segment, binaryCode, addr);
             return writeInfo;
         }
-        public writeProgram(segment: number, codes: string, addr: number = null) {
+        public writeProgram(segment: number, codes: string, priority: number, addr: number = null) {
             let writeInfo = this.writeData(segment, codes, addr);
             if (writeInfo.length == 0) {
                 return []
             }
-            return [0, _MemoryManager.getNextPID(), 32, segment, writeInfo[0], writeInfo[1]]
+            return [0, _MemoryManager.getNextPID(), priority, segment, writeInfo[0], writeInfo[1]]
         }
 
         public readPCB(pid:string): PCB {

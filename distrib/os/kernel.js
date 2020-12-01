@@ -10,7 +10,7 @@ var TSOS;
 (function (TSOS) {
     var Kernel = /** @class */ (function () {
         function Kernel(cpu_scheduler) {
-            if (cpu_scheduler === void 0) { cpu_scheduler = "RR"; }
+            if (cpu_scheduler === void 0) { cpu_scheduler = "rr"; }
             this.cpu_scheduler = cpu_scheduler;
         }
         //
@@ -99,14 +99,16 @@ var TSOS;
                 // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
-            if ((_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state : 0) == 4)
+            if (this.cpu_scheduler === "rr"
+                && ((_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state : 0) == 4))
                 && _MemoryManager.readyQueue.length > 0) {
                 var params = [];
                 TSOS.Control.hostLog("Invoking interrupt for context switching", "OS");
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SCHEDULE_IRQ, params));
                 TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
             }
-            else if (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0) {
+            else if ((this.cpu_scheduler === "fcfs" || this.cpu_scheduler === "npp")
+                && (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0)) {
                 var params = [];
                 TSOS.Control.hostLog("Invoking interrupt for context switching", "OS");
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SCHEDULE_IRQ, params));
@@ -208,16 +210,16 @@ var TSOS;
             _Console.showSysDatetime(sysDate, sysTime);
             var cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                if (typeof _CPU.runUserProgram !== "undefined") {
+                if (typeof _CPU.runningPCB !== "undefined") {
                     console.log("memorySeg" + (1 + _CPU.getRunningPCB()[2]));
                     document.getElementById("memorySeg" + (1 + _CPU.getRunningPCB()[2])).click();
                     _Console.showMemCounter(cpuInfo[0]);
                 }
             }
-            _krnHarddriveDriver.loadHDDFromLocal();
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_MemoryManager.getPBCsInfo());
             if (_krnHarddriveDriver.status === "loaded") {
+                _krnHarddriveDriver.loadHDDFromLocal();
                 _Console.showHDD(_krnHarddriveDriver.hardDirveData);
             }
         };
@@ -279,29 +281,13 @@ var TSOS;
             return _CPU.defaultQuantum;
         };
         Kernel.prototype.krnShortTermSchedule = function () {
-            if (this.cpu_scheduler === "RR") {
+            if (this.cpu_scheduler === "rr") {
                 TSOS.Control.hostLog("Context switch using Round Robin", "OS");
                 TSOS.Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS");
                 _CPU.quantum = _CPU.defaultQuantum;
                 var nextProcess = _MemoryManager.readyQueue.shift();
                 if (typeof nextProcess !== "undefined") {
-                    if (nextProcess.location < 0) {
-                        var inMemorySegment = _CPU.runningPCB.location;
-                        var fileIdx = nextProcess.location * -1;
-                        var inHex = false;
-                        var readData = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex);
-                        // Change string to separate every hex with space
-                        var dataInHDD = readData[1].match(/.{1,2}/g).join(" ");
-                        var dataInMem = _CPU.getLoadMemory(inMemorySegment, true).join().split(",").join(" ");
-                        console.log("Swapping code");
-                        console.log("Code from memory", dataInMem);
-                        console.log("Code from harddrive", dataInHDD);
-                        _Kernel.krnWriteFile(fileIdx, dataInMem, inHex);
-                        _CPU.writeProgram(inMemorySegment, dataInHDD);
-                        nextProcess.location = inMemorySegment;
-                        _CPU.runningPCB.location = fileIdx * -1;
-                        console.log("swap data harddrive entry " + fileIdx + " memory segment " + inMemorySegment);
-                    }
+                    _krnHarddriveDriver.krnSwapping(nextProcess);
                     _MemoryManager.saveState(_CPU.runningPCB);
                     TSOS.Control.hostLog("Save state of current running process", "OS");
                     TSOS.Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process "
@@ -309,30 +295,52 @@ var TSOS;
                     _Kernel.krnRunProgram(nextProcess.getPid().toString());
                 }
             }
-            else if (this.cpu_scheduler === "NPP") {
-                TSOS.Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
-                var nextPriorPCB = _MemoryManager.readyQueue[0];
-                for (var _i = 0, _a = _MemoryManager.readyQueue; _i < _a.length; _i++) {
-                    var pcb = _a[_i];
-                    if (pcb.priority < nextPriorPCB.priority) {
-                        nextPriorPCB = pcb;
+            else if (this.cpu_scheduler === "npp") {
+                if (_CPU.runningPCB.state === 4) {
+                    TSOS.Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
+                    var nextPriorPCB = _MemoryManager.readyQueue[0];
+                    var nextIdx = 0;
+                    for (var pcbIdx = 0; pcbIdx < _MemoryManager.readyQueue.length; pcbIdx++) {
+                        if (_MemoryManager.readyQueue[pcbIdx].priority < nextPriorPCB.priority) {
+                            nextPriorPCB = _MemoryManager.readyQueue[pcbIdx];
+                            nextIdx = pcbIdx;
+                        }
                     }
+                    _MemoryManager.readyQueue.splice(nextIdx, 1);
+                    _krnHarddriveDriver.krnSwapping(nextPriorPCB);
+                    _Kernel.krnRunProgram(nextPriorPCB.getPid().toString());
                 }
-                _Kernel.krnRunProgram(nextPriorPCB.getPid().toString());
             }
             else {
                 TSOS.Control.hostLog("Context switch using First Come First Serve", "OS");
-                var nextPCB = _MemoryManager.readyQueue.shift();
-                _Kernel.krnRunProgram(nextPCB.getPid().toString());
+                if (_CPU.runningPCB.state === 4) {
+                    var nextPCB = _MemoryManager.readyQueue.shift();
+                    _krnHarddriveDriver.krnSwapping(nextPCB);
+                    _Kernel.krnRunProgram(nextPCB.getPid().toString());
+                }
             }
         };
-        Kernel.prototype.krnFormat = function () {
-            var returnMSG = _krnHarddriveDriver.driverEntry();
-            if (returnMSG[0]) {
-                _Console.putText("Fail to nitialize all blocks in all sectors in all tracks in the harddrive. ");
+        Kernel.prototype.krnFormat = function (mode) {
+            if (mode === void 0) { mode = "-full"; }
+            var returnMSG;
+            if (!_CPU.isExecuting) {
+                returnMSG = _krnHarddriveDriver.driverEntry(mode);
             }
             else {
-                _Console.putText("Initialize all blocks in all sectors in all tracks in the harddrive. ");
+                var msg = "The CPU is running a process. Please wait until the CPU is free and do the refactoring";
+                _Console.putText(msg);
+                returnMSG = [];
+            }
+            if (returnMSG[0]) {
+                _Console.putText("Fail to nitialize all blocks in all sectors in all tracks in the harddrive.");
+            }
+            else {
+                if (mode === "-full") {
+                    _Console.putText("Initialize all blocks in all sectors in all tracks in the harddrive.");
+                }
+                else {
+                    _Console.putText("Initialize the first four bytes of every directory and data block.");
+                }
             }
         };
         Kernel.prototype.krnGetHDDEntryByIdx = function (idx, inHex) {
@@ -380,21 +388,67 @@ var TSOS;
                 return [];
             }
         };
-        Kernel.prototype.krnLs = function () {
+        Kernel.prototype.krnLs = function (param) {
+            if (param === void 0) { param = null; }
             if (_krnHarddriveDriver.status === "loaded") {
                 var return_file = _krnHarddriveDriver.get_files();
                 for (var _i = 0, return_file_1 = return_file; _i < return_file_1.length; _i++) {
                     var file = return_file_1[_i];
-                    _Console.putText(file);
-                    _Console.advanceLine();
+                    if (param === "-l") {
+                        _Console.putText(file);
+                        _Console.advanceLine();
+                    }
+                    else {
+                        if (file[0] !== ".") {
+                            _Console.putText(file);
+                            _Console.advanceLine();
+                        }
+                    }
                 }
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
+                _Console.putText("The harddrive need to be format with a file system. ");
+            }
+        };
+        Kernel.prototype.krnCopy = function (srcFile, destFile) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                var readSucc = _krnHarddriveDriver.readFile(srcFile);
+                if (readSucc[0]) {
+                    var createSucc = _krnHarddriveDriver.createfile(destFile);
+                    if (createSucc[0]) {
+                        var writeSucc = _krnHarddriveDriver.writeFile(destFile, readSucc[1], false);
+                        if (writeSucc[0]) {
+                            return 0;
+                        }
+                        else {
+                            return 1;
+                        }
+                    }
+                    else {
+                        return 2;
+                    }
+                }
+                else {
+                    return 3;
+                }
+            }
+            else {
+                return 4;
+            }
+        };
+        Kernel.prototype.krnRename = function (oldName, newName) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                if (_krnHarddriveDriver.existFile(oldName)) {
+                    var returnCode = _krnHarddriveDriver.renameFile(oldName, newName);
+                    return returnCode;
+                }
+                else {
+                    return 2;
+                }
             }
         };
         Kernel.prototype.krnSetSchedule = function (schedule) {
-            if (schedule === "RR" || schedule === "NPP" || schedule === "FCFS") {
+            if (schedule === "rr" || schedule === "npp" || schedule === "fcfs") {
                 this.cpu_scheduler = schedule;
                 return true;
             }

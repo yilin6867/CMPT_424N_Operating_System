@@ -59,11 +59,12 @@ var TSOS;
                 else {
                     var newPCB = new TSOS.PCB(0, _MemoryManager.getNextPID(), priority, -1 * this.tempFileIdx, "0", 255);
                     _MemoryManager.addPCB(newPCB);
+                    console.log(newPCB);
                     return [newPCB.getPid(), newPCB.location, newPCB.getCounter(), 0, 255];
                 }
             }
             else {
-                var newPCBInfo = _CPU.writeProgram(segment, data);
+                var newPCBInfo = _CPU.writeProgram(segment, data, priority);
                 var newPCB = new TSOS.PCB(newPCBInfo[0], newPCBInfo[1], newPCBInfo[2], newPCBInfo[3], newPCBInfo[4].toString(16), newPCBInfo[5]);
                 _MemoryManager.addPCB(newPCB);
                 var writeReturn = [newPCB.getPid(), newPCB.location, newPCB.getCounter(), newPCBInfo[0], newPCBInfo[1]];

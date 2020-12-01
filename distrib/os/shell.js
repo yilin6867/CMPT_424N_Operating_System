@@ -55,7 +55,9 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellHistory, "history", " - Show all previous command");
             this.commandList[this.commandList.length] = sc;
             //Load
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", " - validates if user program input is hexidemcimals");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "<-p> - validates if user program input is hexidemcimals and load it into memory." +
+                " Create a process control block for the process. " +
+                "If -p is supply with a number, set priority of the process to that value.");
             this.commandList[this.commandList.length] = sc;
             // Invoke error
             sc = new TSOS.ShellCommand(this.shellBsod, "bsod", "<Error Message> - invoke kernal error to test display " +
@@ -92,13 +94,21 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellDelete, "delete", "<file name> - Delete data from the file specify by file name and display success of failure" +
                 " in the console.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellFormat, "format", " - Initialize all blocks in all sectors in all tracks in the harddrive");
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", "<-quick, -full> - Initialize all blocks in all sectors in all tracks in the " +
+                "harddrive. If the parameter is quick, then first four bytes of every directory " +
+                "and data block  will be initialize. If the parameter is full, then all the " +
+                "bytes of every directory and data block will be initialize");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellLs, "ls", " - list the files that are currently stored on the disk");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellSetschedule, "setschedule", "[rr, fcfs, priority] - Set the CPU scheduling algorithm");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellGetschedule, "getschedule", " - Display currently selected CPU scheduling algorithm");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCp, "copy", "<source file name> <destination file name> - Copy the file copy from source file " +
+                "to the destination file.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRename, "rename", "<target file name> <new file name> - Rename the target file into the new file name");
             this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
@@ -168,10 +178,10 @@ var TSOS;
             var retVal = new TSOS.UserCommand();
             // 1. Remove leading and trailing spaces.
             buffer = TSOS.Utils.trim(buffer);
-            // 2. Lower-case it.
-            buffer = buffer.toLowerCase();
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
+            // 2. Separate on spaces so we can determine the command and command-line args, if any.
             var tempList = buffer.split(" ");
+            // 3. Lower-case the command.
+            tempList[0] = tempList[0].toLowerCase();
             // 4. Take the first (zeroth) element and use that as the command.
             var cmd = tempList.shift(); // Yes, you can do that to an array in JavaScript. See the Queue class.
             // 4.1 Remove any left-over spaces.
@@ -325,8 +335,9 @@ var TSOS;
             var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             var codes = prg_in.value.split("\n").join(" ");
             var segment = _MemoryManager.memoryFill.indexOf(false);
-            var priority = 32;
-            if (params[0] === "-p") {
+            var priority = 30;
+            console.log(params[0], params[1], params[0] === "-q");
+            if (params[0] === "-q" && parseInt(params[1]) >= 0) {
                 priority = params[1];
             }
             if (!regexp.test(codes)) {
@@ -335,6 +346,7 @@ var TSOS;
             else {
                 _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
+                console.log(priority);
                 var writeInfo = _MemoryManager.write(segment, codes, priority);
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     var location_1 = writeInfo[1] < 0 ? "hardrive entry " + (writeInfo[1] * -1 + 64)
@@ -446,7 +458,7 @@ var TSOS;
                 _Console.advanceLine();
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
+                _Console.putText("The harddrive need to be format with a file system. ");
             }
         };
         Shell.prototype.shellRead = function (params) {
@@ -461,7 +473,7 @@ var TSOS;
                 }
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
+                _Console.putText("The harddrive need to be format with a file system. ");
             }
         };
         Shell.prototype.shellWrite = function (params) {
@@ -477,7 +489,7 @@ var TSOS;
                 }
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
+                _Console.putText("The harddrive need to be format with a file system. ");
             }
         };
         Shell.prototype.shellDelete = function (params) {
@@ -492,14 +504,66 @@ var TSOS;
                 }
             }
             else {
-                _Console.putText("The harddrive need to be formate with a file system. ");
+                _Console.putText("The harddrive need to be format with a file system. ");
             }
         };
-        Shell.prototype.shellFormat = function () {
-            _Kernel.krnFormat();
+        Shell.prototype.shellFormat = function (params) {
+            console.log(params.length);
+            if (params.length > 0) {
+                _Kernel.krnFormat(params[0]);
+            }
+            else {
+                _Kernel.krnFormat();
+            }
         };
-        Shell.prototype.shellLs = function () {
-            _Kernel.krnLs();
+        Shell.prototype.shellLs = function (params) {
+            if (params.length > 0) {
+                _Kernel.krnLs(params[0]);
+            }
+            else {
+                _Kernel.krnLs();
+            }
+        };
+        Shell.prototype.shellCp = function (params) {
+            var srcFile = params[0];
+            var destFile = params[1];
+            if (srcFile && destFile) {
+                var returnCode = _Kernel.krnCopy(srcFile, destFile);
+                switch (returnCode) {
+                    case 0:
+                        _Console.putText("Copy Success");
+                        break;
+                    case 1:
+                        _Console.putText("Copy Fail. File content fail to copy over.");
+                        break;
+                    case 2:
+                        _Console.putText("Copy Fail. File to create file to copy to.");
+                        break;
+                    case 3:
+                        _Console.putText("Copy Fail. Fail to read from source file.");
+                        break;
+                    case 4:
+                        _Console.putText("The harddrive need to be format with a file system.");
+                        break;
+                }
+            }
+            else {
+                _Console.putText("Invalid file names" + srcFile + " and " + destFile);
+            }
+        };
+        Shell.prototype.shellRename = function (params) {
+            var oldName = params[0];
+            var newName = params[1];
+            if (oldName && newName) {
+                var returnCode = _Kernel.krnRename(oldName, newName);
+                switch (returnCode) {
+                    case 0:
+                        _Console.putText("Rename Success");
+                        break;
+                    case 1:
+                        _Console.putText("Rename Failure");
+                }
+            }
         };
         Shell.prototype.shellSetschedule = function (params) {
             var returnCode = _Kernel.krnSetSchedule(params[0]);

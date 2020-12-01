@@ -57,10 +57,11 @@ module TSOS {
                     let newPCB: PCB = new PCB(0, _MemoryManager.getNextPID(), priority, -1 * this.tempFileIdx
                                             , "0", 255);
                     _MemoryManager.addPCB(newPCB);
+                    console.log(newPCB)
                     return [newPCB.getPid(), newPCB.location, newPCB.getCounter(), 0, 255];
                 }
             } else {
-                let newPCBInfo: number[] = _CPU.writeProgram(segment, data);
+                let newPCBInfo: number[] = _CPU.writeProgram(segment, data, priority);
                 let newPCB: PCB = new PCB(newPCBInfo[0], newPCBInfo[1], newPCBInfo[2], newPCBInfo[3]
                                         , newPCBInfo[4].toString(16), newPCBInfo[5]);
                 _MemoryManager.addPCB(newPCB);

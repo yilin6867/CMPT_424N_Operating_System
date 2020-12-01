@@ -22,7 +22,8 @@ module TSOS {
             , public zReg: any = 0
             , public cpuBurst: number = 0
             , public waitBurst: number = 0
-        ){
+        ) {
+
         }
         public updateCounter(newCounter: number) {
             this.counter = pad(newCounter.toString(16).toUpperCase(), 2);

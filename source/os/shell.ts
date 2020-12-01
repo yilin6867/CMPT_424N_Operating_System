@@ -95,7 +95,9 @@ module TSOS {
             //Load
             sc = new ShellCommand(this.shellLoad,
                                     "load",
-                                    " - validates if user program input is hexidemcimals");
+                                    "<-p> - validates if user program input is hexidemcimals and load it into memory." +
+                                        " Create a process control block for the process. " + 
+                                        "If -p is supply with a number, set priority of the process to that value.");
             this.commandList[this.commandList.length] = sc;
 
             // Invoke error
@@ -184,7 +186,10 @@ module TSOS {
 
             sc = new ShellCommand(this.shellFormat,
                                     "format",
-                                    " - Initialize all blocks in all sectors in all tracks in the harddrive")
+                                    "<-quick, -full> - Initialize all blocks in all sectors in all tracks in the " +
+                                    "harddrive. If the parameter is quick, then first four bytes of every directory " +
+                                    "and data block  will be initialize. If the parameter is full, then all the " +
+                                    "bytes of every directory and data block will be initialize")
             this.commandList[this.commandList.length] = sc
 
             sc = new ShellCommand(this.shellLs,
@@ -201,6 +206,18 @@ module TSOS {
                 "getschedule",
                 " - Display currently selected CPU scheduling algorithm")
             this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellCp,
+                "copy",
+                "<source file name> <destination file name> - Copy the file copy from source file " +
+                "to the destination file.")
+            this.commandList[this.commandList.length] = sc
+
+            sc = new ShellCommand(this.shellRename,
+                "rename",
+                "<target file name> <new file name> - Rename the target file into the new file name")
+            this.commandList[this.commandList.length] = sc
+
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -271,11 +288,11 @@ module TSOS {
             // 1. Remove leading and trailing spaces.
             buffer = Utils.trim(buffer);
 
-            // 2. Lower-case it.
-            buffer = buffer.toLowerCase();
-
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
+            // 2. Separate on spaces so we can determine the command and command-line args, if any.
             var tempList = buffer.split(" ");
+
+            // 3. Lower-case the command.
+            tempList[0] = tempList[0].toLowerCase()
 
             // 4. Take the first (zeroth) element and use that as the command.
             var cmd = tempList.shift();  // Yes, you can do that to an array in JavaScript. See the Queue class.
@@ -440,8 +457,9 @@ module TSOS {
             let regexp: RegExp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             let codes: string = prg_in.value.split("\n").join(" ")
             let segment = _MemoryManager.memoryFill.indexOf(false)
-            let priority = 32
-            if (params[0] === "-p") {
+            let priority = 30
+            console.log(params[0], params[1], params[0] === "-q")
+            if (params[0] === "-q" && parseInt(params[1]) >= 0) {
                 priority = params[1]
             }
             if (!regexp.test(codes)) {
@@ -449,6 +467,7 @@ module TSOS {
             } else {
                 _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
+                console.log(priority)
                 let writeInfo: any = _MemoryManager.write(segment, codes, priority);
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
                     let location = writeInfo[1] < 0 ? "hardrive entry " + (writeInfo[1] * -1 + 64)
@@ -560,7 +579,7 @@ module TSOS {
                 }
                 _Console.advanceLine()
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
+                _Console.putText("The harddrive need to be format with a file system. ")
             }
         }
 
@@ -574,7 +593,7 @@ module TSOS {
                     _Console.putText(returnMSG[1])
                 }
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
+                _Console.putText("The harddrive need to be format with a file system. ")
             }
         }
 
@@ -589,7 +608,7 @@ module TSOS {
                     _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ")
                 }
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
+                _Console.putText("The harddrive need to be format with a file system. ")
             }
 
         }
@@ -604,16 +623,67 @@ module TSOS {
                     _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1])
                 }
             } else {
-                _Console.putText("The harddrive need to be formate with a file system. ")
+                _Console.putText("The harddrive need to be format with a file system. ")
             }
         }
 
-        public shellFormat() {
-            _Kernel.krnFormat()
+        public shellFormat(params) {
+            console.log(params.length)
+            if (params.length > 0) {
+                _Kernel.krnFormat(params[0])
+            } else {
+                _Kernel.krnFormat()
+            }
         }
 
-        public shellLs() {
-            _Kernel.krnLs()
+        public shellLs(params) {
+            if (params.length > 0) {
+                _Kernel.krnLs(params[0])
+            } else {
+                _Kernel.krnLs()
+            }
+        }
+
+        public shellCp(params) {
+            let srcFile = params[0]
+            let destFile = params[1]
+            if (srcFile && destFile) {
+                let returnCode = _Kernel.krnCopy(srcFile, destFile)
+                switch(returnCode) {
+                    case 0:
+                        _Console.putText("Copy Success")
+                        break;
+                    case 1:
+                        _Console.putText("Copy Fail. File content fail to copy over.")
+                        break;
+                    case 2:
+                        _Console.putText("Copy Fail. File to create file to copy to.")
+                        break;
+                    case 3:
+                        _Console.putText("Copy Fail. Fail to read from source file.")
+                        break;
+                    case 4:
+                        _Console.putText("The harddrive need to be format with a file system.")
+                        break;
+                }
+            } else {
+                _Console.putText("Invalid file names" + srcFile + " and " + destFile)
+            }
+        }
+
+        public shellRename(params) {
+            let oldName = params[0]
+            let newName = params[1]
+            if (oldName && newName) {
+                let returnCode = _Kernel.krnRename(oldName, newName);
+                switch(returnCode) {
+                    case 0:
+                        _Console.putText("Rename Success")
+                        break;
+                    case 1:
+                        _Console.putText("Rename Failure")
+                }
+            }
         }
 
         public shellSetschedule(params) {

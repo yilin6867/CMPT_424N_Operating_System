@@ -29,34 +29,54 @@ var TSOS;
             // super(this.krnKbdDriverEntry, this.krnKbdDispatchKeyPress);
             // So instead...
             _super.call(this) || this;
+            _this.hardDirveData = [];
             _this.driverEntry = _this.krnFSDriverEntry;
             _this.isr = _this.krnSwapping;
+            for (var _ = 0; _ < (4 * 8 * 8); _++) {
+                _this.hardDirveData.push({});
+            }
             return _this;
         }
-        DeviceDriverFS.prototype.krnFSDriverEntry = function () {
+        DeviceDriverFS.prototype.krnFSDriverEntry = function (mode) {
             // Initialization routine for this, the kernel-mode Keyboard Device Driver.
-            this.status = "loaded";
             var is_success = 1;
             window.localStorage.clear();
-            // Construction hard drive t:s:b section from 0:0:0 to 3:7:7 total of 192 record
-            this.hardDirveData = [];
-            this.fileRecords = {};
+            // Construction hard drive t:s:b section from 0:0:0 to 3:7:7 total of 256 record
             for (var i = 0; i < (4 * 8 * 8); i++) {
-                var entry = {};
-                entry["tsb"] = i;
-                entry["used"] = 0;
-                entry["next"] = "-";
-                var data = new Array(60);
-                data.fill("-");
-                entry["data"] = data;
-                this.hardDirveData.push(entry);
+                this.hardDirveData[i]["tsb"] = i;
+                this.hardDirveData[i]["used"] = 0;
+                this.hardDirveData[i]["next"] = "-";
+                if (mode === "-full" || this.status !== "loaded") {
+                    var data = new Array(60);
+                    data.fill("-");
+                    this.hardDirveData[i]["data"] = data;
+                }
             }
             this.hardDirveData[0]["used"] = 1;
             this.storeHDDToLocal();
+            this.status = "loaded";
             is_success = 0;
             return [is_success];
         };
-        DeviceDriverFS.prototype.krnSwapping = function (params) {
+        DeviceDriverFS.prototype.krnSwapping = function (nextProcess) {
+            if (nextProcess.location < 0) {
+                console.log("Swapped Process Location ", nextProcess.location);
+                var inMemorySegment = _CPU.runningPCB.location;
+                var fileIdx = nextProcess.location * -1;
+                var inHex = false;
+                var readData = _Kernel.krnGetHDDEntryByIdx(fileIdx, inHex);
+                // Change string to separate every hex with space
+                var dataInHDD = readData[1].match(/.{1,2}/g).join(" ");
+                var dataInMem = _CPU.getLoadMemory(inMemorySegment, true).join().split(",").join(" ");
+                console.log("Swapping code");
+                console.log("Code from memory", dataInMem);
+                console.log("Code from harddrive", dataInHDD);
+                _Kernel.krnWriteFile(fileIdx, dataInMem, inHex);
+                _CPU.writeProgram(inMemorySegment, dataInHDD, nextProcess.priority);
+                nextProcess.location = inMemorySegment;
+                _CPU.runningPCB.location = fileIdx * -1;
+                console.log("swap data harddrive entry " + fileIdx + " memory segment " + inMemorySegment);
+            }
         };
         DeviceDriverFS.prototype.get_tsb = function (idx) {
             var t = Math.floor(idx / 64);
@@ -84,7 +104,6 @@ var TSOS;
             var is_success = 1;
             for (; fileIDX < 64; fileIDX++) {
                 if (this.hardDirveData[fileIDX]["used"] !== "1") {
-                    console.log(this.hardDirveData[fileIDX]["used"], this.hardDirveData[fileIDX]["used"] !== "1");
                     var dataIdx = 64;
                     for (; dataIdx < this.hardDirveData.length; dataIdx++) {
                         if (this.hardDirveData[dataIdx]["used"] !== "1") {
@@ -93,6 +112,7 @@ var TSOS;
                             break;
                         }
                     }
+                    this.hardDirveData[fileIDX]["data"] = new Array(60).fill("-");
                     for (var charIdx = 0; charIdx < filename.length; charIdx++) {
                         var hex = filename.charCodeAt(charIdx).toString(16);
                         this.hardDirveData[fileIDX]["data"][charIdx] = hex.toUpperCase();
@@ -103,10 +123,33 @@ var TSOS;
                     break;
                 }
             }
+            if (fileIDX >= 64) {
+                return [is_success, "Unable to create new file. The file system is full." +
+                        "Please delete some file or format the disk to create more space"];
+            }
             console.log(filename, fileIDX);
             window.localStorage.setItem(filename, fileIDX.toString());
             this.storeHDDToLocal();
             return [is_success, fileIDX];
+        };
+        DeviceDriverFS.prototype.existFile = function (filename) {
+            return window.localStorage.getItem(filename);
+        };
+        DeviceDriverFS.prototype.renameFile = function (oldName, newName) {
+            var entryIdx = window.localStorage.getItem(oldName);
+            if (entryIdx) {
+                window.localStorage.setItem(newName, entryIdx);
+                window.localStorage.removeItem(oldName);
+                this.hardDirveData[entryIdx]["data"] = new Array().fill("0");
+                for (var charIdx = 0; charIdx < newName.length; charIdx++) {
+                    var hex = newName.charCodeAt(charIdx).toString(16);
+                    this.hardDirveData[entryIdx]["data"][charIdx] = hex.toUpperCase();
+                }
+                return 0;
+            }
+            else {
+                return 1;
+            }
         };
         DeviceDriverFS.prototype.readFile = function (filename, idx, inHex) {
             if (idx === void 0) { idx = null; }
@@ -244,10 +287,8 @@ var TSOS;
                 var next = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2]);
                 this.hardDirveData[entryIdx]["next"] = 0;
                 this.hardDirveData[entryIdx]["used"] = 0;
-                this.hardDirveData[entryIdx]["data"] = new Array(60).fill(0);
                 while (next !== 0 && !(isNaN(next))) {
                     console.log("Next entry to delete ", next);
-                    this.hardDirveData[next]["data"] = new Array(60).fill(0);
                     this.hardDirveData[next]["used"] = 0;
                     nextTSB = this.hardDirveData[next]["next"].split(":");
                     next = parseInt(nextTSB[0]) * 64 + parseInt(nextTSB[1]) * 8 + parseInt(nextTSB[2]);

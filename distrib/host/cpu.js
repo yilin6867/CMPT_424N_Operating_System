@@ -282,13 +282,13 @@ var TSOS;
             var writeInfo = _MemoryAccessor.write(segment, binaryCode, addr);
             return writeInfo;
         };
-        Cpu.prototype.writeProgram = function (segment, codes, addr) {
+        Cpu.prototype.writeProgram = function (segment, codes, priority, addr) {
             if (addr === void 0) { addr = null; }
             var writeInfo = this.writeData(segment, codes, addr);
             if (writeInfo.length == 0) {
                 return [];
             }
-            return [0, _MemoryManager.getNextPID(), 32, segment, writeInfo[0], writeInfo[1]];
+            return [0, _MemoryManager.getNextPID(), priority, segment, writeInfo[0], writeInfo[1]];
         };
         Cpu.prototype.readPCB = function (pid) {
             return _MemoryManager.getPCBbyID(pid);
