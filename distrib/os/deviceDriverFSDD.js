@@ -140,7 +140,8 @@ var TSOS;
             if (entryIdx) {
                 window.localStorage.setItem(newName, entryIdx);
                 window.localStorage.removeItem(oldName);
-                this.hardDirveData[entryIdx]["data"] = new Array().fill("0");
+                var dataLen = this.hardDirveData[entryIdx]["data"].length;
+                this.hardDirveData[entryIdx]["data"] = new Array(dataLen).fill("-");
                 for (var charIdx = 0; charIdx < newName.length; charIdx++) {
                     var hex = newName.charCodeAt(charIdx).toString(16);
                     this.hardDirveData[entryIdx]["data"][charIdx] = hex.toUpperCase();

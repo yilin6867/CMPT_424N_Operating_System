@@ -576,7 +576,14 @@ var TSOS;
             }
         };
         Shell.prototype.shellGetschedule = function () {
-            _Console.putText("Current CPU scheduling algorithm is " + _Kernel.krnGetSchedule());
+            var schedule = "Round Robin";
+            if (_Kernel.krnGetSchedule() === "fcfs") {
+                schedule = "First Come First Serve";
+            }
+            else if (_Kernel.krnGetSchedule() === "npp") {
+                schedule = "Non Preemptive Priority";
+            }
+            _Console.putText("Current CPU scheduling algorithm is " + schedule);
         };
         return Shell;
     }());
