@@ -145,6 +145,7 @@ var TSOS;
                     var hex = newName.charCodeAt(charIdx).toString(16);
                     this.hardDirveData[entryIdx]["data"][charIdx] = hex.toUpperCase();
                 }
+                this.storeHDDToLocal();
                 return 0;
             }
             else {

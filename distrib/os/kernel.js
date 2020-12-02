@@ -413,11 +413,12 @@ var TSOS;
         Kernel.prototype.krnCopy = function (srcFile, destFile) {
             if (_krnHarddriveDriver.status === "loaded") {
                 var readSucc = _krnHarddriveDriver.readFile(srcFile);
-                if (readSucc[0]) {
+                console.log(readSucc);
+                if (!readSucc[0]) {
                     var createSucc = _krnHarddriveDriver.createfile(destFile);
-                    if (createSucc[0]) {
-                        var writeSucc = _krnHarddriveDriver.writeFile(destFile, readSucc[1], false);
-                        if (writeSucc[0]) {
+                    if (!createSucc[0]) {
+                        var writeSucc = _krnHarddriveDriver.writeFile(destFile, readSucc[1], true);
+                        if (!writeSucc[0]) {
                             return 0;
                         }
                         else {

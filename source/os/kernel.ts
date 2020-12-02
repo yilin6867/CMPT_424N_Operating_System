@@ -438,11 +438,12 @@ module TSOS {
         public krnCopy(srcFile: string, destFile: string) {
             if (_krnHarddriveDriver.status === "loaded") {
                 let readSucc = _krnHarddriveDriver.readFile(srcFile);
-                if (readSucc[0]) {
+                console.log(readSucc)
+                if (!readSucc[0]) {
                     let createSucc = _krnHarddriveDriver.createfile(destFile);
-                    if (createSucc[0]) {
-                        let writeSucc = _krnHarddriveDriver.writeFile(destFile, readSucc[1], false)
-                        if (writeSucc[0]) {
+                    if (!createSucc[0]) {
+                        let writeSucc = _krnHarddriveDriver.writeFile(destFile, readSucc[1], true)
+                        if (!writeSucc[0]) {
                             return 0
                         } else {
                             return 1

@@ -133,11 +133,13 @@
             if (entryIdx) {
                 window.localStorage.setItem(newName, entryIdx);
                 window.localStorage.removeItem(oldName);
-                this.hardDirveData[entryIdx]["data"] = new Array().fill("0");
+                let dataLen = this.hardDirveData[entryIdx]["data"].length
+                this.hardDirveData[entryIdx]["data"] = new Array(dataLen).fill("-");
                 for (let charIdx = 0; charIdx < newName.length; charIdx++) {
                     let hex = newName.charCodeAt(charIdx).toString(16);
                     this.hardDirveData[entryIdx]["data"][charIdx] = hex.toUpperCase();
                 }
+                this.storeHDDToLocal();
                 return 0;
             } else {
                 return 1;
