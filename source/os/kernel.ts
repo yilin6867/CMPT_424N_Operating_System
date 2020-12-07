@@ -471,7 +471,7 @@ module TSOS {
         }
 
         public krnSetSchedule(schedule: string) {
-            if (schedule === "rr" || schedule === "npp" || schedule === "fcfs") {
+            if (schedule === "rr" || schedule === "priority" || schedule === "fcfs") {
                 this.cpu_scheduler = schedule
                 return true
             } else {

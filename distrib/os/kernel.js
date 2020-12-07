@@ -449,7 +449,7 @@ var TSOS;
             }
         };
         Kernel.prototype.krnSetSchedule = function (schedule) {
-            if (schedule === "rr" || schedule === "npp" || schedule === "fcfs") {
+            if (schedule === "rr" || schedule === "priority" || schedule === "fcfs") {
                 this.cpu_scheduler = schedule;
                 return true;
             }

@@ -700,7 +700,7 @@ module TSOS {
             let schedule = "Round Robin"
             if (_Kernel.krnGetSchedule() === "fcfs") {
                 schedule = "First Come First Serve"
-            } else if (_Kernel.krnGetSchedule() === "npp") {
+            } else if (_Kernel.krnGetSchedule() === "priority") {
                 schedule = "Non Preemptive Priority"
             }
             _Console.putText("Current CPU scheduling algorithm is " + schedule)
