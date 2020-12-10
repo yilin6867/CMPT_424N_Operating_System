@@ -569,61 +569,76 @@ module TSOS {
         }
 
         public shellCreate(params) {
-            let filename = params[0]
-            let returnMSG = _Kernel.krnCreateFile(filename)
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to create file, " + filename)    
+            if (params.length > 0) {
+                let filename = params[0]
+                let returnMSG = _Kernel.krnCreateFile(filename)
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to create file, " + filename)    
+                    } else {
+                        _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1])
+                    }
+                    _Console.advanceLine()
                 } else {
-                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1])
+                    _Console.putText("The harddrive need to be format with a file system. ")
                 }
-                _Console.advanceLine()
             } else {
-                _Console.putText("The harddrive need to be format with a file system. ")
+                _Console.putText("Please provide a file name.")
             }
         }
 
         public shellRead(params) {
-            let filename = params[0]
-            let returnMSG = _Kernel.krnReadFile(filename)
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ")
+            if (params.length > 0) {
+                let filename = params[0]
+                let returnMSG = _Kernel.krnReadFile(filename)
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ")
+                    } else {
+                        _Console.putText(returnMSG[1])
+                    }
                 } else {
-                    _Console.putText(returnMSG[1])
+                    _Console.putText("The harddrive need to be format with a file system. ")
                 }
             } else {
-                _Console.putText("The harddrive need to be format with a file system. ")
+                _Console.putText("Please provide a file name.")
             }
         }
 
         public shellWrite(params) {
-            let filename = params[0]
-            let data = params.slice(1).join(" ")
-            let returnMSG = _Kernel.krnWriteFile(filename, data, true)
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1])    
+            if (params.length > 0) {
+                let filename = params[0]
+                let data = params.slice(1).join(" ")
+                let returnMSG = _Kernel.krnWriteFile(filename, data, true)
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1])    
+                    } else {
+                        _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ")
+                    }
                 } else {
-                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ")
+                    _Console.putText("The harddrive need to be format with a file system. ")
                 }
             } else {
-                _Console.putText("The harddrive need to be format with a file system. ")
+                _Console.putText("Please provide a file name.")
             }
-
         }
 
         public shellDelete(params) {
-            let filename = params[0]
-            let returnMSG = _Kernel.krnDeleteFile(filename)
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]) 
+            if (params.length > 0) {
+                let filename = params[0]
+                let returnMSG = _Kernel.krnDeleteFile(filename)
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]) 
+                    } else {
+                        _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1])
+                    }
                 } else {
-                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1])
+                    _Console.putText("The harddrive need to be format with a file system. ")
                 }
             } else {
-                _Console.putText("The harddrive need to be format with a file system. ")
+                _Console.putText("Please provide a file name.")
             }
         }
 
@@ -667,7 +682,7 @@ module TSOS {
                         break;
                 }
             } else {
-                _Console.putText("Invalid file names" + srcFile + " and " + destFile)
+                _Console.putText("Invalid file names, " + srcFile + " and " + destFile)
             }
         }
 
@@ -676,13 +691,20 @@ module TSOS {
             let newName = params[1]
             if (oldName && newName) {
                 let returnCode = _Kernel.krnRename(oldName, newName);
+                console.log(returnCode)
                 switch(returnCode) {
                     case 0:
                         _Console.putText("Rename Success")
                         break;
                     case 1:
-                        _Console.putText("Rename Failure")
+                        _Console.putText("Fail to rename " + oldName + " to " + newName)
+                        break;
+                    case 2:
+                        _Console.putText("Target file does not exist")
+                        break;
                 }
+            } else {
+                _Console.putText("Please provide the target filename and the new filename")
             }
         }
 

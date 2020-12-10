@@ -446,65 +446,85 @@ var TSOS;
             }
         };
         Shell.prototype.shellCreate = function (params) {
-            var filename = params[0];
-            var returnMSG = _Kernel.krnCreateFile(filename);
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to create file, " + filename);
+            if (params.length > 0) {
+                var filename = params[0];
+                var returnMSG = _Kernel.krnCreateFile(filename);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to create file, " + filename);
+                    }
+                    else {
+                        _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1]);
+                    }
+                    _Console.advanceLine();
                 }
                 else {
-                    _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1]);
+                    _Console.putText("The harddrive need to be format with a file system. ");
                 }
-                _Console.advanceLine();
             }
             else {
-                _Console.putText("The harddrive need to be format with a file system. ");
+                _Console.putText("Please provide a file name.");
             }
         };
         Shell.prototype.shellRead = function (params) {
-            var filename = params[0];
-            var returnMSG = _Kernel.krnReadFile(filename);
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ");
+            if (params.length > 0) {
+                var filename = params[0];
+                var returnMSG = _Kernel.krnReadFile(filename);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ");
+                    }
+                    else {
+                        _Console.putText(returnMSG[1]);
+                    }
                 }
                 else {
-                    _Console.putText(returnMSG[1]);
+                    _Console.putText("The harddrive need to be format with a file system. ");
                 }
             }
             else {
-                _Console.putText("The harddrive need to be format with a file system. ");
+                _Console.putText("Please provide a file name.");
             }
         };
         Shell.prototype.shellWrite = function (params) {
-            var filename = params[0];
-            var data = params.slice(1).join(" ");
-            var returnMSG = _Kernel.krnWriteFile(filename, data, true);
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1]);
+            if (params.length > 0) {
+                var filename = params[0];
+                var data = params.slice(1).join(" ");
+                var returnMSG = _Kernel.krnWriteFile(filename, data, true);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1]);
+                    }
+                    else {
+                        _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ");
+                    }
                 }
                 else {
-                    _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ");
+                    _Console.putText("The harddrive need to be format with a file system. ");
                 }
             }
             else {
-                _Console.putText("The harddrive need to be format with a file system. ");
+                _Console.putText("Please provide a file name.");
             }
         };
         Shell.prototype.shellDelete = function (params) {
-            var filename = params[0];
-            var returnMSG = _Kernel.krnDeleteFile(filename);
-            if (returnMSG.length > 0) {
-                if (returnMSG[0]) {
-                    _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]);
+            if (params.length > 0) {
+                var filename = params[0];
+                var returnMSG = _Kernel.krnDeleteFile(filename);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]);
+                    }
+                    else {
+                        _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1]);
+                    }
                 }
                 else {
-                    _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1]);
+                    _Console.putText("The harddrive need to be format with a file system. ");
                 }
             }
             else {
-                _Console.putText("The harddrive need to be format with a file system. ");
+                _Console.putText("Please provide a file name.");
             }
         };
         Shell.prototype.shellFormat = function (params) {
@@ -548,7 +568,7 @@ var TSOS;
                 }
             }
             else {
-                _Console.putText("Invalid file names" + srcFile + " and " + destFile);
+                _Console.putText("Invalid file names, " + srcFile + " and " + destFile);
             }
         };
         Shell.prototype.shellRename = function (params) {
@@ -556,13 +576,21 @@ var TSOS;
             var newName = params[1];
             if (oldName && newName) {
                 var returnCode = _Kernel.krnRename(oldName, newName);
+                console.log(returnCode);
                 switch (returnCode) {
                     case 0:
                         _Console.putText("Rename Success");
                         break;
                     case 1:
-                        _Console.putText("Rename Failure");
+                        _Console.putText("Fail to rename " + oldName + " to " + newName);
+                        break;
+                    case 2:
+                        _Console.putText("Target file does not exist");
+                        break;
                 }
+            }
+            else {
+                _Console.putText("Please provide the target filename and the new filename");
             }
         };
         Shell.prototype.shellSetschedule = function (params) {

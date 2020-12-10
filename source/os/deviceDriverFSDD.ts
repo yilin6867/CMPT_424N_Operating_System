@@ -100,6 +100,7 @@
                         if (this.hardDirveData[dataIdx]["used"] !== "1") {
                             this.hardDirveData[fileIDX]["next"] =  this.get_tsb(dataIdx);
                             this.hardDirveData[dataIdx]["used"] =  "1";
+                            this.hardDirveData[dataIdx]["data"] =  new Array(60).fill("-")
                             break;
                         }
                     }
