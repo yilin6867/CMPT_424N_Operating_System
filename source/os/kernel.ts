@@ -123,7 +123,7 @@ module TSOS {
                 _KernelInterruptQueue.enqueue(new Interrupt(SCHEDULE_IRQ, params))
                 Control.hostLog("Update waiting time for process in the ready queue.", "OS")
             }
-            else if ((this.cpu_scheduler === "fcfs" || this.cpu_scheduler === "npp") 
+            else if ((this.cpu_scheduler === "fcfs" || this.cpu_scheduler === "priority") 
                     && (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0)) {
                 let params = []
                 Control.hostLog("Invoking interrupt for context switching", "OS")
@@ -326,7 +326,7 @@ module TSOS {
                                     + nextProcess.getPid(), "OS");
                     _Kernel.krnRunProgram(nextProcess.getPid().toString());
                 }    
-            } else if (this.cpu_scheduler === "npp") {
+            } else if (this.cpu_scheduler === "priority") {
                 if (_CPU.runningPCB.state === 4) {
                     Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
                     let nextPriorPCB = _MemoryManager.readyQueue[0];
@@ -418,7 +418,7 @@ module TSOS {
         
         public krnLs(param:string =null) {
             if (_krnHarddriveDriver.status === "loaded") {
-                let return_file = _krnHarddriveDriver.get_files()
+                let return_file = _krnHarddriveDriver.getFiles()
                 for (let file of return_file) {
                     if (param === "-l") {
                         _Console.putText(file)
@@ -481,6 +481,10 @@ module TSOS {
 
         public krnGetSchedule() {
             return this.cpu_scheduler
+        }
+
+        public krnNextFreeFile() {
+            return _krnHarddriveDriver.getNextFile();
         }
     }
 }

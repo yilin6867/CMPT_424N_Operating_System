@@ -286,7 +286,7 @@
             }
         }
 
-        public get_files() {
+        public getFiles() {
             let files = [];
             for (let idx = 0; idx < 64; idx++) {
                 if (this.hardDirveData[idx]["used"] == 1) {
@@ -302,6 +302,15 @@
                 }
             }
             return files;
+        }
+
+        public getNextFile() {
+            let fileIDX = 1;
+            for (; fileIDX < 64; fileIDX ++) {
+                if (this.hardDirveData[fileIDX]["used"] !== "1") {
+                    return fileIDX
+                }
+            }
         }
     }
 }

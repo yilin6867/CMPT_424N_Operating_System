@@ -107,7 +107,7 @@ var TSOS;
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SCHEDULE_IRQ, params));
                 TSOS.Control.hostLog("Update waiting time for process in the ready queue.", "OS");
             }
-            else if ((this.cpu_scheduler === "fcfs" || this.cpu_scheduler === "npp")
+            else if ((this.cpu_scheduler === "fcfs" || this.cpu_scheduler === "priority")
                 && (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0)) {
                 var params = [];
                 TSOS.Control.hostLog("Invoking interrupt for context switching", "OS");
@@ -295,7 +295,7 @@ var TSOS;
                     _Kernel.krnRunProgram(nextProcess.getPid().toString());
                 }
             }
-            else if (this.cpu_scheduler === "npp") {
+            else if (this.cpu_scheduler === "priority") {
                 if (_CPU.runningPCB.state === 4) {
                     TSOS.Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
                     var nextPriorPCB = _MemoryManager.readyQueue[0];
@@ -391,7 +391,7 @@ var TSOS;
         Kernel.prototype.krnLs = function (param) {
             if (param === void 0) { param = null; }
             if (_krnHarddriveDriver.status === "loaded") {
-                var return_file = _krnHarddriveDriver.get_files();
+                var return_file = _krnHarddriveDriver.getFiles();
                 for (var _i = 0, return_file_1 = return_file; _i < return_file_1.length; _i++) {
                     var file = return_file_1[_i];
                     if (param === "-l") {
@@ -459,6 +459,9 @@ var TSOS;
         };
         Kernel.prototype.krnGetSchedule = function () {
             return this.cpu_scheduler;
+        };
+        Kernel.prototype.krnNextFreeFile = function () {
+            return _krnHarddriveDriver.getNextFile();
         };
         return Kernel;
     }());

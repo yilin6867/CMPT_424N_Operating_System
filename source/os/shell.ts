@@ -458,8 +458,7 @@ module TSOS {
             let codes: string = prg_in.value.split("\n").join(" ")
             let segment = _MemoryManager.memoryFill.indexOf(false)
             let priority = 30
-            console.log(params[0], params[1], params[0] === "-q")
-            if (params[0] === "-q" && parseInt(params[1]) >= 0) {
+            if (params[0] === "-p" && parseInt(params[1]) >= 0) {
                 priority = params[1]
             }
             if (!regexp.test(codes)) {
@@ -711,10 +710,10 @@ module TSOS {
         public shellSetschedule(params) {
             let returnCode = _Kernel.krnSetSchedule(params[0])
             if (returnCode) {
-                _Console.putText("Current CPU scheduling algorithm is " + params[0])
+                _OsShell.shellGetschedule();
             } else {
                 _Console.putText("Please enter a valid CPU scheduling algorithm." + 
-                    " Please refer to ")
+                    " Please refer to help or man command for detail.")
             }
         }
 

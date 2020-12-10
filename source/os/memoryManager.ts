@@ -46,6 +46,7 @@ module TSOS {
         public write(segment: number, data: string, priority: number) {
             if (segment === -1) {
                 console.log("Date at memory manager", data)
+                this.tempFileIdx = _Kernel.krnNextFreeFile()
                 let filename = "temp_file" + this.tempFileIdx
                 let return_msg: (string | number)[] = _Kernel.krnCreateFile(filename)
                 return_msg = _Kernel.krnWriteFile(filename, data, false)

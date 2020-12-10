@@ -336,8 +336,7 @@ var TSOS;
             var codes = prg_in.value.split("\n").join(" ");
             var segment = _MemoryManager.memoryFill.indexOf(false);
             var priority = 30;
-            console.log(params[0], params[1], params[0] === "-q");
-            if (params[0] === "-q" && parseInt(params[1]) >= 0) {
+            if (params[0] === "-p" && parseInt(params[1]) >= 0) {
                 priority = params[1];
             }
             if (!regexp.test(codes)) {
@@ -596,11 +595,11 @@ var TSOS;
         Shell.prototype.shellSetschedule = function (params) {
             var returnCode = _Kernel.krnSetSchedule(params[0]);
             if (returnCode) {
-                _Console.putText("Current CPU scheduling algorithm is " + params[0]);
+                _OsShell.shellGetschedule();
             }
             else {
                 _Console.putText("Please enter a valid CPU scheduling algorithm." +
-                    " Please refer to ");
+                    " Please refer to help or man command for detail.");
             }
         };
         Shell.prototype.shellGetschedule = function () {

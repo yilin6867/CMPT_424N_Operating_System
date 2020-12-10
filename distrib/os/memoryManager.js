@@ -48,6 +48,7 @@ var TSOS;
         MemoryManager.prototype.write = function (segment, data, priority) {
             if (segment === -1) {
                 console.log("Date at memory manager", data);
+                this.tempFileIdx = _Kernel.krnNextFreeFile();
                 var filename = "temp_file" + this.tempFileIdx;
                 var return_msg = _Kernel.krnCreateFile(filename);
                 return_msg = _Kernel.krnWriteFile(filename, data, false);
