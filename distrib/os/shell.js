@@ -55,7 +55,9 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellHistory, "history", " - Show all previous command");
             this.commandList[this.commandList.length] = sc;
             //Load
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", " - validates if user program input is hexidemcimals");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "<-p> - validates if user program input is hexidemcimals and load it into memory." +
+                " Create a process control block for the process. " +
+                "If -p is supply with a number, set priority of the process to that value.");
             this.commandList[this.commandList.length] = sc;
             // Invoke error
             sc = new TSOS.ShellCommand(this.shellBsod, "bsod", "<Error Message> - invoke kernal error to test display " +
@@ -81,8 +83,33 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellKillall, "killall", " - Kill all proces");
             this.commandList[this.commandList.length] = sc;
-            // ps  - list the running processes and their IDs
-            // kill <id> - kills the specified process id.
+            sc = new TSOS.ShellCommand(this.shellCreate, "create", "<file name> - Create a file in the hard disk drive with give file name.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellWrite, "write", "<file name> <data> - Write data to the file specify by file name display a " +
+                "message denoting success or failure. Data must be enclose in double quotes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRead, "read", "<file name> - Read data from the file specify by file name and display in the console." +
+                " Error will display if the read fails");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellDelete, "delete", "<file name> - Delete data from the file specify by file name and display success of failure" +
+                " in the console.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", "<-quick, -full> - Initialize all blocks in all sectors in all tracks in the " +
+                "harddrive. If the parameter is quick, then first four bytes of every directory " +
+                "and data block  will be initialize. If the parameter is full, then all the " +
+                "bytes of every directory and data block will be initialize");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellLs, "ls", " - list the files that are currently stored on the disk");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellSetschedule, "setschedule", "[rr, fcfs, priority] - Set the CPU scheduling algorithm");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellGetschedule, "getschedule", " - Display currently selected CPU scheduling algorithm");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCp, "copy", "<source file name> <destination file name> - Copy the file copy from source file " +
+                "to the destination file.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRename, "rename", "<target file name> <new file name> - Rename the target file into the new file name");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         };
@@ -151,10 +178,10 @@ var TSOS;
             var retVal = new TSOS.UserCommand();
             // 1. Remove leading and trailing spaces.
             buffer = TSOS.Utils.trim(buffer);
-            // 2. Lower-case it.
-            buffer = buffer.toLowerCase();
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
+            // 2. Separate on spaces so we can determine the command and command-line args, if any.
             var tempList = buffer.split(" ");
+            // 3. Lower-case the command.
+            tempList[0] = tempList[0].toLowerCase();
             // 4. Take the first (zeroth) element and use that as the command.
             var cmd = tempList.shift(); // Yes, you can do that to an array in JavaScript. See the Queue class.
             // 4.1 Remove any left-over spaces.
@@ -226,50 +253,16 @@ var TSOS;
         Shell.prototype.shellMan = function (args) {
             if (args.length > 0) {
                 var topic = args[0];
-                switch (topic) {
-                    case "help":
-                        _StdOut.putText("Help displays a list of (hopefully) valid commands.");
-                        break;
-                    // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
-                    case "prompt":
-                        _StdOut.putText("prompt <string> -- Use string being passed as arguement as prompt icon");
-                        break;
-                    case "trace":
-                        _StdOut.putText("trace <on, off> -- Set the trace mode to be either on or off");
-                        break;
-                    case "rot13":
-                        _StdOut.putText("rot13 <string> -- Letter substitution cipher that replaces each letter in the "
-                            + "argument string with the 13th letter after it");
-                        break;
-                    case "cls":
-                        _StdOut.putText("cls -- Clears the screen and reset clear");
-                        break;
-                    case "shutdown":
-                        _StdOut.putText("shutdown -- Shutdown the virtual OS l");
-                        break;
-                    case "date":
-                        _StdOut.putText("date -- return the current date and time");
-                        break;
-                    case "whereami":
-                        _StdOut.putText("whereami -- return the current directory and file the os is located");
-                        break;
-                    case "history":
-                        _StdOut.putText("history -- Show all previous commands");
-                        break;
-                    case "load":
-                        _StdOut.putText("load -- validates if user program input is hexidemcimals");
-                        break;
-                        ;
-                    case "bsod":
-                        _StdOut.putText("bsod <Error Message> -- invoke kernal error to test display " +
-                            "of BSOD for given string of Error Message");
-                        break;
-                    case "status":
-                        _StdOut.putText("<String> - Render the status option on the Graphic Taskbar with "
-                            + "given string of text.");
-                        break;
-                    default:
-                        _StdOut.putText("No manual entry for " + args[0] + ".");
+                var found = false;
+                for (var i in _OsShell.commandList) {
+                    if (topic === _OsShell.commandList[i].command) {
+                        found = true;
+                        _StdOut.advanceLine();
+                        _StdOut.putText("  " + _OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
+                    }
+                }
+                if (!found) {
+                    _StdOut.putText("No manual entry for " + topic + ".");
                 }
             }
             else {
@@ -337,22 +330,31 @@ var TSOS;
             _StdOut.putText(APP_NAME + " is running at " + file);
         };
         // Use to load user program input. Currently validating user input
-        Shell.prototype.shellLoad = function () {
+        Shell.prototype.shellLoad = function (params) {
             var prg_in = document.getElementById("taProgramInput");
             var regexp = new RegExp("^(?:[0-9A-Fa-f]{2}[ ]*)*(?:[0-9A-Fa-f]{2})$");
             var codes = prg_in.value.split("\n").join(" ");
             var segment = _MemoryManager.memoryFill.indexOf(false);
+            var priority = 30;
+            if (params[0] === "-p" && parseInt(params[1]) >= 0) {
+                priority = params[1];
+            }
             if (!regexp.test(codes)) {
                 _StdOut.putText("The User Program Input is not valid input.");
             }
             else {
-                var writeInfo = _MemoryManager.write(segment, codes);
                 _StdOut.putText("The User Program Input is valid input.");
                 _StdOut.advanceLine();
+                console.log(priority);
+                var writeInfo = _MemoryManager.write(segment, codes, priority);
                 if (Array.isArray(writeInfo) && writeInfo.length > 1) {
-                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into memory "
-                        + writeInfo[1] + " between address " + writeInfo[3] + " and address " + writeInfo[4] + ".");
-                    _Kernel.krnShowMemory(writeInfo[5]);
+                    var location_1 = writeInfo[1] < 0 ? "hardrive entry " + (writeInfo[1] * -1 + 64)
+                        : "segment " + writeInfo[1];
+                    _StdOut.putText("The User Program with PID of " + writeInfo[0] + " is load into "
+                        + location_1 + " between address " + writeInfo[3] + " and address " + writeInfo[4] + ".");
+                    if (writeInfo[5]) {
+                        _Kernel.krnShowMemory(writeInfo[5]);
+                    }
                 }
                 else if (Array.isArray(writeInfo) && writeInfo.length == 0) {
                     _StdOut.putText("Write Faile. The user program exceed the memory space.");
@@ -416,8 +418,8 @@ var TSOS;
             }
         };
         Shell.prototype.shellRunall = function () {
-            console.log(_MemoryManager.resident_queue);
-            for (var _i = 0, _a = _MemoryManager.resident_queue; _i < _a.length; _i++) {
+            console.log(_MemoryManager.residentQueue);
+            for (var _i = 0, _a = _MemoryManager.residentQueue; _i < _a.length; _i++) {
                 var pcb = _a[_i];
                 if (pcb.state == 0) {
                     pcb.state = 1;
@@ -441,6 +443,174 @@ var TSOS;
                 console.log(pcb[0].toString());
                 _OsShell.shellKill(pcb[0].toString());
             }
+        };
+        Shell.prototype.shellCreate = function (params) {
+            if (params.length > 0) {
+                var filename = params[0];
+                var returnMSG = _Kernel.krnCreateFile(filename);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to create file, " + filename);
+                    }
+                    else {
+                        _Console.putText("Create file, " + filename + ", in directory " + returnMSG[1]);
+                    }
+                    _Console.advanceLine();
+                }
+                else {
+                    _Console.putText("The harddrive need to be format with a file system. ");
+                }
+            }
+            else {
+                _Console.putText("Please provide a file name.");
+            }
+        };
+        Shell.prototype.shellRead = function (params) {
+            if (params.length > 0) {
+                var filename = params[0];
+                var returnMSG = _Kernel.krnReadFile(filename);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to read data from file, " + filename + ". " + returnMSG[1] + ". ");
+                    }
+                    else {
+                        _Console.putText(returnMSG[1]);
+                    }
+                }
+                else {
+                    _Console.putText("The harddrive need to be format with a file system. ");
+                }
+            }
+            else {
+                _Console.putText("Please provide a file name.");
+            }
+        };
+        Shell.prototype.shellWrite = function (params) {
+            if (params.length > 0) {
+                var filename = params[0];
+                var data = params.slice(1).join(" ");
+                var returnMSG = _Kernel.krnWriteFile(filename, data, true);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to write data to file, " + filename + ". " + returnMSG[1]);
+                    }
+                    else {
+                        _Console.putText("Write data to file, " + filename + ", in directory " + returnMSG[1] + ". ");
+                    }
+                }
+                else {
+                    _Console.putText("The harddrive need to be format with a file system. ");
+                }
+            }
+            else {
+                _Console.putText("Please provide a file name.");
+            }
+        };
+        Shell.prototype.shellDelete = function (params) {
+            if (params.length > 0) {
+                var filename = params[0];
+                var returnMSG = _Kernel.krnDeleteFile(filename);
+                if (returnMSG.length > 0) {
+                    if (returnMSG[0]) {
+                        _Console.putText("Fail to delete file, " + filename + ". " + returnMSG[1]);
+                    }
+                    else {
+                        _Console.putText("Delete file, " + filename + ", in directory " + returnMSG[1]);
+                    }
+                }
+                else {
+                    _Console.putText("The harddrive need to be format with a file system. ");
+                }
+            }
+            else {
+                _Console.putText("Please provide a file name.");
+            }
+        };
+        Shell.prototype.shellFormat = function (params) {
+            console.log(params.length);
+            if (params.length > 0) {
+                _Kernel.krnFormat(params[0]);
+            }
+            else {
+                _Kernel.krnFormat();
+            }
+        };
+        Shell.prototype.shellLs = function (params) {
+            if (params.length > 0) {
+                _Kernel.krnLs(params[0]);
+            }
+            else {
+                _Kernel.krnLs();
+            }
+        };
+        Shell.prototype.shellCp = function (params) {
+            var srcFile = params[0];
+            var destFile = params[1];
+            if (srcFile && destFile) {
+                var returnCode = _Kernel.krnCopy(srcFile, destFile);
+                switch (returnCode) {
+                    case 0:
+                        _Console.putText("Copy Success");
+                        break;
+                    case 1:
+                        _Console.putText("Copy Fail. File content fail to copy over.");
+                        break;
+                    case 2:
+                        _Console.putText("Copy Fail. File to create file to copy to.");
+                        break;
+                    case 3:
+                        _Console.putText("Copy Fail. Fail to read from source file.");
+                        break;
+                    case 4:
+                        _Console.putText("The harddrive need to be format with a file system.");
+                        break;
+                }
+            }
+            else {
+                _Console.putText("Invalid file names, " + srcFile + " and " + destFile);
+            }
+        };
+        Shell.prototype.shellRename = function (params) {
+            var oldName = params[0];
+            var newName = params[1];
+            if (oldName && newName) {
+                var returnCode = _Kernel.krnRename(oldName, newName);
+                console.log(returnCode);
+                switch (returnCode) {
+                    case 0:
+                        _Console.putText("Rename Success");
+                        break;
+                    case 1:
+                        _Console.putText("Fail to rename " + oldName + " to " + newName);
+                        break;
+                    case 2:
+                        _Console.putText("Target file does not exist");
+                        break;
+                }
+            }
+            else {
+                _Console.putText("Please provide the target filename and the new filename");
+            }
+        };
+        Shell.prototype.shellSetschedule = function (params) {
+            var returnCode = _Kernel.krnSetSchedule(params[0]);
+            if (returnCode) {
+                _OsShell.shellGetschedule();
+            }
+            else {
+                _Console.putText("Please enter a valid CPU scheduling algorithm." +
+                    " Please refer to help or man command for detail.");
+            }
+        };
+        Shell.prototype.shellGetschedule = function () {
+            var schedule = "Round Robin";
+            if (_Kernel.krnGetSchedule() === "fcfs") {
+                schedule = "First Come First Serve";
+            }
+            else if (_Kernel.krnGetSchedule() === "priority") {
+                schedule = "Non Preemptive Priority";
+            }
+            _Console.putText("Current CPU scheduling algorithm is " + schedule);
         };
         return Shell;
     }());

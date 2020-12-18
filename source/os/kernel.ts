@@ -11,6 +11,10 @@
 module TSOS {
 
     export class Kernel {
+        constructor(
+            public cpu_scheduler="rr"
+        ) {
+        }
         //
         // OS Startup and Shutdown Routines
         //
@@ -33,8 +37,12 @@ module TSOS {
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
             _krnKeyboardDriver = new DeviceDriverKeyboard();     // Construct it.
-            _krnKeyboardDriver.driverEntry();                    // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
+
+            // Load the Harddrive Device Driver
+            this.krnTrace("Loading the Harddrive device driver");
+            _krnHarddriveDriver = new DeviceDriverFS();
+            this.krnTrace(_krnHarddriveDriver.status);
 
             // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
             this.krnTrace("Enabling the interrupts.");
@@ -87,28 +95,40 @@ module TSOS {
             // Render OS values dynamically in the console
             this.krnUpdateDisplayValue();
 
-            // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
+                // Check for an interrupt, if there are any. Page 560
                 // Process the first interrupt on the interrupt queue.
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
-                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
-                _MemoryManager.addWaitBurst()
-            } else if (_CPU.quantum == 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4) {
-                this.krnShortTermSchedule()
-                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
-                _MemoryManager.addWaitBurst()
-            } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
+            } else if (_CPU.isExecuting) { 
+                // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
                 _CPU.quantum =_CPU.quantum - 1
                 Control.hostLog("Current Round Robin Quantum value is " + _CPU.quantum, "OS")
                 Control.hostLog("Updating CPU burst time for running process " + _CPU.runningPCB.getPid(), "OS")
                 _CPU.runningPCB.cpuBurst = _CPU.runningPCB.cpuBurst + 1
+                console.log("Process " + _CPU.runningPCB.getPid(), _CPU.runningPCB.cpuBurst)
                 Control.hostLog("Update waiting time for process in the ready queue.", "OS")
                 _MemoryManager.addWaitBurst()
-            } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
+            } else {                       
+                // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
+            }
+            if (this.cpu_scheduler === "rr" 
+                    && ((_CPU.quantum === 0 || (_CPU.runningPCB ? _CPU.runningPCB.state: 0) == 4))
+                    && _MemoryManager.readyQueue.length > 0) {
+                let params = []
+                Control.hostLog("Invoking interrupt for context switching", "OS")
+                _KernelInterruptQueue.enqueue(new Interrupt(SCHEDULE_IRQ, params))
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
+            }
+            else if ((this.cpu_scheduler === "fcfs" || this.cpu_scheduler === "priority") 
+                    && (_CPU.runningPCB && _CPU.runningPCB.state === 4 && _MemoryManager.readyQueue.length > 0)) {
+                let params = []
+                Control.hostLog("Invoking interrupt for context switching", "OS")
+                _KernelInterruptQueue.enqueue(new Interrupt(SCHEDULE_IRQ, params))
+                Control.hostLog("Update waiting time for process in the ready queue.", "OS")
             }
         }
 
@@ -143,6 +163,9 @@ module TSOS {
                 case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
+                    break;
+                case SCHEDULE_IRQ:
+                    this.krnShortTermSchedule()
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -212,15 +235,18 @@ module TSOS {
             _Console.showSysDatetime(sysDate, sysTime);
             let cpuInfo = _CPU.getInfo();
             if (_CPU.isExecuting) {
-                if(typeof _CPU.runUserProgram !== "undefined") {
+                if(typeof _CPU.runningPCB !== "undefined") {
                     console.log("memorySeg" + ( 1 + _CPU.getRunningPCB()[2]))
                     document.getElementById("memorySeg" + ( 1 + _CPU.getRunningPCB()[2])).click();
-                    console.log(_Memory.memoryArr[2098])
                     _Console.showMemCounter(cpuInfo[0]);
                 }
             }
             _Console.showCPU(cpuInfo);
             _Console.showPCB(_MemoryManager.getPBCsInfo());
+            if (_krnHarddriveDriver.status === "loaded") {
+                _krnHarddriveDriver.loadHDDFromLocal()
+                _Console.showHDD(_krnHarddriveDriver.hardDirveData)
+            }
         }
 
         public krnRunProgram(pid: string): void {
@@ -287,16 +313,178 @@ module TSOS {
         }
 
         public krnShortTermSchedule() {
-            Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS")
-            _CPU.quantum = _CPU.defaultQuantum;
-            let nextProcess = _MemoryManager.readyQueue.shift();
-            if (typeof nextProcess !== "undefined") {
-                _MemoryManager.saveState(_CPU.runningPCB)
-                Control.hostLog("Save state of current running process", "OS")
-                Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
-                                + nextProcess.getPid(), "OS")
-                _Kernel.krnRunProgram(nextProcess.getPid().toString());
+            if (this.cpu_scheduler === "rr") {
+                Control.hostLog("Context switch using Round Robin", "OS");
+                Control.hostLog("Reset quantum back to default Round Robin Quantum: " + _CPU.defaultQuantum, "OS");
+                _CPU.quantum = _CPU.defaultQuantum;
+                let nextProcess: PCB = _MemoryManager.readyQueue.shift();
+                if (typeof nextProcess !== "undefined") {
+                    _krnHarddriveDriver.krnSwapping(nextProcess)
+                    _MemoryManager.saveState(_CPU.runningPCB);
+                    Control.hostLog("Save state of current running process", "OS");
+                    Control.hostLog("Switching process from process " + _CPU.runningPCB.getPid() + " to process " 
+                                    + nextProcess.getPid(), "OS");
+                    _Kernel.krnRunProgram(nextProcess.getPid().toString());
+                }    
+            } else if (this.cpu_scheduler === "priority") {
+                if (_CPU.runningPCB.state === 4) {
+                    Control.hostLog("Context switch using Non-Preemptive Priority", "OS");
+                    let nextPriorPCB = _MemoryManager.readyQueue[0];
+                    let nextIdx = 0
+                    for (let pcbIdx = 0; pcbIdx < _MemoryManager.readyQueue.length; pcbIdx++) {
+                        if (_MemoryManager.readyQueue[pcbIdx].priority < nextPriorPCB.priority) {
+                            nextPriorPCB = _MemoryManager.readyQueue[pcbIdx]
+                            nextIdx = pcbIdx;
+                        }
+                    }
+                    _MemoryManager.readyQueue.splice(nextIdx, 1)
+                    _krnHarddriveDriver.krnSwapping(nextPriorPCB)
+                    _Kernel.krnRunProgram(nextPriorPCB.getPid().toString());
+                }
+            } else {
+                Control.hostLog("Context switch using First Come First Serve", "OS");
+                if (_CPU.runningPCB.state === 4) {
+                    let nextPCB = _MemoryManager.readyQueue.shift()
+                    _krnHarddriveDriver.krnSwapping(nextPCB)
+                    _Kernel.krnRunProgram(nextPCB.getPid().toString())
+                }
             }
+        }
+
+        public krnFormat(mode:string="-full") {
+            let returnMSG;
+            if (!_CPU.isExecuting) {
+                returnMSG = _krnHarddriveDriver.driverEntry(mode);
+            } else {
+                let msg = "The CPU is running a process. Please wait until the CPU is free and do the refactoring"
+                _Console.putText(msg)
+                returnMSG = []
+            }
+            if (returnMSG[0]) {
+                _Console.putText("Fail to nitialize all blocks in all sectors in all tracks in the harddrive.")    
+            } else {
+                if (mode==="-full") {
+                    _Console.putText("Initialize all blocks in all sectors in all tracks in the harddrive.")
+                } else {
+                    _Console.putText("Initialize the first four bytes of every directory and data block.")
+                }
+            }
+        }
+
+        public krnGetHDDEntryByIdx(idx: number, inHex: boolean) {
+            return _krnHarddriveDriver.readFile("", idx, inHex)
+        }
+
+        public krnCreateFile(filename: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG = _krnHarddriveDriver.createfile(filename)
+                return returnMSG
+            } else {
+                return []
+            }
+        }
+
+        public krnReadFile(filename: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG = _krnHarddriveDriver.readFile(filename)
+                return returnMSG
+            } else {
+                return []
+            }
+        }
+
+        public krnWriteFile(filename: (string | number), data: string, inHex: boolean) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG
+                if (typeof filename === "string") {
+                    returnMSG = _krnHarddriveDriver.writeFile(filename, data, inHex)
+                } else {
+                    returnMSG = _krnHarddriveDriver.writeFile("", data, inHex, filename)
+                }
+                return returnMSG
+            } else {
+                return []
+            }
+        }
+
+        public krnDeleteFile(filename: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let returnMSG = _krnHarddriveDriver.deleteFile(filename)
+                return returnMSG
+            } else {
+                return []
+            }
+        }
+        
+        public krnLs(param:string =null) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let return_file = _krnHarddriveDriver.getFiles()
+                for (let file of return_file) {
+                    if (param === "-l") {
+                        _Console.putText(file)
+                        _Console.advanceLine()
+                    } else {
+                        if (file[0] !== ".") {
+                            _Console.putText(file)
+                            _Console.advanceLine()
+                        }
+                    }
+                }
+            } else {
+                _Console.putText("The harddrive need to be format with a file system. ")
+            }
+        }
+
+        public krnCopy(srcFile: string, destFile: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                let readSucc = _krnHarddriveDriver.readFile(srcFile);
+                console.log(readSucc)
+                if (!readSucc[0]) {
+                    let createSucc = _krnHarddriveDriver.createfile(destFile);
+                    if (!createSucc[0]) {
+                        let writeSucc = _krnHarddriveDriver.writeFile(destFile, readSucc[1], true)
+                        if (!writeSucc[0]) {
+                            return 0
+                        } else {
+                            return 1
+                        }
+                    } else {
+                        return 2
+                    }
+                } else {
+                    return 3
+                }
+            } else {
+                return 4
+            }
+        }
+
+        public krnRename(oldName: string, newName: string) {
+            if (_krnHarddriveDriver.status === "loaded") {
+                if (_krnHarddriveDriver.existFile(oldName)) {
+                    let returnCode = _krnHarddriveDriver.renameFile(oldName, newName);
+                    return returnCode;
+                } else {
+                    return 2;
+                }
+            }
+        }
+
+        public krnSetSchedule(schedule: string) {
+            if (schedule === "rr" || schedule === "priority" || schedule === "fcfs") {
+                this.cpu_scheduler = schedule
+                return true
+            } else {
+                return false
+            }
+        }
+
+        public krnGetSchedule() {
+            return this.cpu_scheduler
+        }
+
+        public krnNextFreeFile() {
+            return _krnHarddriveDriver.getNextFile();
         }
     }
 }
